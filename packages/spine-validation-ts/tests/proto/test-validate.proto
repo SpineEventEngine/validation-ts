@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package spine.validation.testing.validate_suite;
+
+// Test messages for the `(validate)` and `(if_invalid)` validation options.
+//
+// This file contains test cases for recursive validation of nested message fields.
+// The `(validate)` option enables validation of constraints in nested messages,
+// and `(if_invalid)` provides custom error messages for validation failures.
+
+import "spine/options.proto";
+
+// Tests basic nested message validation.
+message PersonWithAddress {
+    string name = 1 [(required) = true];
+    Address address = 2 [(validate) = true];
+}
+
+message Address {
+    string street = 1 [(required) = true];
+    string city = 2 [(required) = true];
+    // Must be a 5-digit US ZIP code.
+    string zip_code = 3 [
+        (required) = true,
+        (pattern).regex = "^[0-9]{5}$"
+    ];
+}
+
+// Tests custom error messages via `(if_invalid)`.
+message OrderWithCustomError {
+    int32 order_id = 1 [(required) = true];
+    Customer customer = 2 [
+        (validate) = true,
+        (if_invalid).error_msg = "Customer information is invalid: {value}."
+    ];
+}
+
+message Customer {
+    // Must be a valid email address (basic format validation).
+    string email = 1 [
+        (required) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+    int32 age = 2 [(required) = true, (range) = "[18..120]"];
+}
+
+// Tests validation on repeated message fields.
+message TeamWithMembers {
+    string team_name = 1 [(required) = true];
+    repeated Member members = 2 [(validate) = true];
+}
+
+message Member {
+    string name = 1 [(required) = true];
+    // Must be a valid email address (basic format validation).
+    string email = 2 [
+        (required) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+}
+
+// Tests deeply nested validation.
+message CompanyStructure {
+    string company_name = 1 [(required) = true];
+    Department department = 2 [(validate) = true];
+}
+
+message Department {
+    string dept_name = 1 [(required) = true];
+    Manager manager = 2 [(validate) = true];
+}
+
+message Manager {
+    string name = 1 [(required) = true];
+    // Must be a valid email address (basic format validation).
+    string email = 2 [
+        (required) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+}
+
+// Tests validation on optional nested fields.
+message ProfileWithOptionalData {
+    string username = 1 [(required) = true];
+    OptionalData optional_data = 2 [(validate) = true];
+}
+
+message OptionalData {
+    string bio = 1;
+    int32 followers = 2 [(min).value = "0"];
+}
+
+// Tests message without validate option.
+message PersonWithoutValidation {
+    string name = 1 [(required) = true];
+    Address address = 2;
+}
+
+// Tests combining multiple validation types.
+message ProductOrder {
+    int32 product_id = 1 [(required) = true, (min).value = "1"];
+    ProductDetails product = 2 [
+        (validate) = true,
+        (if_invalid).error_msg = "Product details are invalid."
+    ];
+    repeated Review reviews = 3 [(validate) = true];
+    ShippingInfo shipping = 4 [
+        (required) = true,
+        (validate) = true
+    ];
+}
+
+message ProductDetails {
+    string name = 1 [(required) = true];
+    double price = 2 [(required) = true, (min).value = "0.01"];
+    repeated string tags = 3 [(distinct) = true];
+}
+
+message Review {
+    int32 rating = 1 [(required) = true, (range) = "[1..5]"];
+    string comment = 2;
+}
+
+message ShippingInfo {
+    Address address = 1 [(required) = true, (validate) = true];
+    string method = 2 [(required) = true];
+}
+
+// Tests validation on message field without constraints.
+message ContainerWithEmptyMessage {
+    string id = 1 [(required) = true];
+    EmptyValidated empty = 2 [(validate) = true];
+}
+
+message EmptyValidated {
+    string note = 1;
+}
+
+// Tests nested validation combined with distinct.
+message ProjectWithTasks {
+    string project_name = 1 [(required) = true];
+    repeated Task tasks = 2 [(validate) = true];
+    repeated string tags = 3 [(distinct) = true];
+}
+
+message Task {
+    string title = 1 [(required) = true];
+    int32 priority = 2 [(range) = "[1..5]"];
+    repeated string assignees = 3 [(distinct) = true];
+}

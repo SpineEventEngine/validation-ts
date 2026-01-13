@@ -1,0 +1,17 @@
+{
+  "name": "@spine-event-engine/validation-ts-workspace",
+  "version": "2.0.0-snapshot.1",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@spine-event-engine/validation-ts",
+    "test": "npm test --workspace=@spine-event-engine/validation-ts",
+    "example": "npm start --workspace=@spine-event-engine/example-smoke"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "description": "TypeScript validation library for Protobuf messages with Spine validation options"
+}

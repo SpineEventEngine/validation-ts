@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package spine.validation.testing.integration;
+
+// Integration test messages demonstrating multiple validation constraints.
+//
+// This file showcases complex validation scenarios combining required_field,
+// required, pattern, min/max, and range constraints in an account management
+// context.
+
+import "spine/options.proto";
+
+// Account message combining multiple validation constraints.
+message Account {
+    option (required_field) = "id | email";
+
+    int32 id = 1 [(min).value = "1"];
+    // Must be a valid email address (basic format validation).
+    string email = 2 [
+        (required) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        (pattern).error_msg = "Invalid email format: `{value}`."
+    ];
+    // Must be 3-20 characters containing only letters, numbers, underscores, or hyphens.
+    string username = 3 [
+        (required) = true,
+        (pattern).regex = "^[A-Za-z0-9_-]{3,20}$",
+        (pattern).error_msg = "Username must be 3-20 characters (letters, numbers, _, -). Got: `{value}`."
+    ];
+    // Must be at least 8 characters long.
+    string password = 4 [
+        (required) = true,
+        (pattern).regex = "^.{8,}$",
+        (pattern).error_msg = "Password must be at least 8 characters. Got length: {value}."
+    ];
+    AccountType account_type = 5 [(required) = true];
+    int32 age = 6 [
+        (required) = true,
+        (range) = "[13..120]"
+    ];
+    double balance = 7 [
+        (min).value = "0.0",
+        (max).value = "1000000.0"
+    ];
+    int32 failed_login_attempts = 8 [(range) = "[0..5]"];
+    double rating = 9 [(range) = "[1.0..5.0]"];
+}
+
+// Account type enumeration.
+enum AccountType {
+    ACCOUNT_TYPE_UNSPECIFIED = 0;
+    ACCOUNT_TYPE_FREE = 1;
+    ACCOUNT_TYPE_PREMIUM = 2;
+    ACCOUNT_TYPE_ENTERPRISE = 3;
+}

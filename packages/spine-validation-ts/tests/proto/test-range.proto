@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package spine.validation.testing.range_suite;
+
+// Test messages for the `(range)` validation option.
+//
+// This file contains test cases for bounded numeric range validation using
+// bracket notation. Supports inclusive bounds `[min..max]`, exclusive bounds
+// `(min..max)`, and half-open intervals `[min..max)` or `(min..max]`.
+
+import "spine/options.proto";
+
+// Tests closed (inclusive) ranges.
+message ClosedRange {
+    int32 percentage = 1 [(range) = "[0..100]"];
+    int32 rgb_value = 2 [(range) = "[0..255]"];
+    double temperature_c = 3 [(range) = "[-273.15..1000.0]"];
+}
+
+// Tests open (exclusive) ranges.
+message OpenRange {
+    double positive_value = 1 [(range) = "(0.0..100.0)"];
+    int32 exclusive_count = 2 [(range) = "(0..10)"];
+}
+
+// Tests half-open ranges.
+message HalfOpenRange {
+    int32 hour = 1 [(range) = "[0..24)"];
+    int32 minute = 2 [(range) = "[0..60)"];
+    float degree = 3 [(range) = "[0.0..360.0)"];
+    double angle = 4 [(range) = "(0.0..180.0]"];
+}
+
+// Tests range validation across different numeric types.
+message NumericTypeRanges {
+    int32 int32_field = 1 [(range) = "[1..100]"];
+    int64 int64_field = 2 [(range) = "[0..1000000]"];
+    uint32 uint32_field = 3 [(range) = "[1..65535]"];
+    uint64 uint64_field = 4 [(range) = "[1..4294967295]"];
+    float float_field = 5 [(range) = "[0.0..1.0]"];
+    double double_field = 6 [(range) = "[-1000.0..1000.0]"];
+}
+
+// Tests range validation on repeated fields.
+message RepeatedRange {
+    repeated int32 scores = 1 [(range) = "[0..100]"];
+    repeated double percentages = 2 [(range) = "[0.0..100.0]"];
+}
+
+// Tests combined required and range constraints.
+message CombinedConstraints {
+    int32 product_id = 1 [(required) = true, (range) = "[1..999999]"];
+    int32 quantity = 2 [(required) = true, (range) = "[1..1000]"];
+    double discount = 3 [(range) = "[0.0..1.0]"];
+}
+
+// Tests range validation for payment card fields.
+message PaymentCard {
+    int32 expiry_month = 1 [(required) = true, (range) = "[1..12]"];
+    int32 expiry_year = 2 [(required) = true, (range) = "[2024..2050]"];
+    int32 cvv = 3 [(required) = true, (range) = "[0..999]"];
+}
+
+// Tests range validation for RGB color values.
+message RGBColor {
+    int32 red = 1 [(range) = "[0..255]"];
+    int32 green = 2 [(range) = "[0..255]"];
+    int32 blue = 3 [(range) = "[0..255]"];
+    double alpha = 4 [(range) = "[0.0..1.0]"];
+}
+
+// Tests range validation for pagination parameters.
+message PaginationRequest {
+    int32 page = 1 [(required) = true, (range) = "[1..10000]"];
+    int32 page_size = 2 [(required) = true, (range) = "[1..100]"];
+}
+
+// Tests optional fields with range constraints.
+message OptionalRange {
+    int32 optional_score = 1 [(range) = "[1..100]"];
+    double optional_rating = 2 [(range) = "[1.0..5.0]"];
+}
+
+// Tests edge cases with single-value ranges.
+message EdgeCaseRanges {
+    int32 exact_value = 1 [(range) = "[42..42]"];
+    double pi_approx = 2 [(range) = "[3.14..3.15]"];
+}

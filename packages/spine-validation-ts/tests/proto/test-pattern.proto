@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package spine.validation.testing.pattern_suite;
+
+// Test messages for the `(pattern)` validation option.
+//
+// This file contains test cases for regex pattern validation on string fields,
+// including single fields, repeated fields, optional fields, and various pattern
+// modifiers like case-insensitive matching.
+
+import "spine/options.proto";
+
+// Tests basic pattern validation on various string field types.
+message PatternValidation {
+    // Must contain only letters (A-Z, a-z).
+    string alpha_field = 1 [
+        (pattern).regex = "^[A-Za-z]+$",
+        (pattern).error_msg = "Field must contain only letters. Got: `{value}`."
+    ];
+
+    // Must contain only letters and numbers.
+    string alphanumeric_field = 2 [
+        (pattern).regex = "^[A-Za-z0-9]+$",
+        (pattern).error_msg = "Field must be alphanumeric. Got: `{value}`."
+    ];
+
+    // Must be a valid email address (basic format validation).
+    string email = 3 [
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        (pattern).error_msg = "Invalid email format: `{value}`."
+    ];
+
+    // Must be a US phone number in XXX-XXX-XXXX format.
+    string phone = 4 [
+        (pattern).regex = "^\\d{3}-\\d{3}-\\d{4}$",
+        (pattern).error_msg = "Phone must be in format XXX-XXX-XXXX. Got: `{value}`."
+    ];
+
+    // Must be a valid HTTP or HTTPS URL.
+    string website = 5 [
+        (pattern).regex = "^https?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$",
+        (pattern).error_msg = "Invalid URL format: `{value}`."
+    ];
+
+    // Must be a hexadecimal color code in #RRGGBB format.
+    string color_hex = 6 [
+        (pattern).regex = "^#[0-9A-Fa-f]{6}$",
+        (pattern).error_msg = "Color must be a valid hex code (#RRGGBB). Got: `{value}`."
+    ];
+
+    // Must be 3-20 characters containing only letters, numbers, underscores, or hyphens.
+    string username = 7 [
+        (pattern).regex = "^[A-Za-z0-9_-]{3,20}$",
+        (pattern).error_msg = "Username must be 3-20 characters (letters, numbers, _, -). Got: `{value}`."
+    ];
+}
+
+// Tests pattern validation on repeated string fields.
+message RepeatedPatternValidation {
+    // Each email must be a valid email address (basic format validation).
+    repeated string emails = 1 [
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        (pattern).error_msg = "Invalid email in list: `{value}`."
+    ];
+
+    // Each tag must contain only letters and numbers.
+    repeated string tags = 2 [
+        (pattern).regex = "^[A-Za-z0-9]+$",
+        (pattern).error_msg = "Tag must be alphanumeric: `{value}`."
+    ];
+}
+
+// Tests pattern validation with case-insensitive modifier.
+message CaseInsensitivePattern {
+    // Must be either "yes" or "no" (case-insensitive).
+    string yes_or_no = 1 [
+        (pattern).regex = "^(yes|no)$",
+        (pattern).modifier.case_insensitive = true,
+        (pattern).error_msg = "Must be 'yes' or 'no' (case-insensitive). Got: `{value}`."
+    ];
+}
+
+// Tests pattern validation on optional fields (validated only when set).
+message OptionalPattern {
+    // If provided, must be a valid email address (basic format validation).
+    string optional_email = 1 [
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        (pattern).error_msg = "If provided, email must be valid: `{value}`."
+    ];
+
+    // If provided, must be a US phone number in XXX-XXX-XXXX format.
+    string optional_phone = 2 [
+        (pattern).regex = "^\\d{3}-\\d{3}-\\d{4}$",
+        (pattern).error_msg = "If provided, phone must be XXX-XXX-XXXX: `{value}`."
+    ];
+}

@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package spine.validation.testing.required_suite;
+
+// Test messages for the `(required)` and `(if_missing)` validation options.
+//
+// This file contains test cases for required field validation across different
+// field types (strings, numbers, messages, enums, repeated fields) and custom
+// error messages via the `(if_missing)` option.
+
+import "spine/options.proto";
+
+// Tests required field validation on various field types.
+message RequiredFields {
+    string name = 1 [(required) = true];
+    int32 age = 2 [(required) = true];
+    Address address = 3 [(required) = true];
+    Status status = 4 [(required) = true];
+    repeated string tags = 5 [(required) = true];
+}
+
+// Nested message for testing required message fields.
+message Address {
+    string street = 1;
+    string city = 2;
+}
+
+// Enum for testing required enum fields.
+enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_ACTIVE = 1;
+    STATUS_INACTIVE = 2;
+}
+
+// Tests custom error messages via the `(if_missing)` option.
+message CustomErrorMessages {
+    string username = 1 [
+        (required) = true,
+        (if_missing).error_msg = "Username is mandatory for account creation."
+    ];
+
+    string email = 2 [
+        (required) = true,
+        (if_missing).error_msg = "Email address must be provided."
+    ];
+}
+
+// Tests optional fields without required constraints.
+message OptionalFields {
+    string nickname = 1;
+    int32 score = 2;
+}

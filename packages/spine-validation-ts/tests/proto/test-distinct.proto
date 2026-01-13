@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package spine.validation.testing.distinct_suite;
+
+// Test messages for the `(distinct)` validation option.
+//
+// This file contains test cases for uniqueness validation on repeated fields.
+// The `(distinct)` constraint ensures all elements in a repeated field are unique.
+
+import "spine/options.proto";
+
+// Tests distinct constraint on primitive types.
+message DistinctPrimitives {
+    repeated int32 numbers = 1 [(distinct) = true];
+    repeated string tags = 2 [(distinct) = true];
+    repeated double scores = 3 [(distinct) = true];
+    repeated bool flags = 4 [(distinct) = true];
+}
+
+// Tests distinct constraint on enum values.
+message DistinctEnums {
+    repeated Status statuses = 1 [(distinct) = true];
+}
+
+enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_ACTIVE = 1;
+    STATUS_INACTIVE = 2;
+    STATUS_PENDING = 3;
+}
+
+// Tests repeated fields without distinct constraint.
+message NonDistinctFields {
+    repeated int32 numbers = 1;
+    repeated string tags = 2;
+}
+
+// Tests distinct combined with other constraints.
+message CombinedConstraints {
+    repeated int32 product_ids = 1 [
+        (distinct) = true,
+        (range) = "[1..999999]"
+    ];
+    // Each email must be a valid email address (basic format validation).
+    repeated string emails = 2 [
+        (distinct) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+    repeated int32 scores = 3 [
+        (distinct) = true,
+        (min).value = "0",
+        (max).value = "100"
+    ];
+}
+
+// Tests distinct on optional repeated fields.
+message OptionalDistinct {
+    repeated int32 optional_numbers = 1 [(distinct) = true];
+    repeated string optional_tags = 2 [(distinct) = true];
+}
+
+// Tests distinct for user profile with unique tags.
+message UserProfile {
+    string username = 1 [(required) = true];
+    repeated string tags = 2 [(distinct) = true];
+    repeated string skills = 3 [(distinct) = true];
+}
+
+// Tests distinct for shopping cart with unique items.
+message ShoppingCart {
+    repeated int32 product_ids = 1 [(distinct) = true];
+    repeated string coupon_codes = 2 [(distinct) = true];
+}
+
+// Tests distinct across different numeric types.
+message DistinctNumericTypes {
+    repeated int32 int32_values = 1 [(distinct) = true];
+    repeated int64 int64_values = 2 [(distinct) = true];
+    repeated uint32 uint32_values = 3 [(distinct) = true];
+    repeated uint64 uint64_values = 4 [(distinct) = true];
+    repeated float float_values = 5 [(distinct) = true];
+    repeated double double_values = 6 [(distinct) = true];
+}
+
+// Tests edge cases for distinct validation.
+message DistinctEdgeCases {
+    repeated string empty_strings = 1 [(distinct) = true];
+    repeated int32 zeros = 2 [(distinct) = true];
+    repeated string case_sensitive = 3 [(distinct) = true];
+}

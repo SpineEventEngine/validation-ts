@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package example;
+
+import "google/protobuf/timestamp.proto";
+import "spine/options.proto";
+
+// Product message representing a product entity with validation constraints
+message Product {
+  // Product ID - required and set once
+  string id = 1 [(required) = true,
+                 (set_once) = true,
+                 (pattern).regex = "^prod-[0-9]+$",
+                 (pattern).error_msg = "Product ID must follow format 'prod-XXX'. Provided: `{value}`."];
+
+  // Product name - required
+  string name = 2 [(required) = true,
+                   (if_missing).error_msg = "Product name is required."];
+
+  // Product description - optional
+  string description = 3;
+
+  // Product price - must be positive
+  double price = 4 [(required) = true,
+                    (min).value = "0.01",
+                    (min).error_msg = "Price must be at least {other}. Provided: {value}."];
+
+  // Stock quantity - must be non-negative
+  int32 stock = 5 [(min).value = "0",
+                   (range) = "[0..1000000)"];
+
+  // Creation timestamp - required
+  google.protobuf.Timestamp created_at = 6 [(required) = true];
+
+  // Category - required and validated
+  Category category = 7 [(required) = true,
+                         (validate) = true,
+                         (if_invalid).error_msg = "Category is invalid."];
+
+  // Display settings - demonstrates "goes" option
+  // Text color can only be set when highlight color is set, and vice versa
+  Color text_color = 8 [(goes).with = "highlight_color"];
+  Color highlight_color = 9 [(goes).with = "text_color"];
+}
+
+// Color message for display settings
+message Color {
+  int32 red = 1 [(range) = "[0..255]"];
+  int32 green = 2 [(range) = "[0..255]"];
+  int32 blue = 3 [(range) = "[0..255]"];
+}
+
+// Category message with validation
+message Category {
+  // Category ID - must be positive
+  int32 id = 1 [(required) = true,
+                (min).value = "1"];
+
+  // Category name - required
+  string name = 2 [(required) = true];
+}
+
+// Payment method demonstrating is_required oneof option
+message PaymentMethod {
+  oneof method {
+    option (is_required) = true;
+
+    // Money is provided from a payment card that has this number
+    PaymentCardNumber payment_card = 1 [(validate) = true];
+
+    // Money is provided from this bank account
+    BankAccount bank_account = 2 [(validate) = true];
+  }
+}
+
+// Payment card number with validation
+message PaymentCardNumber {
+  string number = 1 [(required) = true,
+                     (pattern).regex = "^[0-9]{13,19}$",
+                     (pattern).error_msg = "Card number must be 13-19 digits."];
+  int32 expiry_month = 2 [(required) = true,
+                          (range) = "[1..12]"];
+  int32 expiry_year = 3 [(required) = true,
+                         (min).value = "2024"];
+}
+
+// Bank account with validation
+message BankAccount {
+  string account_number = 1 [(required) = true,
+                             (pattern).regex = "^[0-9]{8,17}$"];
+  string routing_number = 2 [(required) = true,
+                             (pattern).regex = "^[0-9]{9}$"];
+}
+
+// Request message for listing products with pagination
+message ListProductsRequest {
+  // Page number - must be positive
+  int32 page = 1 [(required) = true,
+                  (min).value = "1",
+                  (if_missing).error_msg = "Page number is required."];
+
+  // Page size - must be between 1 and 100
+  int32 page_size = 2 [(required) = true,
+                       (range) = "[1..100]",
+                       (if_missing).error_msg = "Page size is required."];
+
+  // Optional search query
+  string search_query = 3;
+}
+
+// Response message for listing products
+message ListProductsResponse {
+  // List of products with validation enabled
+  repeated Product products = 1 [(validate) = true];
+
+  // Total count - must be non-negative
+  int32 total_count = 2 [(min).value = "0"];
+}
