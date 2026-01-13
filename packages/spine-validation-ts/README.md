@@ -1,6 +1,6 @@
 # @spine-event-engine/validation-ts
 
-TypeScript validation library for Protobuf messages with [Spine Event Engine](https://spine.io/) validation options.
+TypeScript validation library for Protobuf messages with [Spine Validation](https://github.com/SpineEventEngine/validation/) options.
 
 ## Features
 
@@ -21,7 +21,6 @@ npm install @spine-event-engine/validation-ts
 
 This library requires:
 - `@bufbuild/protobuf` v2.10.2 or later
-- Protobuf definitions with Spine validation options
 
 The package includes:
 - Spine validation Proto definitions (`spine/options.proto`)
@@ -86,7 +85,7 @@ Formats a `TemplateString` by replacing placeholders with provided values.
 
 ## Supported Validation Options
 
-### Field-Level Options
+### Field-level options
 
 - ✅ **`(required)`** - Ensures field has a non-default value
 - ✅ **`(if_missing)`** - Custom error message for required fields
@@ -98,15 +97,15 @@ Formats a `TemplateString` by replacing placeholders with provided values.
 - ✅ **`(if_invalid)`** - Custom error message for nested validation failures
 - ✅ **`(goes)`** - Field dependency validation (field can only be set if another field is set)
 
-### Message-Level Options
+### Message-level options
 
 - ✅ **`(required_field)`** - Requires specific field combinations using boolean logic
 
-### Oneof-Level Options
+### Oneof-level options
 
 - ✅ **`(is_required)`** - Requires that one of the oneof fields must be set
 
-## Example Proto File
+## Example
 
 ```protobuf
 syntax = "proto3";
@@ -165,7 +164,7 @@ message UserProfile {
 
 ## Validation Behavior
 
-### Proto3 Field Semantics
+### Proto3 field semantics
 
 In `proto3`, fields have default values:
 - Numeric fields default to `0`
@@ -180,7 +179,7 @@ The `(required)` validator considers a field "set" when:
 - Message fields are not `undefined`
 - Repeated fields have at least one element
 
-### Nested Validation
+### Nested validation
 
 Use `(validate) = true` on message fields to recursively validate nested messages:
 
@@ -193,7 +192,7 @@ message Order {
 }
 ```
 
-### Field Dependencies
+### Field dependencies
 
 Use `(goes)` to enforce field dependencies:
 
@@ -207,7 +206,7 @@ message ShippingDetails {
 }
 ```
 
-### Required Field Combinations
+### Required field combinations
 
 Use `(required_field)` for complex field requirements:
 
