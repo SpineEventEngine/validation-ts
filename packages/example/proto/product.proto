@@ -1,3 +1,28 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 syntax = "proto3";
 
 package example;
@@ -5,114 +30,91 @@ package example;
 import "google/protobuf/timestamp.proto";
 import "spine/options.proto";
 
-// Product message representing a product entity with validation constraints
 message Product {
-  // Product ID - required and set once
-  string id = 1 [(required) = true,
-                 (set_once) = true,
-                 (pattern).regex = "^prod-[0-9]+$",
-                 (pattern).error_msg = "Product ID must follow format 'prod-XXX'. Provided: `{value}`."];
+    string id = 1 [(required) = true,
+                   (pattern).regex = "^prod-[0-9]+$",
+                   (pattern).error_msg = "Product ID must follow format 'prod-XXX'. Provided: `{value}`."];
 
-  // Product name - required
-  string name = 2 [(required) = true,
-                   (if_missing).error_msg = "Product name is required."];
+    string name = 2 [(required) = true,
+                     (if_missing).error_msg = "Product name is required."];
 
-  // Product description - optional
-  string description = 3;
+    string description = 3;
 
-  // Product price - must be positive
-  double price = 4 [(required) = true,
-                    (min).value = "0.01",
-                    (min).error_msg = "Price must be at least {other}. Provided: {value}."];
+    double price = 4 [(required) = true,
+                      (min).value = "0.01",
+                      (min).error_msg = "Price must be at least {other}. Provided: {value}."];
 
-  // Stock quantity - must be non-negative
-  int32 stock = 5 [(min).value = "0",
-                   (range) = "[0..1000000)"];
+    int32 stock = 5 [(min).value = "0",
+                     (range) = "[0..1000000)"];
 
-  // Creation timestamp - required
-  google.protobuf.Timestamp created_at = 6 [(required) = true];
+    google.protobuf.Timestamp created_at = 6 [(required) = true];
 
-  // Category - required and validated
-  Category category = 7 [(required) = true,
-                         (validate) = true,
-                         (if_invalid).error_msg = "Category is invalid."];
+    Category category = 7 [(required) = true,
+                           (validate) = true,
+                           (if_invalid).error_msg = "Category is invalid."];
 
-  // Display settings - demonstrates "goes" option
-  // Text color can only be set when highlight color is set, and vice versa
-  Color text_color = 8 [(goes).with = "highlight_color"];
-  Color highlight_color = 9 [(goes).with = "text_color"];
+    // Display settings, demonstrates "goes" option.
+    // Text color can only be set when highlight color is set, and vice versa.
+    Color text_color = 8 [(goes).with = "highlight_color"];
+    Color highlight_color = 9 [(goes).with = "text_color"];
 }
 
-// Color message for display settings
 message Color {
-  int32 red = 1 [(range) = "[0..255]"];
-  int32 green = 2 [(range) = "[0..255]"];
-  int32 blue = 3 [(range) = "[0..255]"];
+    int32 red = 1 [(range) = "[0..255]"];
+    int32 green = 2 [(range) = "[0..255]"];
+    int32 blue = 3 [(range) = "[0..255]"];
 }
 
-// Category message with validation
 message Category {
-  // Category ID - must be positive
-  int32 id = 1 [(required) = true,
-                (min).value = "1"];
+    int32 id = 1 [(required) = true,
+                  (min).value = "1"];
 
-  // Category name - required
-  string name = 2 [(required) = true];
+    string name = 2 [(required) = true];
 }
 
-// Payment method demonstrating is_required oneof option
 message PaymentMethod {
-  oneof method {
-    option (is_required) = true;
+    oneof method {
+        option (is_required) = true;
 
-    // Money is provided from a payment card that has this number
-    PaymentCardNumber payment_card = 1 [(validate) = true];
+        PaymentCardNumber payment_card = 1 [(validate) = true];
 
-    // Money is provided from this bank account
-    BankAccount bank_account = 2 [(validate) = true];
-  }
+        BankAccount bank_account = 2 [(validate) = true];
+    }
 }
 
-// Payment card number with validation
 message PaymentCardNumber {
-  string number = 1 [(required) = true,
-                     (pattern).regex = "^[0-9]{13,19}$",
-                     (pattern).error_msg = "Card number must be 13-19 digits."];
-  int32 expiry_month = 2 [(required) = true,
-                          (range) = "[1..12]"];
-  int32 expiry_year = 3 [(required) = true,
-                         (min).value = "2024"];
+    string number = 1 [(required) = true,
+                       (pattern).regex = "^[0-9]{13,19}$",
+                       (pattern).error_msg = "Card number must be 13-19 digits."];
+    int32 expiry_month = 2 [(required) = true,
+                            (range) = "[1..12]"];
+    int32 expiry_year = 3 [(required) = true,
+                           (min).value = "2024"];
 }
 
-// Bank account with validation
 message BankAccount {
-  string account_number = 1 [(required) = true,
-                             (pattern).regex = "^[0-9]{8,17}$"];
-  string routing_number = 2 [(required) = true,
-                             (pattern).regex = "^[0-9]{9}$"];
+    string account_number = 1 [(required) = true,
+                               (pattern).regex = "^[0-9]{8,17}$"];
+    string routing_number = 2 [(required) = true,
+                               (pattern).regex = "^[0-9]{9}$"];
 }
 
-// Request message for listing products with pagination
 message ListProductsRequest {
-  // Page number - must be positive
-  int32 page = 1 [(required) = true,
-                  (min).value = "1",
-                  (if_missing).error_msg = "Page number is required."];
+    int32 page = 1 [(required) = true,
+                    (min).value = "1",
+                    (if_missing).error_msg = "Page number is required."];
 
-  // Page size - must be between 1 and 100
-  int32 page_size = 2 [(required) = true,
-                       (range) = "[1..100]",
-                       (if_missing).error_msg = "Page size is required."];
+    int32 page_size = 2 [(required) = true,
+                         (range) = "[1..100]",
+                         (if_missing).error_msg = "Page size is required."];
 
-  // Optional search query
-  string search_query = 3;
+    // Optional search query.
+    string search_query = 3;
 }
 
-// Response message for listing products
 message ListProductsResponse {
-  // List of products with validation enabled
-  repeated Product products = 1 [(validate) = true];
+    // List of products with the nested validation enabled.
+    repeated Product products = 1 [(validate) = true];
 
-  // Total count - must be non-negative
-  int32 total_count = 2 [(min).value = "0"];
+    int32 total_count = 2 [(min).value = "0"];
 }
