@@ -1,6 +1,6 @@
-# Spine Validation TypeScript
+# Spine Validation for TypeScript
 
-> Runtime validation for Protobuf messages with [Spine Event Engine](https://spine.io/) validation constraints.
+_Runtime validation for Protobuf messages with [Spine Event Engine](https://spine.io/) Validation constraints._
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Protobuf-ES](https://img.shields.io/badge/protobuf--es-v2-green.svg)](https://github.com/bufbuild/protobuf-es)
@@ -11,11 +11,12 @@ A TypeScript validation library for Protobuf messages using Spine validation opt
 
 ## 💡 Why Use This?
 
-### For Spine Event Engine Users
+### For Spine Event Engine users
 
 **You already have validation rules in your backend.** Now bring them to your TypeScript/JavaScript frontend with zero duplication!
 
-If you're using [Spine Event Engine](https://spine.io/) with its Validation library on the server side, your Protobuf messages already have validation constraints defined using Spine options like `(required)`, `(pattern)`, `(min)`, `(max)`, etc.
+If you're using the [Validation library](https://github.com/SpineEventEngine/validation/) on the server side, 
+your Protobuf messages already have validation constraints defined using Spine options like `(required)`, `(pattern)`, `(min)`, `(max)`, etc.
 
 **This library lets you:**
 - ✅ **Reuse the same validation rules** in your frontend that you defined in your backend.
@@ -26,7 +27,7 @@ If you're using [Spine Event Engine](https://spine.io/) with its Validation libr
 
 **No code duplication. No maintenance burden. Just add this library and validate.**
 
-### For New Users
+### For new users
 
 Even if you're not using Spine Event Engine, this library provides a powerful way to add runtime validation to your Protobuf-based TypeScript applications:
 
@@ -40,18 +41,18 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 
 ## ✨ Features
 
-**Comprehensive Validation Support:**
+**Comprehensive Validation support:**
 
-- ✅ **`(required)`** - Ensure fields have non-default values.
-- 🔤 **`(pattern)`** - Regex validation for strings.
-- 🔢 **`(min)` / `(max)`** - Numeric bounds with inclusive/exclusive support.
-- 📊 **`(range)`** - Bounded ranges with bracket notation `[min..max]`.
-- 🔁 **`(distinct)`** - Enforce uniqueness in repeated fields.
-- 🏗️ **`(validate)`** - Recursive nested message validation.
-- 🔗 **`(goes)`** - Field dependency constraints.
-- 🎯 **`(required_field)`** - Complex required field combinations with boolean logic.
+-  **`(required)`** - Ensure fields have non-default values.
+-  **`(pattern)`** - Regex validation for strings.
+-  **`(min)` / `(max)`** - Numeric bounds with inclusive/exclusive support.
+-  **`(range)`** - Bounded ranges with bracket notation `[min..max]`.
+-  **`(distinct)`** - Enforce uniqueness in repeated fields.
+- ️ **`(validate)`** - Recursive nested message validation.
+-  **`(goes)`** - Field dependency constraints.
+-  **`(required_field)`** - Complex required field combinations with boolean logic.
 
-**Developer Experience:**
+**Developer experience:**
 
 - 🚀 Full TypeScript type safety.
 - 📝 Custom error messages.
@@ -59,7 +60,7 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 - 📚 Extensive documentation.
 - 🎨 Clean, readable error formatting.
 
-### ⚠️ Known Limitations
+### ⚠️ Known limitations
 
 - **`(set_once)`** - Not currently supported. This option requires state tracking across multiple validations, which is outside the scope of single-message validation. If you need this feature, please [open an issue](../../issues).
 
@@ -135,9 +136,9 @@ validation-ts/
 ├── packages/
 │   ├── spine-validation-ts/     # 📦 Main validation package
 │   │   ├── src/                 # Source code
-│   │   ├── tests/               # 223 comprehensive tests
-│   │   ├── proto/               # Spine validation proto definitions
-│   │   └── README.md            # Full package documentation
+│   │   ├── tests/               # Tests
+│   │   ├── proto/               # Spine proto definitions
+│   │   └── README.md            # The package documentation
 │   │
 │   └── example/                 # 🎯 Example project
 │       ├── proto/               # Example proto files
@@ -146,14 +147,6 @@ validation-ts/
 │
 └── README.md                    # You are here
 ```
-
----
-
-## 🎓 Documentation
-
-- **[Package README](packages/spine-validation-ts/README.md)** - Complete API documentation and usage guide.
-- **[Descriptor API Guide](packages/spine-validation-ts/DESCRIPTOR_API_GUIDE.md)** - Working with message and field descriptors.
-- **[Quick Reference](packages/spine-validation-ts/QUICK_REFERENCE.md)** - Cheat sheet for common operations.
 
 ---
 
@@ -170,7 +163,7 @@ cd validation-ts
 npm install
 ```
 
-### Build & Test
+### Build & test
 
 ```bash
 # Build the validation package
@@ -183,7 +176,7 @@ npm test
 npm run example
 ```
 
-### Workspace Scripts
+### Workspace scripts
 
 | Command | Description |
 |---------|-------------|
@@ -195,7 +188,7 @@ npm run example
 
 ## 📋 Validation Options Reference
 
-### Field-Level Options
+### Field-level options
 
 | Option | Description | Example |
 |--------|-------------|---------|
@@ -209,13 +202,13 @@ npm run example
 | `(if_invalid)` | Custom error for nested validation. | `[(if_invalid).error_msg = "Invalid address"]` |
 | `(goes)` | Field dependency. | `[(goes).with = "other_field"]` |
 
-### Message-Level Options
+### Message-level options
 
 | Option | Description | Example |
 |--------|-------------|---------|
 | `(required_field)` | Required field combinations. | `option (required_field) = "id \| email";` |
 
-### Not Supported
+### Not supported
 
 | Option | Status | Notes |
 |--------|--------|-------|
@@ -233,31 +226,6 @@ The package includes comprehensive test coverage:
 - **Edge cases** and real-world scenarios.
 - **100% coverage** of validation logic.
 
-Test suites:
-- Basic validation.
-- Required fields.
-- Pattern matching.
-- Min/Max constraints.
-- Range validation.
-- Distinct elements.
-- Nested validation.
-- Field dependencies (goes).
-- Required field combinations.
-- Integration scenarios.
-
----
-
-## 📝 Example Output
-
-When validation fails, you get clear, actionable error messages:
-
-```
-Validation failed:
-1. User.name: A value must be set.
-2. User.email: Email must be valid. Provided: `invalid-email`.
-3. User.age: Value must be at least 0. Provided: -5.
-4. User.tags: Values must be distinct. Duplicates found: ["test"].
-```
 
 ---
 
@@ -277,7 +245,7 @@ The validation system is built with extensibility in mind:
 
 Contributions are welcome! Please ensure:
 
-1. All tests pass: `npm test`.
+1. All tests pass: `npm run test`.
 2. Code follows existing patterns.
 3. New features include tests.
 4. Documentation is updated.
@@ -287,14 +255,6 @@ Contributions are welcome! Please ensure:
 ## 📄 License
 
 Apache 2.0.
-
----
-
-## 🔗 Related Projects
-
-- [Spine Event Engine](https://spine.io/) - Event-driven framework for CQRS/ES applications.
-- [Protobuf-ES](https://github.com/bufbuild/protobuf-es) - Protocol Buffers for ECMAScript.
-- [Buf](https://buf.build/) - Modern Protobuf tooling.
 
 ---
 
