@@ -1,7 +1,7 @@
 {
   "name": "@spine-event-engine/validation-ts",
   "version": "2.0.0-snapshot.1",
-  "description": "TypeScript validation library for Protobuf messages with Spine validation options",
+  "description": "TypeScript validation library for Protobuf messages with Spine Validation options",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
