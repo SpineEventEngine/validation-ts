@@ -37,7 +37,7 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 - **`(min)` / `(max)`** — Numeric bounds with inclusive/exclusive support.
 - **`(range)`** — Bounded ranges with bracket notation `(min..max]`.
 - **`(distinct)`** — Enforce uniqueness in repeated fields.
-- **``(`validate)`** — Recursive nested message validation.
+- **`(validate)`** — Recursive nested message validation.
 - **`(goes)`** — Field dependency constraints.
 - **`(require)`** — Complex required field combinations with boolean logic.
 - **`(choice)`** — Require that a oneof group has at least one field set.
