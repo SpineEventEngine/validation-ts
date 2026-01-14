@@ -32,7 +32,23 @@
 
 import {create} from '@bufbuild/protobuf';
 import {UserSchema, Role} from './generated/user_pb.js';
-import {validate, formatViolations} from '@spine-event-engine/validation-ts';
+import {validate, Violations} from '@spine-event-engine/validation-ts';
+
+/**
+ * Helper function to display violations in a readable format.
+ */
+function displayViolations(violations: any[]): void {
+    if (violations.length === 0) {
+        console.log('✓ No violations - message is valid!');
+        return;
+    }
+
+    violations.forEach((v, i) => {
+        const fieldPath = Violations.failurePath(v);
+        const message = Violations.formatMessage(v);
+        console.log(`${i + 1}. ${v.typeName}.${fieldPath}: ${message}`);
+    });
+}
 
 console.log('=== Spine Validation Example ===\n');
 
@@ -49,7 +65,7 @@ const validUser = create(UserSchema, {
 
 const validUserViolations = validate(UserSchema, validUser);
 console.log('Violations:', validUserViolations.length);
-console.log(formatViolations(validUserViolations));
+displayViolations(validUserViolations);
 console.log();
 
 // Example 2: Invalid user - missing required email
@@ -65,7 +81,7 @@ const invalidUser1 = create(UserSchema, {
 
 const violations1 = validate(UserSchema, invalidUser1);
 console.log('Violations:', violations1.length);
-console.log(formatViolations(violations1));
+displayViolations(violations1);
 console.log();
 
 // Example 3: Invalid user - missing required name
@@ -81,7 +97,7 @@ const invalidUser2 = create(UserSchema, {
 
 const violations2 = validate(UserSchema, invalidUser2);
 console.log('Violations:', violations2.length);
-console.log(formatViolations(violations2));
+displayViolations(violations2);
 console.log();
 
 // Example 4: Multiple violations
@@ -97,7 +113,7 @@ const invalidUser3 = create(UserSchema, {
 
 const violations3 = validate(UserSchema, invalidUser3);
 console.log('Violations:', violations3.length);
-console.log(formatViolations(violations3));
+displayViolations(violations3);
 console.log();
 
 // Example 5: Pattern validation - invalid name format
@@ -113,7 +129,7 @@ const invalidPattern1 = create(UserSchema, {
 
 const violations4 = validate(UserSchema, invalidPattern1);
 console.log('Violations:', violations4.length);
-console.log(formatViolations(violations4));
+displayViolations(violations4);
 console.log();
 
 // Example 6: Pattern validation - invalid email format
@@ -129,7 +145,7 @@ const invalidPattern2 = create(UserSchema, {
 
 const violations5 = validate(UserSchema, invalidPattern2);
 console.log('Violations:', violations5.length);
-console.log(formatViolations(violations5));
+displayViolations(violations5);
 console.log();
 
 // Example 7: Multiple validation types
@@ -146,8 +162,8 @@ const multipleInvalid = create(UserSchema, {
 const violations6 = validate(UserSchema, multipleInvalid);
 console.log('Violations:', violations6.length);
 violations6.forEach((v, i) => {
-    const fieldPath = v.fieldPath?.fieldName.join('.') || 'unknown';
-    const message = v.message?.withPlaceholders || 'No message';
+    const fieldPath = Violations.failurePath(v);
+    const message = Violations.formatMessage(v);
     console.log(`${i + 1}. Field "${fieldPath}": ${message}`);
 });
 console.log();

@@ -162,3 +162,58 @@ export function formatViolations(violations: ConstraintViolation[]): string {
         return `${index + 1}. ${v.typeName}.${fieldPath}: ${message}`;
     }).join('\n');
 }
+
+/**
+ * Utility object for working with constraint violations.
+ *
+ * Provides helper methods to extract formatted information from `ConstraintViolation` objects.
+ *
+ * @example
+ * ```typescript
+ * const violations = validate(UserSchema, user);
+ * violations.forEach(v => {
+ *     const path = Violations.failurePath(v);
+ *     const message = Violations.formatMessage(v);
+ *     console.error(`${v.typeName}.${path}: ${message}`);
+ * });
+ * ```
+ */
+export const Violations = {
+    /**
+     * Returns the formatted error message from a violation with all placeholders replaced.
+     *
+     * Placeholders in the error message (e.g., `${field}`, `${value}`) are substituted
+     * with their corresponding values from the violation context.
+     *
+     * @param violation The constraint violation to format.
+     * @returns The formatted error message, or 'Validation failed' if no message is present.
+     *
+     * @example
+     * ```typescript
+     * const message = Violations.formatMessage(violation);
+     * // Returns: "Email must be valid. Provided: `invalid@`."
+     * ```
+     */
+    formatMessage(violation: ConstraintViolation): string {
+        return violation.message ? formatTemplateString(violation.message) : 'Validation failed';
+    },
+
+    /**
+     * Returns the field path from a violation as a dot-separated string.
+     *
+     * Converts the field path array (e.g., `['user', 'email']`) into a single
+     * dot-separated string (e.g., `'user.email'`).
+     *
+     * @param violation The constraint violation.
+     * @returns The field path as a string, or 'unknown' if no field path is present.
+     *
+     * @example
+     * ```typescript
+     * const path = Violations.failurePath(violation);
+     * // Returns: "user.email"
+     * ```
+     */
+    failurePath(violation: ConstraintViolation): string {
+        return violation.fieldPath?.fieldName.join('.') || 'unknown';
+    }
+} as const;

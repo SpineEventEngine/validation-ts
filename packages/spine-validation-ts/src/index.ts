@@ -34,9 +34,16 @@
 
 export {
     validate,
-    formatTemplateString,
-    formatViolations
+    formatViolations,
+    Violations
 } from './validation';
+
+/**
+ * Internal utility function for formatting template strings.
+ * End-users typically don't need to use this directly. Use `Violations.formatMessage()` instead.
+ * @internal
+ */
+export { formatTemplateString } from './validation';
 
 export type {
     ConstraintViolation,

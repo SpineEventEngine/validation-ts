@@ -1,11 +1,7 @@
 # Spine Validation — TypeScript Client Library
 
-> Runtime validation in TypeScript for Protobuf messages with [Spine Event Engine](https://spine.io/) Validation.
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Protobuf-ES](https://img.shields.io/badge/protobuf--es-v2-green.svg)](https://github.com/bufbuild/protobuf-es)
-
-A TypeScript validation library for Protobuf messages using Spine validation options, built on [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2).
+A TypeScript validation library for Protobuf messages using [Spine Validation](https://github.com/SpineEventEngine/validation/) options, 
+built on [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2).
 
 ---
 
@@ -13,11 +9,8 @@ A TypeScript validation library for Protobuf messages using Spine validation opt
 
 ### For Spine Event Engine Users
 
-**You already have validation rules in your backend.** Now bring them to your TypeScript/JavaScript frontend with zero duplication!
+This library lets you:
 
-If you're using [Spine Event Engine](https://spine.io/) with its Validation library on the server side, your Protobuf messages already have validation constraints defined using Spine options like `(required)`, `(pattern)`, `(min)`, `(max)`, etc.
-
-**This library lets you:**
 - ✅ **Reuse the same validation rules** in your frontend that you defined in your backend.
 - ✅ **Maintain a single source of truth** - validation logic lives in your `.proto` files.
 - ✅ **Keep frontend and backend validation in sync** automatically.
@@ -38,7 +31,7 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 
 ## ✨ Features
 
-**Comprehensive Validation Support:**
+**Comprehensive Validation Support**
 
 - **`(required)`** - Ensure fields have non-default values.
 - **`(pattern)`** - Regex validation for strings.
@@ -50,7 +43,7 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 - **`(require)`** - Complex required field combinations with boolean logic.
 - **`(choice)`** - Require that a oneof group has at least one field set.
 
-**Developer Experience:**
+**Developer Experience**
 
 - 🚀 Full TypeScript type safety.
 - 📝 Custom error messages.
@@ -67,15 +60,38 @@ which is outside the scope of single-message validation.
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+This library requires:
+- **[Buf](https://buf.build/)** for Protobuf code generation
+- **[@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es)** (Protobuf-ES v2) for TypeScript/JavaScript runtime
+
+Your TypeScript code must be generated using Buf's Protobuf-ES code generator (`@bufbuild/protoc-gen-es`). 
+This library is specifically designed to work with Buf-generated TypeScript code and will not work out-of-the-box
+with other Protobuf code generators.
+
 ### Installation
 
 ```bash
 npm install @spine-event-engine/validation-ts @bufbuild/protobuf
 ```
 
-### Basic Usage
+### Usage Guide
 
-**Step 1:** Define validation options in your `.proto` file:
+#### Step 1: Configure Buf for code generation
+
+Create a `buf.gen.yaml` file in your project root:
+
+```yaml
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/es:v2.2.3
+    out: src/generated
+```
+
+#### Step 2: Define validation in your Proto files
+
+Create your `.proto` file with Spine validation options:
 
 ```protobuf
 syntax = "proto3";
@@ -100,27 +116,37 @@ message User {
 }
 ```
 
-**Step 2:** Use validation in TypeScript
+#### Step 3: Generate TypeScript code
+
+Run Buf to generate TypeScript code from your proto files:
+
+```bash
+buf generate
+```
+
+This generates TypeScript schemas in `src/generated/` that include all validation metadata.
+
+#### Step 4: Use Validation library in your TypeScript code
 
 ```typescript
 import { create } from '@bufbuild/protobuf';
-import { validate, formatViolations } from '@spine-event-engine/validation-ts';
+import { validate, Violations } from '@spine-event-engine/validation-ts';
 import { UserSchema } from './generated/user_pb';
 
-// Create a message
 const user = create(UserSchema, {
-    name: '',   // Missing required field
-    email: 'invalid-email'  // Invalid pattern
+    name: '',   // Missing required field.
+    email: 'invalid-email'  // Invalid pattern.
 });
 
-// Validate
 const violations = validate(UserSchema, user);
 
 if (violations.length > 0) {
-    console.log(formatViolations(violations));
-    // Output:
-    // 1. User.name: A value must be set.
-    // 2. User.email: Email must be valid. Provided: `invalid-email`.
+    violations.forEach(violation => {
+        const fieldPath = Violations.failurePath(violation);
+        const message = Violations.formatMessage(violation);
+
+        console.error(`${violation.typeName}.${fieldPath}: ${message}`);
+    });
 }
 ```
 
@@ -255,16 +281,28 @@ Test suites:
 
 ---
 
-## 📝 Example Output
+## 📝 Working with Violations
 
-When validation fails, you get clear, actionable error messages:
+When validation fails, you can access detailed information from each violation:
 
-```
-Validation failed:
-1. User.name: A value must be set.
-2. User.email: Email must be valid. Provided: `invalid-email`.
-3. User.age: Value must be at least 0. Provided: -5.
-4. User.tags: Values must be distinct. Duplicates found: ["test"].
+```typescript
+import { validate, Violations } from '@spine-event-engine/validation-ts';
+
+const violations = validate(UserSchema, user);
+
+violations.forEach(violation => {
+    // Use Violations utility object for easy access to violation details
+    const field = Violations.failurePath(violation);
+    const message = Violations.formatMessage(violation);
+
+    console.error(`${violation.typeName}.${field}: ${message}`);
+
+    // Example outputs:
+    // "User.name: A value must be set."
+    // "User.email: Email must be valid. Provided: `invalid-email`."
+    // "User.age: Value must be at least 0. Provided: -5."
+    // "User.tags: Values must be distinct. Duplicates found: [\"test\"]."
+});
 ```
 
 ---
@@ -313,3 +351,6 @@ Apache 2.0.
 [Documentation](packages/spine-validation-ts/README.md) · [Examples](packages/example) · [Report Bug](../../issues)
 
 </div>
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Protobuf-ES](https://img.shields.io/badge/protobuf--es-v2-green.svg)](https://github.com/bufbuild/protobuf-es)
