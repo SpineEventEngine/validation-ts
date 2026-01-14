@@ -20,8 +20,13 @@
     "typescript",
     "protobuf-es"
   ],
-  "author": "",
+  "author": "Spine Event Engine team <developers@spine.io>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SpineEventEngine/validation-ts.git",
+    "directory": "packages/validation-ts"
+  },
   "peerDependencies": {
     "@bufbuild/protobuf": "^2.10.2"
   },
