@@ -1,0 +1,124 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.minmax_suite;
+
+// Test messages for the `(min)` and `(max)` validation options.
+//
+// This file contains test cases for numeric range validation using minimum and
+// maximum constraints. Supports inclusive/exclusive bounds, custom error messages,
+// and validation across different numeric types and repeated fields.
+
+import "spine/options.proto";
+
+// Tests basic min constraint (inclusive by default).
+message MinValue {
+    int32 positive_id = 1 [(min).value = "1"];
+    int32 non_negative = 2 [(min).value = "0"];
+    double price = 3 [(min).value = "0.01"];
+}
+
+// Tests basic max constraint (inclusive by default).
+message MaxValue {
+    int32 percentage = 1 [(max).value = "100"];
+    double altitude = 2 [(max).value = "8848.86"];
+    int64 year = 3 [(max).value = "2100"];
+}
+
+// Tests combined min and max constraints.
+message MinMaxRange {
+    int32 age = 1 [(min).value = "0", (max).value = "150"];
+    double temperature = 2 [(min).value = "-273.15", (max).value = "1000.0"];
+    int32 percentage = 3 [(min).value = "0", (max).value = "100"];
+}
+
+// Tests exclusive bounds.
+message ExclusiveBounds {
+    double positive_value = 1 [(min) = {
+        value: "0.0",
+        exclusive: true
+    }];
+    double temperature_kelvin = 2 [(min) = {
+        value: "0.0",
+        exclusive: true,
+        error_msg: "Temperature cannot reach {other}K, but provided {value}."
+    }];
+    int32 below_limit = 3 [(max) = {
+        value: "100",
+        exclusive: true
+    }];
+}
+
+// Tests custom error messages.
+message CustomErrorMessages {
+    int32 age = 1 [(min) = {
+        value: "18",
+        error_msg: "Must be at least {other} years old. Provided: {value}."
+    }];
+    double balance = 2 [(min) = {
+        value: "0.01",
+        error_msg: "Balance must be at least ${other}. Current: ${value}."
+    }, (max) = {
+        value: "1000000.0",
+        error_msg: "Balance cannot exceed ${other}. Current: ${value}."
+    }];
+}
+
+// Tests min/max validation across different numeric types.
+message NumericTypes {
+    int32 int32_field = 1 [(min).value = "0", (max).value = "2147483647"];
+    int64 int64_field = 2 [(min).value = "0"];
+    uint32 uint32_field = 3 [(max).value = "4294967295"];
+    uint64 uint64_field = 4 [(min).value = "1"];
+    float float_field = 5 [(min).value = "0.0", (max).value = "100.0"];
+    double double_field = 6 [(min).value = "-1000.0", (max).value = "1000.0"];
+}
+
+// Tests min/max validation on repeated fields.
+message RepeatedMinMax {
+    repeated int32 scores = 1 [(min).value = "0", (max).value = "100"];
+    repeated double prices = 2 [(min).value = "0.01"];
+}
+
+// Tests combined required and min/max constraints.
+message CombinedConstraints {
+    int32 product_id = 1 [(required) = true, (min).value = "1"];
+    double price = 2 [
+        (required) = true,
+        (min) = {
+            value: "0.01",
+            error_msg: "Price must be at least {other}."
+        }
+    ];
+    int32 stock = 3 [(min).value = "0"];
+}
+
+// Tests optional fields with min/max constraints.
+message OptionalMinMax {
+    int32 optional_count = 1 [(min).value = "1"];
+    double optional_rating = 2 [(max).value = "5.0"];
+}

@@ -1,0 +1,99 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.requiredfield_suite;
+
+// Test messages for the `(require)` message-level validation option.
+//
+// This file contains test cases for the `(require)` constraint that
+// requires specific combinations of fields using boolean logic (OR, AND, and
+// parentheses for grouping). The constraint is specified at the message level.
+
+import "spine/options.proto";
+
+// Tests simple OR logic: at least one field must be set.
+message UserIdentifier {
+    option (require).fields = "id | email";
+
+    int32 id = 1;
+    string email = 2;
+}
+
+// Tests AND logic: both fields must be set together.
+message ContactInfo {
+    option (require).fields = "phone & country_code";
+
+    string phone = 1;
+    string country_code = 2;
+}
+
+// Tests complex OR with AND groups.
+message PersonName {
+    option (require).fields = "given_name | (honorific_prefix & family_name)";
+
+    string honorific_prefix = 1;
+    string given_name = 2;
+    string middle_name = 3;
+    string family_name = 4;
+    string honorific_suffix = 5;
+}
+
+// Tests multiple OR alternatives.
+message PaymentMethod {
+    option (require).fields = "credit_card | bank_account | paypal_email";
+
+    string credit_card = 1;
+    string bank_account = 2;
+    string paypal_email = 3;
+}
+
+// Tests multiple AND requirements.
+message ShippingAddress {
+    option (require).fields = "street & city & postal_code & country";
+
+    string street = 1;
+    string city = 2;
+    string postal_code = 3;
+    string country = 4;
+    string state = 5;
+}
+
+// Tests complex nested logic with grouping.
+message AccountCreation {
+    option (require).fields = "(username & password) | oauth_token";
+
+    string username = 1;
+    string password = 2;
+    string oauth_token = 3;
+}
+
+// Tests message without required_field constraint (all fields optional).
+message OptionalData {
+    string field1 = 1;
+    string field2 = 2;
+    int32 field3 = 3;
+}

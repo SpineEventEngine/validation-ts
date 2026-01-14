@@ -1,0 +1,35 @@
+name: Publish to NPM
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish:
+    name: Publish Package to NPM
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read      # Read repository code
+      id-token: write     # Generate OIDC token for npm authentication
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build validation package
+        run: npm run build --workspace=@spine-event-engine/validation-ts
+        # This runs: buf generate → patch → tsc (via prepublishOnly)
+
+      - name: Publish to npm with provenance
+        run: npm publish --workspace=@spine-event-engine/validation-ts --provenance --access public

@@ -1,0 +1,146 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.goes_suite;
+
+// Test messages for the `(goes)` field dependency validation option.
+//
+// This file contains test cases for the `(goes)` constraint that enforces field
+// dependencies. A field with `(goes).with = "other_field"` can only be set if
+// the referenced field is also set.
+
+import "spine/options.proto";
+
+// Tests basic goes constraint.
+message ScheduledEvent {
+    string event_name = 1 [(required) = true];
+    string date = 2;
+    string time = 3 [(goes).with = "date"];
+}
+
+// Tests custom error message via `(goes).error_msg`.
+message ShippingDetails {
+    string address = 1;
+    string tracking_number = 2 [
+        (goes).with = "address",
+        (goes).error_msg = "Tracking number requires a shipping address: {value}."
+    ];
+}
+
+// Tests mutual dependencies (bidirectional).
+message ColorSettings {
+    string text_color = 1 [(goes).with = "highlight_color"];
+    string highlight_color = 2 [(goes).with = "text_color"];
+}
+
+// Tests multiple independent goes constraints.
+message PaymentInfo {
+    string cardholder_name = 1;
+    string card_number = 2 [(goes).with = "cardholder_name"];
+    string cvv = 3 [(goes).with = "card_number"];
+    int32 expiry_month = 4 [(goes).with = "card_number"];
+}
+
+// Tests goes constraint on different field types.
+message ProfileSettings {
+    string username = 1;
+    int32 display_id = 2 [(goes).with = "username"];
+    bool is_verified = 3 [(goes).with = "username"];
+    double rating = 4 [(goes).with = "username"];
+}
+
+// Tests goes constraint on message field type.
+message DocumentMetadata {
+    string title = 1;
+    Timestamp created_at = 2 [(goes).with = "title"];
+}
+
+message Timestamp {
+    int64 seconds = 1;
+    int32 nanos = 2;
+}
+
+// Tests goes combined with pattern constraints.
+message SecureAccount {
+    // Must be 3-20 characters containing only letters, numbers, and underscores.
+    string username = 1 [(required) = true, (pattern).regex = "^[a-zA-Z0-9_]{3,20}$"];
+    // Must be at least 8 characters long.
+    string password = 2 [
+        (required) = true,
+        (pattern).regex = "^.{8,}$"
+    ];
+    // If provided, must be a valid email address (basic format validation).
+    string recovery_email = 3 [(pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"];
+    string recovery_phone = 4 [(goes).with = "recovery_email"];
+}
+
+// Tests message without goes constraint.
+message SimpleConfig {
+    string primary_option = 1;
+    string secondary_option = 2;
+}
+
+// Tests goes constraint with enum field.
+message FeatureFlags {
+    FeatureLevel level = 1;
+    string custom_config = 2 [(goes).with = "level"];
+}
+
+enum FeatureLevel {
+    FEATURE_LEVEL_UNSPECIFIED = 0;
+    FEATURE_LEVEL_BASIC = 1;
+    FEATURE_LEVEL_ADVANCED = 2;
+    FEATURE_LEVEL_PREMIUM = 3;
+}
+
+// Tests chain dependencies.
+message ReportGeneration {
+    string report_type = 1;
+    string output_format = 2 [(goes).with = "report_type"];
+    string email_recipient = 3 [(goes).with = "report_type"];
+    string schedule = 4 [(goes).with = "output_format"];
+}
+
+// Tests goes constraint on optional fields.
+message OptionalSettings {
+    string base_url = 1;
+    int32 port = 2 [(goes).with = "base_url"];
+    string path = 3 [(goes).with = "base_url"];
+}
+
+// Tests goes combined with min/max/range constraints.
+message AdvancedConfig {
+    string config_name = 1;
+    int32 max_connections = 2 [
+        (goes).with = "config_name",
+        (range).value = "[1..1000]"
+    ];
+    double timeout_seconds = 3 [
+        (goes).with = "config_name",
+        (min).value = "0.1"
+    ];
+}

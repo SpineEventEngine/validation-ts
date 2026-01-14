@@ -1,0 +1,66 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package example;
+
+import "spine/options.proto";
+
+message User {
+    option (required_field) = "id | email";
+
+    int32 id = 1 [(min).value = "1"];
+
+    string name = 2 [(required) = true,
+                     (pattern).regex = "^[A-Za-z][A-Za-z0-9 ]{1,49}$",
+                     (pattern).error_msg = "Name must start with a letter and be 2-50 characters. Provided: `{value}`."];
+
+    string email = 3 [(required) = true,
+                      (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+                      (pattern).error_msg = "Email must be valid. Provided: `{value}`."];
+
+    Role role = 4 [(required) = true];
+
+    repeated string tags = 5 [(distinct) = true];
+}
+
+enum Role {
+    ROLE_UNSPECIFIED = 0;
+    ROLE_USER = 1;
+    ROLE_ADMIN = 2;
+    ROLE_MODERATOR = 3;
+}
+
+message GetUserRequest {
+    int32 user_id = 1 [(required) = true,
+                       (min).value = "1",
+                       (if_missing).error_msg = "User ID is required."];
+}
+
+message GetUserResponse {
+    User user = 1 [(validate) = true];
+    bool found = 2;
+}

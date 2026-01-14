@@ -1,0 +1,115 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.distinct_suite;
+
+// Test messages for the `(distinct)` validation option.
+//
+// This file contains test cases for uniqueness validation on repeated fields.
+// The `(distinct)` constraint ensures all elements in a repeated field are unique.
+
+import "spine/options.proto";
+
+// Tests distinct constraint on primitive types.
+message DistinctPrimitives {
+    repeated int32 numbers = 1 [(distinct) = true];
+    repeated string tags = 2 [(distinct) = true];
+    repeated double scores = 3 [(distinct) = true];
+    repeated bool flags = 4 [(distinct) = true];
+}
+
+// Tests distinct constraint on enum values.
+message DistinctEnums {
+    repeated Status statuses = 1 [(distinct) = true];
+}
+
+enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_ACTIVE = 1;
+    STATUS_INACTIVE = 2;
+    STATUS_PENDING = 3;
+}
+
+// Tests repeated fields without distinct constraint.
+message NonDistinctFields {
+    repeated int32 numbers = 1;
+    repeated string tags = 2;
+}
+
+// Tests distinct combined with other constraints.
+message CombinedConstraints {
+    repeated int32 product_ids = 1 [
+        (distinct) = true,
+        (range).value = "[1..999999]"
+    ];
+    // Each email must be a valid email address (basic format validation).
+    repeated string emails = 2 [
+        (distinct) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+    repeated int32 scores = 3 [
+        (distinct) = true,
+        (min).value = "0",
+        (max).value = "100"
+    ];
+}
+
+// Tests distinct on optional repeated fields.
+message OptionalDistinct {
+    repeated int32 optional_numbers = 1 [(distinct) = true];
+    repeated string optional_tags = 2 [(distinct) = true];
+}
+
+// Tests distinct for user profile with unique tags.
+message UserProfile {
+    string username = 1 [(required) = true];
+    repeated string tags = 2 [(distinct) = true];
+    repeated string skills = 3 [(distinct) = true];
+}
+
+// Tests distinct for shopping cart with unique items.
+message ShoppingCart {
+    repeated int32 product_ids = 1 [(distinct) = true];
+    repeated string coupon_codes = 2 [(distinct) = true];
+}
+
+// Tests distinct across different numeric types.
+message DistinctNumericTypes {
+    repeated int32 int32_values = 1 [(distinct) = true];
+    repeated int64 int64_values = 2 [(distinct) = true];
+    repeated uint32 uint32_values = 3 [(distinct) = true];
+    repeated uint64 uint64_values = 4 [(distinct) = true];
+    repeated float float_values = 5 [(distinct) = true];
+    repeated double double_values = 6 [(distinct) = true];
+}
+
+// Tests edge cases for distinct validation.
+message DistinctEdgeCases {
+    repeated string empty_strings = 1 [(distinct) = true];
+    repeated int32 zeros = 2 [(distinct) = true];
+    repeated string case_sensitive = 3 [(distinct) = true];
+}
