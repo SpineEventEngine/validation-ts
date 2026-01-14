@@ -30,7 +30,7 @@ jobs:
 
       - name: Build validation package
         run: npm run build --workspace=@spine-event-engine/validation-ts
-        # This runs: buf generate → patch → tsc (via prepublishOnly)
 
       - name: Perform publishing to NPM registry
-        run: npm publish --workspace=@spine-event-engine/validation-ts
+        # The version is still a `snapshot`, so NPM requires it to be tagged accordingly.
+        run: npm publish --workspace=@spine-event-engine/validation-ts --tag snapshot

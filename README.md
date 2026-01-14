@@ -72,9 +72,20 @@ with other Protobuf code generators.
 
 ### Installation
 
+This package is currently published as a **pre-release (snapshot)** version. 
+Install it using the `@snapshot` dist-tag:
+
 ```bash
-npm install @spine-event-engine/validation-ts @bufbuild/protobuf
+npm install @spine-event-engine/validation-ts@snapshot @bufbuild/protobuf
 ```
+
+To install a specific snapshot version:
+
+```bash
+npm install @spine-event-engine/validation-ts@2.0.0-snapshot.3 @bufbuild/protobuf
+```
+
+> **Note:** This library is in active development and therefore it is published as a snapshot.
 
 ### Usage Guide
 
