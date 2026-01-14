@@ -9,7 +9,6 @@ TypeScript validation library for Protobuf messages with [Spine Validation](http
 - ✅ Custom error messages with placeholder substitution
 - ✅ Type-safe validation with full TypeScript support
 - ✅ Works with [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2)
-- ✅ Comprehensive test coverage (200+ tests)
 
 ## Prerequisites
 
@@ -336,7 +335,7 @@ message PaymentMethod {
 
 ## Testing
 
-The package includes comprehensive test coverage with 200+ tests across 11 test suites:
+The production code is covered at ~80% of statements with 200+ tests across 11 test suites:
 
 - `basic-validation.test.ts` - Basic validation and formatting
 - `required.test.ts` - `(required)` and `(if_missing)` options

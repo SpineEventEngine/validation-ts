@@ -271,13 +271,11 @@ npm run example
 
 ## ✅ Test Coverage
 
-The package includes comprehensive test coverage:
-
 - **200+ tests** across 11 test suites
 - **All validation options** thoroughly tested
 - **Integration tests** combining multiple constraints
 - **Edge cases** and real-world scenarios
-- **100% coverage** of validation logic
+- **~80% statement coverage** of validation logic
 
 Test suites:
 - Basic validation
