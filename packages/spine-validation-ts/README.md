@@ -65,8 +65,8 @@ import { UserSchema } from './generated/user_pb';
 
 // Create a message with validation constraints.
 const user = create(UserSchema, {
-    name: '',  // This field is marked as `(required) = true`.
-    email: ''  // This field is also required.
+    name: '',  // This field is marked as `(required) = true`
+    email: ''  // This field is also required
 });
 
 // Validate the message.
@@ -96,11 +96,11 @@ Validates a Protobuf message against its Spine validation constraints.
 **Returns:** array of `ConstraintViolation` objects (empty if valid)
 
 Each `ConstraintViolation` contains:
-- `typeName`: the message type that failed validation,
-- `fieldPath`: the path to the field that violated the constraint,
-- `message`: the error message with placeholders replaced,
-- `param`: additional parameters related to the violation,
-- `violation`: nested violations for complex constraints.
+- `typeName` — the message type that failed validation
+- `fieldPath` — the path to the field that violated the constraint
+- `message` — the error message with placeholders replaced
+- `param` — additional parameters related to the violation
+- `violation` — nested violations for complex constraints
 
 ### `Violations` Utility
 
@@ -163,29 +163,30 @@ to build custom error displays tailored to your application.
 
 ### Field-level options
 
-- ✅ **`(required)`** - Ensures field has a non-default value
-- ✅ **`(if_missing)`** - Custom error message for required fields
-- ✅ **`(pattern)`** - Regex validation for string fields
-- ✅ **`(min)` / `(max)`** - Numeric range validation with inclusive/exclusive bounds
-- ✅ **`(range)`** - Bounded numeric ranges using bracket notation `[min..max]`, with custom error messages
-- ✅ **`(distinct)`** - Ensures unique elements in repeated fields and map values
-- ✅ **`(validate)`** - Enables recursive validation of nested messages
-- ✅ **`(goes)`** - Field dependency validation (field can only be set if another field is set)
+- ✅ **`(required)`** — Ensures field has a non-default value
+- ✅ **`(if_missing)`** — Custom error message for required fields
+- ✅ **`(pattern)`** — Regex validation for string fields
+- ✅ **`(min)` / `(max)`** — Numeric range validation with inclusive/exclusive bounds
+- ✅ **`(range)`** — Bounded numeric ranges using bracket notation `[min..max]`, with custom error messages
+- ✅ **`(distinct)`** — Ensures unique elements in repeated fields and map values
+- ✅ **`(validate)`** — Enables recursive validation of nested messages
+- ✅ **`(goes)`** — Field dependency validation (field can only be set if another field is set)
 
 ### Message-level options
 
-- ✅ **`(require)`** - Requires specific field combinations using boolean logic
+- ✅ **`(require)`** — Requires specific field combinations using boolean logic
 
 ### Oneof-level options
 
-- ✅ **`(choice)`** - Requires that a `oneof` group has at least one field set
+- ✅ **`(choice)`** — Requires that a `oneof` group has at least one field set
 
 ### Not Supported
 
-- ❌ **`(set_once)`** - Requires state tracking across validations (not feasible in TypeScript runtime)
-- ❌ **`(if_set_again)`** - Companion to `(set_once)`
-- ❌ **`(required_field)`** - Deprecated, replaced by `(require)`
-- ❌ **`(is_required)`** - Deprecated, replaced by `(choice)`
+- ❌ **`(if_invalid)`** — Deprecated field-level option
+- ❌ **`(set_once)`** — Requires state tracking across validations (not feasible in TypeScript runtime)
+- ❌ **`(if_set_again)`** — Companion to `(set_once)`
+- ❌ **`(is_required)`** — Deprecated, replaced by `(choice)`
+- ❌ **`(required_field)`** — Deprecated, replaced by `(require)`
 
 ## Example
 

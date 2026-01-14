@@ -36,9 +36,9 @@
  * - `float`, `double`
  *
  * Features:
- * - Inclusive bounds (closed intervals): `[min..max]`
- * - Exclusive bounds (open intervals): `(min..max)`
- * - Half-open intervals: `[min..max)` or `(min..max]`
+ * - Inclusive bounds (closed intervals) — `[min..max]`
+ * - Exclusive bounds (open intervals) — `(min..max)`
+ * - Half-open intervals — `[min..max)` or `(min..max]`
  * - Validation applies to repeated fields (each element checked independently)
  *
  * Syntax:

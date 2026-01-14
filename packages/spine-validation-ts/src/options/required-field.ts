@@ -31,9 +31,9 @@
  * at least one field from a set of alternatives or combinations of fields.
  *
  * Syntax:
- * - `|` (pipe): OR operator - at least one field must be set
- * - `&` (ampersand): AND operator - all fields must be set together
- * - Parentheses for grouping: `(field1 & field2) | field3`
+ * - `|` (pipe) — OR operator, at least one field must be set
+ * - `&` (ampersand) — AND operator, all fields must be set together
+ * - Parentheses for grouping — `(field1 & field2) | field3`
  *
  * Examples:
  * ```protobuf

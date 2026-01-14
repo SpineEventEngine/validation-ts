@@ -32,9 +32,9 @@
  *
  * Semantics:
  * - If field A has `(goes).with = "B"`:
- *   - A is set AND B is NOT set → VIOLATION
- *   - A is set AND B is set → VALID
- *   - A is NOT set → VALID (regardless of B)
+ *   - A is set AND B is NOT set — VIOLATION
+ *   - A is set AND B is set — VALID
+ *   - A is NOT set — VALID (regardless of B)
  *
  * Examples:
  * ```protobuf
@@ -61,11 +61,11 @@ import { getRegisteredOption } from '../options-registry';
  * Checks if a field has a non-default value (is "set") in proto3.
  *
  * For proto3 fields:
- * - Message fields: non-default instance (not `undefined`/`null`)
- * - String fields: non-empty string
- * - Numeric fields: non-zero value
- * - Bool fields: any value (`true` or `false` both count as "set")
- * - Enum fields: non-zero value
+ * - Message fields — non-default instance (not `undefined`/`null`)
+ * - String fields — non-empty string
+ * - Numeric fields — non-zero value
+ * - Bool fields — any value (`true` or `false` both count as "set")
+ * - Enum fields — non-zero value
  *
  * @param value The field value to check.
  * @returns `true` if the field is considered set, `false` otherwise.

@@ -12,7 +12,7 @@ built on [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf
 This library lets you:
 
 - ✅ **Reuse the same validation rules** in your frontend that you defined in your backend.
-- ✅ **Maintain a single source of truth** - validation logic lives in your `.proto` files.
+- ✅ **Maintain a single source of truth** — validation logic lives in your `.proto` files.
 - ✅ **Keep frontend and backend validation in sync** automatically.
 - ✅ **Get type-safe validation** with full TypeScript support.
 - ✅ **Display the same error messages** to users that your backend generates.
@@ -33,15 +33,15 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 
 **Comprehensive Validation Support**
 
-- **`(required)`** - Ensure fields have non-default values.
-- **`(pattern)`** - Regex validation for strings.
-- **`(min)` / `(max)`** - Numeric bounds with inclusive/exclusive support.
-- **`(range)`** - Bounded ranges with bracket notation `(min..max]`.
-- **`(distinct)`** - Enforce uniqueness in repeated fields.
-- **`(validate)`** - Recursive nested message validation.
-- **`(goes)`** - Field dependency constraints.
-- **`(require)`** - Complex required field combinations with boolean logic.
-- **`(choice)`** - Require that a oneof group has at least one field set.
+- **`(required)`** — Ensure fields have non-default values.
+- **`(pattern)`** — Regex validation for strings.
+- **`(min)` / `(max)`** — Numeric bounds with inclusive/exclusive support.
+- **`(range)`** — Bounded ranges with bracket notation `(min..max]`.
+- **`(distinct)`** — Enforce uniqueness in repeated fields.
+- **`(validate)`** — Recursive nested message validation.
+- **`(goes)`** — Field dependency constraints.
+- **`(require)`** — Complex required field combinations with boolean logic.
+- **`(choice)`** — Require that a oneof group has at least one field set.
 
 **Developer Experience**
 
@@ -53,7 +53,7 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 
 ### ⚠️ Known Limitations
 
-- **`(set_once)`** - Not currently supported. This option requires state tracking across multiple validations, 
+- **`(set_once)`** — Not currently supported. This option requires state tracking across multiple validations,
 which is outside the scope of single-message validation.
 
 ---
@@ -134,8 +134,8 @@ import { validate, Violations } from '@spine-event-engine/validation-ts';
 import { UserSchema } from './generated/user_pb';
 
 const user = create(UserSchema, {
-    name: '',   // Missing required field.
-    email: 'invalid-email'  // Invalid pattern.
+    name: '',   // Missing required field
+    email: 'invalid-email'  // Invalid pattern
 });
 
 const violations = validate(UserSchema, user);
@@ -213,9 +213,9 @@ npm run example
 
 | Command | Description |
 |---------|-------------|
-| `npm run build` | Build the validation package. |
-| `npm test` | Run all validation tests. |
-| `npm run example` | Run the example project. |
+| `npm run build` | Build the validation package |
+| `npm test` | Run all validation tests |
+| `npm run example` | Run the example project |
 
 ---
 
@@ -225,34 +225,36 @@ npm run example
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `(required)` | Field must have a non-default value. | `[(required) = true]` |
-| `(if_missing)` | Custom error for missing field. | `[(if_missing).error_msg = "Name is required"]` |
-| `(pattern)` | Regex pattern matching. | `[(pattern).regex = "^[A-Z].*"]` |
-| `(min)` / `(max)` | Numeric minimum/maximum. | `[(min).value = "0", (max).value = "100"]` |
-| `(range)` | Bounded numeric range. | `[(range) = "[0..100]"]` |
-| `(distinct)` | Unique repeated elements. | `[(distinct) = true]` |
-| `(validate)` | Validate nested messages. | `[(validate) = true]` |
-| `(goes)` | Field dependency. | `[(goes).with = "other_field"]` |
+| `(required)` | Field must have a non-default value | `[(required) = true]` |
+| `(if_missing)` | Custom error for missing field | `[(if_missing).error_msg = "Name is required"]` |
+| `(pattern)` | Regex pattern matching | `[(pattern).regex = "^[A-Z].*"]` |
+| `(min)` / `(max)` | Numeric minimum/maximum | `[(min).value = "0", (max).value = "100"]` |
+| `(range)` | Bounded numeric range | `[(range) = "[0..100]"]` |
+| `(distinct)` | Unique repeated elements | `[(distinct) = true]` |
+| `(validate)` | Validate nested messages | `[(validate) = true]` |
+| `(goes)` | Field dependency | `[(goes).with = "other_field"]` |
 
 ### Message-Level Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `(require)` | Required field combinations. | `option (require).fields = "id \| email";` |
+| `(require)` | Required field combinations | `option (require).fields = "id \| email";` |
 
 ### Oneof-Level Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `(choice)` | Require oneof to have a field set. | `option (choice).required = true;` |
+| `(choice)` | Require oneof to have a field set | `option (choice).required = true;` |
 
 ### Not Supported
 
 | Option | Status | Notes |
 |--------|--------|-------|
-| `(set_once)` | ❌ Not supported | Requires state tracking across validations. See [limitations](#-known-limitations). |
-| `(is_required)` | ❌ Not supported | Deprecated. Use `(choice)` instead. |
-| `(required_field)` | ❌ Not supported | Deprecated. Use `(require)` instead. |
+| `(if_invalid)` | ❌ Not supported | Deprecated field-level option |
+| `(set_once)` | ❌ Not supported | Requires state tracking across validations. See [limitations](#-known-limitations) |
+| `(if_set_again)` | ❌ Not supported | Companion to `(set_once)` |
+| `(is_required)` | ❌ Not supported | Deprecated. Use `(choice)` instead |
+| `(required_field)` | ❌ Not supported | Deprecated. Use `(require)` instead |
 
 ---
 
@@ -260,24 +262,24 @@ npm run example
 
 The package includes comprehensive test coverage:
 
-- **200+ tests** across 11 test suites.
-- **All validation options** thoroughly tested.
-- **Integration tests** combining multiple constraints.
-- **Edge cases** and real-world scenarios.
-- **100% coverage** of validation logic.
+- **200+ tests** across 11 test suites
+- **All validation options** thoroughly tested
+- **Integration tests** combining multiple constraints
+- **Edge cases** and real-world scenarios
+- **100% coverage** of validation logic
 
 Test suites:
-- Basic validation.
-- Required fields.
-- Pattern matching.
-- Min/Max constraints.
-- Range validation.
-- Distinct elements.
-- Nested validation.
-- Field dependencies (goes).
-- Required field combinations (require).
-- Oneof validation (choice).
-- Integration scenarios.
+- Basic validation
+- Required fields
+- Pattern matching
+- Min/Max constraints
+- Range validation
+- Distinct elements
+- Nested validation
+- Field dependencies (`goes`)
+- Required field combinations (`require`)
+- `fneof` validation (`choice`)
+- Integration scenarios
 
 ---
 
@@ -311,11 +313,11 @@ violations.forEach(violation => {
 
 The validation system is built with extensibility in mind:
 
-- **`validation.ts`** - Core validation engine using the visitor pattern.
-- **`options-registry.ts`** - Dynamic registration of validation options.
-- **`options/`** - Modular validators for each Spine option.
-- **Proto-first** - Validation rules defined in `.proto` files.
-- **Type-safe** - Full TypeScript support with generated types.
+- **`validation.ts`** — Core validation engine using the visitor pattern
+- **`options-registry.ts`** — Dynamic registration of validation options
+- **`options/`** — Modular validators for each Spine option
+- **Proto-first** — Validation rules defined in `.proto` files
+- **Type-safe** — Full TypeScript support with generated types
 
 ---
 
@@ -323,10 +325,10 @@ The validation system is built with extensibility in mind:
 
 Contributions are welcome! Please ensure:
 
-1. All tests pass: `npm test`.
-2. Code follows existing patterns.
-3. New features include tests.
-4. Documentation is updated.
+1. All tests pass: `npm test`
+2. Code follows existing patterns
+3. New features include tests
+4. Documentation is updated
 
 ---
 
@@ -338,9 +340,9 @@ Apache 2.0.
 
 ## 🔗 Related Projects
 
-- [Spine Event Engine](https://spine.io/) - Event-driven framework for CQRS/ES applications.
-- [Protobuf-ES](https://github.com/bufbuild/protobuf-es) - Protocol Buffers for ECMAScript.
-- [Buf](https://buf.build/) - Modern Protobuf tooling.
+- [Spine Event Engine](https://spine.io/) — Event-driven framework for CQRS/ES applications
+- [Protobuf-ES](https://github.com/bufbuild/protobuf-es) — Protocol Buffers for ECMAScript
+- [Buf](https://buf.build/) — Modern Protobuf tooling
 
 ---
 

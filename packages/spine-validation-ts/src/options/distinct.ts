@@ -37,11 +37,11 @@
  * - Map fields (validates that all values are unique; keys are inherently unique)
  *
  * Features:
- * - Ensures all elements in a repeated field are unique.
- * - Ensures all values in a map field are unique (keys are always unique by definition).
- * - Detects duplicate values and reports violations with element indices or keys.
- * - Works with primitive types (numbers, strings, booleans).
- * - Works with enum values.
+ * - Ensures all elements in a repeated field are unique
+ * - Ensures all values in a map field are unique (keys are always unique by definition)
+ * - Detects duplicate values and reports violations with element indices or keys
+ * - Works with primitive types (numbers, strings, booleans)
+ * - Works with enum values
  *
  * Examples:
  * ```protobuf

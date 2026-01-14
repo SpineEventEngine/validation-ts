@@ -36,7 +36,7 @@
  * - Map fields (validates each entry)
  *
  * Features:
- * - Recursive validation: validates constraints in nested messages
+ * - Recursive validation — validates constraints in nested messages
  * - Validates each item in repeated fields
  * - Validates each value in map entries
  *

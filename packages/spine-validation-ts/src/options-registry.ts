@@ -51,11 +51,11 @@ import {
  * Currently supported options are automatically registered.
  *
  * Note: The following options are NOT SUPPORTED:
- * - `if_invalid` (73822) - Deprecated, not supported
- * - `set_once` (73824) - Requires state tracking across validations
- * - `if_set_again` (73827) - Companion to `set_once`
- * - `required_field` (73902) - Deprecated, replaced by `requireFields`
- * - `is_required` (73891) - Deprecated, replaced by `choice`
+ * - `if_invalid` (73822) — Deprecated, not supported
+ * - `set_once` (73824) — Requires state tracking across validations
+ * - `if_set_again` (73827) — Companion to `set_once`
+ * - `required_field` (73902) — Deprecated, replaced by `requireFields`
+ * - `is_required` (73891) — Deprecated, replaced by `choice`
  */
 const optionRegistry = {
     required,
