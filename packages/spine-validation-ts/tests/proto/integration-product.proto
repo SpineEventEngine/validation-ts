@@ -56,7 +56,7 @@ message Product {
     ];
     int32 stock = 5 [
         (min).value = "0",
-        (range) = "[0..1000000)"
+        (range).value = "[0..1000000)"
     ];
     google.protobuf.Timestamp created_at = 6 [(required) = true];
     Category category = 7 [
@@ -70,9 +70,9 @@ message Product {
 
 // Color message for display settings.
 message Color {
-    int32 red = 1 [(range) = "[0..255]"];
-    int32 green = 2 [(range) = "[0..255]"];
-    int32 blue = 3 [(range) = "[0..255]"];
+    int32 red = 1 [(range).value = "[0..255]"];
+    int32 green = 2 [(range).value = "[0..255]"];
+    int32 blue = 3 [(range).value = "[0..255]"];
 }
 
 // Category message with validation.
@@ -84,10 +84,10 @@ message Category {
     string name = 2 [(required) = true];
 }
 
-// Payment method demonstrating is_required oneof option.
+// Payment method demonstrating choice oneof option.
 message PaymentMethod {
     oneof method {
-        option (is_required) = true;
+        option (choice).required = true;
 
         PaymentCardNumber payment_card = 1 [(validate) = true];
         BankAccount bank_account = 2 [(validate) = true];
@@ -104,7 +104,7 @@ message PaymentCardNumber {
     ];
     int32 expiry_month = 2 [
         (required) = true,
-        (range) = "[1..12]"
+        (range).value = "[1..12]"
     ];
     int32 expiry_year = 3 [
         (required) = true,
@@ -135,7 +135,7 @@ message ListProductsRequest {
     ];
     int32 page_size = 2 [
         (required) = true,
-        (range) = "[1..100]",
+        (range).value = "[1..100]",
         (if_missing).error_msg = "Page size is required."
     ];
     string search_query = 3;

@@ -37,7 +37,7 @@ import "spine/options.proto";
 
 // User message representing a user entity with validation constraints.
 message User {
-    option (required_field) = "id | email";
+    option (require).fields = "id | email";
 
     int32 id = 1 [(min).value = "1"];
     // Must start with a letter and be 2-50 characters (letters, numbers, spaces allowed).

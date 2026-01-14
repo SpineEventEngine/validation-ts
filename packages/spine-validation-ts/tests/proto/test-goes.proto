@@ -137,7 +137,7 @@ message AdvancedConfig {
     string config_name = 1;
     int32 max_connections = 2 [
         (goes).with = "config_name",
-        (range) = "[1..1000]"
+        (range).value = "[1..1000]"
     ];
     double timeout_seconds = 3 [
         (goes).with = "config_name",

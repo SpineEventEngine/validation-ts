@@ -135,11 +135,11 @@ describe('Nested Message Validation (validate)', () => {
     });
 
     describe('Custom Error Messages (if_invalid)', () => {
-        it('should use custom error message when nested validation fails', () => {
+        it('should use default error message when nested validation fails', () => {
             const invalid = create(OrderWithCustomErrorSchema, {
                 orderId: 123,
                 customer: create(CustomerSchema, {
-                    email: 'invalid-email',  // Pattern violation. 
+                    email: 'invalid-email',  // Pattern violation.
                     age: 25
                 })
             });
@@ -147,11 +147,11 @@ describe('Nested Message Validation (validate)', () => {
             const violations = validate(OrderWithCustomErrorSchema, invalid);
             expect(violations.length).toBeGreaterThan(0);
 
-            // Should have parent-level violation with custom message.
+            // Should have parent-level violation with default message.
             const parentViolation = violations.find(v =>
                 v.fieldPath?.fieldName.length === 1 &&
                 v.fieldPath?.fieldName[0] === 'customer' &&
-                v.message?.withPlaceholders.includes('Customer information is invalid')
+                v.message?.withPlaceholders.includes('Nested message validation failed')
             );
             expect(parentViolation).toBeDefined();
         });

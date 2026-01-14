@@ -45,6 +45,7 @@ import { validateRangeFields } from './options/range';
 import { validateDistinctFields } from './options/distinct';
 import { validateNestedFields } from './options/validate';
 import { validateGoesFields } from './options/goes';
+import { validateChoiceFields } from './options/choice';
 
 export type { ConstraintViolation, ValidationError } from './generated/spine/validate/validation_error_pb';
 export type { TemplateString } from './generated/spine/validate/error_message_pb';
@@ -66,6 +67,7 @@ export type { FieldPath } from './generated/spine/base/field_path_pb';
  * - `(distinct)` - ensures all elements in repeated fields are unique
  * - `(validate)` - enables recursive validation of nested message fields
  * - `(goes)` - enforces field dependency (field can only be set if another field is set)
+ * - `(choice)` - requires that a oneof group has at least one field set
  *
  * @param schema The message schema containing validation metadata.
  * @param message The message instance to validate.
@@ -99,6 +101,7 @@ export function validate<T extends Message>(
     validateDistinctFields(schema, message, violations);
     validateNestedFields(schema, message, violations);
     validateGoesFields(schema, message, violations);
+    validateChoiceFields(schema, message, violations);
 
     return violations;
 }

@@ -66,7 +66,7 @@ message Customer {
         (required) = true,
         (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
     ];
-    int32 age = 2 [(required) = true, (range) = "[18..120]"];
+    int32 age = 2 [(required) = true, (range).value = "[18..120]"];
 }
 
 // Tests validation on repeated message fields.
@@ -142,7 +142,7 @@ message ProductDetails {
 }
 
 message Review {
-    int32 rating = 1 [(required) = true, (range) = "[1..5]"];
+    int32 rating = 1 [(required) = true, (range).value = "[1..5]"];
     string comment = 2;
 }
 
@@ -170,6 +170,6 @@ message ProjectWithTasks {
 
 message Task {
     string title = 1 [(required) = true];
-    int32 priority = 2 [(range) = "[1..5]"];
+    int32 priority = 2 [(range).value = "[1..5]"];
     repeated string assignees = 3 [(distinct) = true];
 }

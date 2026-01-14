@@ -404,11 +404,11 @@ describe('Integration Tests', () => {
             expect(violations).toHaveLength(0);
         });
 
-        it('should detect nested User violations with custom error message', () => {
+        it('should detect nested User violations with default error message', () => {
             const invalidResponse = create(GetUserResponseSchema, {
                 user: create(UserSchema, {
                     id: 1,
-                    name: '',  // Required violation. 
+                    name: '',  // Required violation.
                     email: 'alice@example.com',
                     role: Role.USER,
                     tags: []
@@ -419,13 +419,13 @@ describe('Integration Tests', () => {
             const violations = validate(GetUserResponseSchema, invalidResponse);
             expect(violations.length).toBeGreaterThan(0);
 
-            // Should have parent-level violation with custom message.
+            // Should have parent-level violation with default message.
             const parentViolation = violations.find(v =>
                 v.fieldPath?.fieldName.length === 1 &&
                 v.fieldPath?.fieldName[0] === 'user'
             );
             expect(parentViolation).toBeDefined();
-            expect(parentViolation?.message?.withPlaceholders).toBe('User data is invalid.');
+            expect(parentViolation?.message?.withPlaceholders).toBe('Nested message validation failed.');
 
             // Should also have nested violation for name field.
             const nameViolation = violations.find(v =>

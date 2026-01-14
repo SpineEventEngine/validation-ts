@@ -27,9 +27,9 @@ syntax = "proto3";
 
 package spine.validation.testing.requiredfield_suite;
 
-// Test messages for the `(required_field)` message-level validation option.
+// Test messages for the `(require)` message-level validation option.
 //
-// This file contains test cases for the `(required_field)` constraint that
+// This file contains test cases for the `(require)` constraint that
 // requires specific combinations of fields using boolean logic (OR, AND, and
 // parentheses for grouping). The constraint is specified at the message level.
 
@@ -37,7 +37,7 @@ import "spine/options.proto";
 
 // Tests simple OR logic: at least one field must be set.
 message UserIdentifier {
-    option (required_field) = "id | email";
+    option (require).fields = "id | email";
 
     int32 id = 1;
     string email = 2;
@@ -45,7 +45,7 @@ message UserIdentifier {
 
 // Tests AND logic: both fields must be set together.
 message ContactInfo {
-    option (required_field) = "phone & country_code";
+    option (require).fields = "phone & country_code";
 
     string phone = 1;
     string country_code = 2;
@@ -53,7 +53,7 @@ message ContactInfo {
 
 // Tests complex OR with AND groups.
 message PersonName {
-    option (required_field) = "given_name | (honorific_prefix & family_name)";
+    option (require).fields = "given_name | (honorific_prefix & family_name)";
 
     string honorific_prefix = 1;
     string given_name = 2;
@@ -64,7 +64,7 @@ message PersonName {
 
 // Tests multiple OR alternatives.
 message PaymentMethod {
-    option (required_field) = "credit_card | bank_account | paypal_email";
+    option (require).fields = "credit_card | bank_account | paypal_email";
 
     string credit_card = 1;
     string bank_account = 2;
@@ -73,7 +73,7 @@ message PaymentMethod {
 
 // Tests multiple AND requirements.
 message ShippingAddress {
-    option (required_field) = "street & city & postal_code & country";
+    option (require).fields = "street & city & postal_code & country";
 
     string street = 1;
     string city = 2;
@@ -84,7 +84,7 @@ message ShippingAddress {
 
 // Tests complex nested logic with grouping.
 message AccountCreation {
-    option (required_field) = "(username & password) | oauth_token";
+    option (require).fields = "(username & password) | oauth_token";
 
     string username = 1;
     string password = 2;

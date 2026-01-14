@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "generate": "buf generate",
-    "generate:tests": "cd tests && buf generate",
+    "generate": "buf generate && node scripts/patch-generated.js",
+    "generate:tests": "cd tests && buf generate && cd .. && node scripts/patch-generated.js",
     "build": "npm run generate && tsc",
     "test": "npm run generate && npm run generate:tests && jest",
     "test:watch": "npm run generate && npm run generate:tests && jest --watch",

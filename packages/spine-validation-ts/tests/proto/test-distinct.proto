@@ -64,7 +64,7 @@ message NonDistinctFields {
 message CombinedConstraints {
     repeated int32 product_ids = 1 [
         (distinct) = true,
-        (range) = "[1..999999]"
+        (range).value = "[1..999999]"
     ];
     // Each email must be a valid email address (basic format validation).
     repeated string emails = 2 [

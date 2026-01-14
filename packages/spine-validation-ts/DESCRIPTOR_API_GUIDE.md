@@ -120,7 +120,6 @@ import {
   set_once,
   distinct,
   if_missing,
-  if_invalid,
   required_field
 } from './generated/options_pb';
 import { hasOption, getOption } from '@bufbuild/protobuf';
@@ -181,11 +180,6 @@ for (const field of UserSchema.fields) {
     const ifMissingOpt = getOption(field, if_missing);
     console.log(`  if_missing.errorMsg: "${ifMissingOpt.errorMsg}"`);
   }
-
-  if (hasOption(field, if_invalid)) {
-    const ifInvalidOpt = getOption(field, if_invalid);
-    console.log(`  if_invalid.errorMsg: "${ifInvalidOpt.errorMsg}"`);
-  }
 }
 ```
 
@@ -203,7 +197,6 @@ interface FieldValidationOptions {
   max?: { value: string; exclusive: boolean; errorMsg: string };
   pattern?: { regex: string; errorMsg: string };
   if_missing?: { errorMsg: string };
-  if_invalid?: { errorMsg: string };
 }
 
 function getFieldValidationOptions(
@@ -261,13 +254,6 @@ function getFieldValidationOptions(
     const ifMissingOpt = getOption(field, if_missing);
     options.if_missing = {
       errorMsg: ifMissingOpt.errorMsg
-    };
-  }
-
-  if (hasOption(field, if_invalid)) {
-    const ifInvalidOpt = getOption(field, if_invalid);
-    options.if_invalid = {
-      errorMsg: ifInvalidOpt.errorMsg
     };
   }
 
@@ -406,7 +392,6 @@ From `/Users/armiol/development/Spine/validation-ts/src/generated/options_pb.ts`
 - `max: GenExtension<FieldOptions, MaxOption>` - Maximum value constraint
 - `pattern: GenExtension<FieldOptions, PatternOption>` - Regex pattern constraint
 - `validate: GenExtension<FieldOptions, boolean>` - Enable validation for nested messages
-- `if_invalid: GenExtension<FieldOptions, IfInvalidOption>` - Custom error for invalid field
 - `goes: GenExtension<FieldOptions, GoesOption>` - Field dependency
 - `set_once: GenExtension<FieldOptions, boolean>` - Field can only be set once
 - `distinct: GenExtension<FieldOptions, boolean>` - Repeated field must have unique values

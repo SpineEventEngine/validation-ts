@@ -121,9 +121,8 @@ import {
   min,             // MinOption { value, exclusive, errorMsg }
   max,             // MaxOption { value, exclusive, errorMsg }
   pattern,         // PatternOption { regex, errorMsg, modifier }
-  range,           // string
+  range,           // RangeOption { value, errorMsg }
   if_missing,      // IfMissingOption { errorMsg }
-  if_invalid,      // IfInvalidOption { errorMsg }
   goes,            // GoesOption { with, errorMsg }
 } from './generated/options_pb';
 ```

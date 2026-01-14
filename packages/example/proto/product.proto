@@ -45,13 +45,12 @@ message Product {
                       (min).error_msg = "Price must be at least {other}. Provided: {value}."];
 
     int32 stock = 5 [(min).value = "0",
-                     (range) = "[0..1000000)"];
+                     (range).value = "[0..1000000)"];
 
     google.protobuf.Timestamp created_at = 6 [(required) = true];
 
     Category category = 7 [(required) = true,
-                           (validate) = true,
-                           (if_invalid).error_msg = "Category is invalid."];
+                           (validate) = true];
 
     // Display settings, demonstrates "goes" option.
     // Text color can only be set when highlight color is set, and vice versa.
@@ -60,9 +59,9 @@ message Product {
 }
 
 message Color {
-    int32 red = 1 [(range) = "[0..255]"];
-    int32 green = 2 [(range) = "[0..255]"];
-    int32 blue = 3 [(range) = "[0..255]"];
+    int32 red = 1 [(range).value = "[0..255]"];
+    int32 green = 2 [(range).value = "[0..255]"];
+    int32 blue = 3 [(range).value = "[0..255]"];
 }
 
 message Category {
@@ -87,7 +86,7 @@ message PaymentCardNumber {
                        (pattern).regex = "^[0-9]{13,19}$",
                        (pattern).error_msg = "Card number must be 13-19 digits."];
     int32 expiry_month = 2 [(required) = true,
-                            (range) = "[1..12]"];
+                            (range).value = "[1..12]"];
     int32 expiry_year = 3 [(required) = true,
                            (min).value = "2024"];
 }
@@ -105,7 +104,7 @@ message ListProductsRequest {
                     (if_missing).error_msg = "Page number is required."];
 
     int32 page_size = 2 [(required) = true,
-                         (range) = "[1..100]",
+                         (range).value = "[1..100]",
                          (if_missing).error_msg = "Page size is required."];
 
     // Optional search query.

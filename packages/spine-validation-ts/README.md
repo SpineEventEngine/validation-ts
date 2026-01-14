@@ -59,29 +59,29 @@ if (violations.length > 0) {
 Validates a Protobuf message against its Spine validation constraints.
 
 **Parameters:**
-- `schema`: The message schema (e.g., `UserSchema`)
-- `message`: The message instance to validate
+- `schema`: the message schema (e.g., `UserSchema`)
+- `message`: the message instance to validate
 
-**Returns:** Array of `ConstraintViolation` objects (empty if valid)
+**Returns:** array of `ConstraintViolation` objects (empty if valid)
 
 ### `formatViolations(violations)`
 
 Formats validation violations into a human-readable string.
 
 **Parameters:**
-- `violations`: Array of constraint violations
+- `violations`: array of constraint violations
 
-**Returns:** Formatted string describing all violations
+**Returns:** formatted string describing all violations
 
 ### `formatTemplateString(template, values)`
 
 Formats a `TemplateString` by replacing placeholders with provided values.
 
 **Parameters:**
-- `template`: Template string with placeholders (e.g., `{value}`, `{other}`)
-- `values`: Object mapping placeholder names to their values
+- `template`: template string with placeholders (e.g., `{value}`, `{other}`)
+- `values`: object mapping placeholder names to their values
 
-**Returns:** Formatted string with placeholders replaced
+**Returns:** formatted string with placeholders replaced
 
 ## Supported Validation Options
 
@@ -91,19 +91,25 @@ Formats a `TemplateString` by replacing placeholders with provided values.
 - ✅ **`(if_missing)`** - Custom error message for required fields
 - ✅ **`(pattern)`** - Regex validation for string fields
 - ✅ **`(min)` / `(max)`** - Numeric range validation with inclusive/exclusive bounds
-- ✅ **`(range)`** - Bounded numeric ranges using bracket notation `[min..max]`
-- ✅ **`(distinct)`** - Ensures unique elements in repeated fields
+- ✅ **`(range)`** - Bounded numeric ranges using bracket notation `[min..max]`, with custom error messages
+- ✅ **`(distinct)`** - Ensures unique elements in repeated fields and map values
 - ✅ **`(validate)`** - Enables recursive validation of nested messages
-- ✅ **`(if_invalid)`** - Custom error message for nested validation failures
 - ✅ **`(goes)`** - Field dependency validation (field can only be set if another field is set)
 
 ### Message-level options
 
-- ✅ **`(required_field)`** - Requires specific field combinations using boolean logic
+- ✅ **`(require)`** - Requires specific field combinations using boolean logic
 
 ### Oneof-level options
 
-- ✅ **`(is_required)`** - Requires that one of the oneof fields must be set
+- ✅ **`(choice)`** - Requires that a `oneof` group has at least one field set
+
+### Not Supported
+
+- ❌ **`(set_once)`** - Requires state tracking across validations (not feasible in TypeScript runtime)
+- ❌ **`(if_set_again)`** - Companion to `(set_once)`
+- ❌ **`(required_field)`** - Deprecated, replaced by `(require)`
+- ❌ **`(is_required)`** - Deprecated, replaced by `(choice)`
 
 ## Example
 
@@ -113,7 +119,7 @@ syntax = "proto3";
 import "spine/options.proto";
 
 message User {
-    option (required_field) = "id | email";
+    option (require).fields = "id | email";
 
     int32 id = 1 [
         (set_once) = true,
@@ -133,11 +139,15 @@ message User {
     ];
 
     int32 age = 4 [
-        (range) = "[13..120]"
+        (range).value = "[13..120]"
     ];
 
     repeated string tags = 5 [
         (distinct) = true
+    ];
+
+    map<string, string> preferences = 6 [
+        (distinct) = true  // Values must be unique.
     ];
 }
 
@@ -152,8 +162,7 @@ message Address {
 message UserProfile {
     User user = 1 [
         (required) = true,
-        (validate) = true,
-        (if_invalid).error_msg = "User data is invalid."
+        (validate) = true
     ];
 
     Address address = 2 [
@@ -208,11 +217,11 @@ message ShippingDetails {
 
 ### Required field combinations
 
-Use `(required_field)` for complex field requirements:
+Use `(require)` for complex field requirements:
 
 ```protobuf
 message ContactInfo {
-    option (required_field) = "(phone & country_code) | email";
+    option (require).fields = "(phone & country_code) | email";
 
     string phone = 1;
     string country_code = 2;
@@ -220,19 +229,37 @@ message ContactInfo {
 }
 ```
 
+### `Oneof` constraints
+
+Use `(choice)` to require that a `oneof` group has a field set:
+
+```protobuf
+message PaymentMethod {
+    oneof method {
+        option (choice).required = true;
+        option (choice).error_msg = "Payment method is required.";
+
+        CreditCard credit_card = 1;
+        BankAccount bank_account = 2;
+        PayPal paypal = 3;
+    }
+}
+```
+
 ## Testing
 
-The package includes comprehensive test coverage with 223 tests across 10 test suites:
+The package includes comprehensive test coverage with 200+ tests across 11 test suites:
 
 - `basic-validation.test.ts` - Basic validation and formatting
 - `required.test.ts` - `(required)` and `(if_missing)` options
 - `pattern.test.ts` - `(pattern)` regex validation
-- `required-field.test.ts` - `(required_field)` message-level option
+- `required-field.test.ts` - `(require)` message-level option
 - `min-max.test.ts` - `(min)` and `(max)` numeric validation
 - `range.test.ts` - `(range)` bracket notation
 - `distinct.test.ts` - `(distinct)` uniqueness validation
-- `validate.test.ts` - `(validate)` and `(if_invalid)` nested validation
+- `validate.test.ts` - `(validate)` nested validation
 - `goes.test.ts` - `(goes)` field dependency validation
+- `choice.test.ts` - `(choice)` `oneof` validation
 - `integration.test.ts` - Complex multi-option scenarios
 
 Run tests with:
@@ -240,6 +267,44 @@ Run tests with:
 ```bash
 npm test
 ```
+
+## Development Notes
+
+### Generated Code Patching
+
+The package uses a post-generation script ([scripts/patch-generated.js](scripts/patch-generated.js)) to handle 
+JavaScript reserved word conflicts in generated Protobuf code.
+
+**Issue:**
+
+The Spine `(require)` option generates an export named `require` in the TypeScript output:
+
+```typescript
+export const require: GenExtension<MessageOptions, RequireOption>
+```
+
+However, `require` is a reserved identifier in Node.js/CommonJS, which can cause issues with module systems and tooling.
+
+**Solution:**
+
+After running `buf generate`, the patch script automatically renames the export to `requireFields`:
+
+```typescript
+export const requireFields: GenExtension<MessageOptions, RequireOption>
+```
+
+This happens automatically as part of the build process:
+
+```json
+{
+  "scripts": {
+    "generate": "buf generate && node scripts/patch-generated.js"
+  }
+}
+```
+
+The script patches both the main generated files and test generated files, ensuring consistency across the codebase. 
+This approach allows us to use the standard `(require)` option name in proto files while avoiding conflicts in the generated TypeScript code.
 
 ## License
 

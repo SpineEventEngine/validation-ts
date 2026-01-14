@@ -28,16 +28,18 @@
  * Validation logic for the `(distinct)` option.
  *
  * The `(distinct)` option is a field-level constraint that enforces uniqueness
- * of elements in repeated fields.
+ * of elements in repeated fields and map field values.
  *
  * Supported field types:
  * - All repeated scalar types (`int32`, `int64`, `uint32`, `uint64`, `sint32`, `sint64`,
  *   `fixed32`, `fixed64`, `sfixed32`, `sfixed64`, `float`, `double`, `bool`, `string`, `bytes`)
  * - Repeated enum fields
+ * - Map fields (validates that all values are unique; keys are inherently unique)
  *
  * Features:
  * - Ensures all elements in a repeated field are unique.
- * - Detects duplicate values and reports violations with element indices.
+ * - Ensures all values in a map field are unique (keys are always unique by definition).
+ * - Detects duplicate values and reports violations with element indices or keys.
  * - Works with primitive types (numbers, strings, booleans).
  * - Works with enum values.
  *
@@ -46,6 +48,7 @@
  * repeated string tags = 1 [(distinct) = true];
  * repeated int32 product_ids = 2 [(distinct) = true];
  * repeated Status statuses = 3 [(distinct) = true];
+ * map<string, Email> emails = 4 [(distinct) = true];  // Email values must be unique
  * ```
  */
 
@@ -62,18 +65,18 @@ import { getRegisteredOption } from '../options-registry';
  * Creates a constraint violation for `(distinct)` validation failures.
  *
  * @param typeName The fully qualified message type name.
- * @param fieldName Array representing the field path (including index).
+ * @param fieldName Array representing the field path (including index or key).
  * @param duplicateValue The duplicate value found.
- * @param firstIndex Index of the first occurrence of the value.
- * @param duplicateIndex Index of the duplicate occurrence.
+ * @param firstLocation Index (for repeated fields) or key (for map fields) of the first occurrence.
+ * @param duplicateLocation Index (for repeated fields) or key (for map fields) of the duplicate occurrence.
  * @returns A `ConstraintViolation` object.
  */
 function createViolation(
     typeName: string,
     fieldName: string[],
     duplicateValue: any,
-    firstIndex: number,
-    duplicateIndex: number
+    firstLocation: number | string,
+    duplicateLocation: number | string
 ): ConstraintViolation {
     return create(ConstraintViolationSchema, {
         typeName,
@@ -82,11 +85,11 @@ function createViolation(
         }),
         fieldValue: undefined,
         message: create(TemplateStringSchema, {
-            withPlaceholders: `Duplicate value found in repeated field. Value {value} at index {duplicate_index} is a duplicate of the value at index {first_index}.`,
+            withPlaceholders: `Duplicate value found. Value {value} at location {duplicate_index} is a duplicate of the value at location {first_index}.`,
             placeholderValue: {
                 'value': String(duplicateValue),
-                'first_index': String(firstIndex),
-                'duplicate_index': String(duplicateIndex)
+                'first_index': String(firstLocation),
+                'duplicate_index': String(duplicateLocation)
             }
         }),
         msgFormat: '',
@@ -128,7 +131,7 @@ function validateFieldDistinct<T extends Message>(
         return;
     }
 
-    if (field.fieldKind !== 'list') {
+    if (field.fieldKind !== 'list' && field.fieldKind !== 'map') {
         return;
     }
 
@@ -143,36 +146,70 @@ function validateFieldDistinct<T extends Message>(
 
     const fieldValue = (message as any)[field.localName];
 
-    if (!Array.isArray(fieldValue) || fieldValue.length <= 1) {
-        return;
-    }
+    if (field.fieldKind === 'list') {
+        if (!Array.isArray(fieldValue) || fieldValue.length <= 1) {
+            return;
+        }
 
-    const seenValues = new Map<any, number>();
+        const seenValues = new Map<any, number>();
 
-    fieldValue.forEach((element: any, index: number) => {
-        let isDuplicate = false;
-        let firstIndex = -1;
+        fieldValue.forEach((element: any, index: number) => {
+            let isDuplicate = false;
+            let firstIndex = -1;
 
-        for (const [seenValue, seenIndex] of seenValues.entries()) {
-            if (valuesAreEqual(element, seenValue)) {
-                isDuplicate = true;
-                firstIndex = seenIndex;
-                break;
+            for (const [seenValue, seenIndex] of seenValues.entries()) {
+                if (valuesAreEqual(element, seenValue)) {
+                    isDuplicate = true;
+                    firstIndex = seenIndex;
+                    break;
+                }
             }
+
+            if (isDuplicate) {
+                violations.push(createViolation(
+                    schema.typeName,
+                    [field.name, String(index)],
+                    element,
+                    firstIndex,
+                    index
+                ));
+            } else {
+                seenValues.set(element, index);
+            }
+        });
+    } else if (field.fieldKind === 'map') {
+        if (!fieldValue || Object.keys(fieldValue).length <= 1) {
+            return;
         }
 
-        if (isDuplicate) {
-            violations.push(createViolation(
-                schema.typeName,
-                [field.name, String(index)],
-                element,
-                firstIndex,
-                index
-            ));
-        } else {
-            seenValues.set(element, index);
-        }
-    });
+        const seenValues = new Map<any, string>();
+        const entries = Object.entries(fieldValue);
+
+        entries.forEach(([key, value]) => {
+            let isDuplicate = false;
+            let firstKey = '';
+
+            for (const [seenValue, seenKey] of seenValues.entries()) {
+                if (valuesAreEqual(value, seenValue)) {
+                    isDuplicate = true;
+                    firstKey = seenKey;
+                    break;
+                }
+            }
+
+            if (isDuplicate) {
+                violations.push(createViolation(
+                    schema.typeName,
+                    [field.name, key],
+                    value,
+                    firstKey,
+                    key
+                ));
+            } else {
+                seenValues.set(value, key);
+            }
+        });
+    }
 }
 
 /**

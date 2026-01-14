@@ -66,6 +66,7 @@ import type { ConstraintViolation } from '../generated/spine/validate/validation
 import { ConstraintViolationSchema } from '../generated/spine/validate/validation_error_pb';
 import { FieldPathSchema } from '../generated/spine/base/field_path_pb';
 import { TemplateStringSchema } from '../generated/spine/validate/error_message_pb';
+import type { RequireOption } from '../generated/spine/options_pb';
 import { getRegisteredOption } from '../options-registry';
 
 /**
@@ -256,9 +257,9 @@ export function validateRequiredFieldOption<T extends Message>(
     message: any,
     violations: ConstraintViolation[]
 ): void {
-    const requiredFieldOption = getRegisteredOption('required_field');
+    const requireFieldsOption = getRegisteredOption('requireFields');
 
-    if (!requiredFieldOption) {
+    if (!requireFieldsOption) {
         return;
     }
 
@@ -267,38 +268,16 @@ export function validateRequiredFieldOption<T extends Message>(
         return;
     }
 
-    const unknownFields = options.$unknown as Array<{ no: number; wireType: number; data: Uint8Array }>;
-    if (unknownFields) {
-        const requiredFieldExtension = unknownFields.find((f: any) => f.no === 73902);
-        if (requiredFieldExtension) {
-            const dataWithoutLength = requiredFieldExtension.data.slice(1);
-            const decoder = new TextDecoder();
-            const expression = decoder.decode(dataWithoutLength);
-
-            if (expression && typeof expression === 'string') {
-                const satisfied = evaluateExpression(expression, message, schema);
-
-                if (!satisfied) {
-                    const violationMessage = `At least one of the required field combinations must be satisfied: ${expression}`;
-                    violations.push(createViolation(
-                        schema.typeName,
-                        expression,
-                        violationMessage
-                    ));
-                }
-                return;
-            }
-        }
-    }
-
-    if (!hasExtension(options, requiredFieldOption)) {
+    if (!hasExtension(options, requireFieldsOption)) {
         return;
     }
 
-    const expression = getExtension(options, requiredFieldOption);
-    if (!expression || typeof expression !== 'string') {
+    const requireOption = getExtension(options, requireFieldsOption) as RequireOption;
+    if (!requireOption || !requireOption.fields) {
         return;
     }
+
+    const expression = requireOption.fields;
 
     const satisfied = evaluateExpression(expression, message, schema);
 

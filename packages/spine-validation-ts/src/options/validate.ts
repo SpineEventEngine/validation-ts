@@ -25,12 +25,10 @@
  */
 
 /**
- * Validation logic for the `(validate)` and `(if_invalid)` options.
+ * Validation logic for the `(validate)` option.
  *
  * The `(validate)` option is a field-level constraint that enables recursive
  * validation of nested message fields, repeated message fields, and map fields.
- *
- * The `(if_invalid)` option provides custom error messages for validation failures.
  *
  * Supported field types:
  * - Message fields (singular)
@@ -39,7 +37,6 @@
  *
  * Features:
  * - Recursive validation: validates constraints in nested messages
- * - Custom error messages with token replacement (`{value}`)
  * - Validates each item in repeated fields
  * - Validates each value in map entries
  *
@@ -50,7 +47,7 @@
  * }
  * Address address = 1 [(validate) = true];
  * repeated Product products = 2 [(validate) = true];
- * Customer customer = 3 [(validate) = true, (if_invalid).error_msg = "Invalid customer: {value}."];
+ * Customer customer = 3 [(validate) = true];
  * ```
  */
 
@@ -61,7 +58,6 @@ import type { ConstraintViolation } from '../generated/spine/validate/validation
 import { ConstraintViolationSchema } from '../generated/spine/validate/validation_error_pb';
 import { FieldPathSchema } from '../generated/spine/base/field_path_pb';
 import { TemplateStringSchema } from '../generated/spine/validate/error_message_pb';
-import type { IfInvalidOption } from '../generated/spine/options_pb';
 import { getRegisteredOption } from '../options-registry';
 
 /**
@@ -98,15 +94,11 @@ function createViolation(
 }
 
 /**
- * Gets the error message from `(if_invalid)` option or returns default.
+ * Gets the default error message for nested validation failures.
  *
- * @param ifInvalidOption The `(if_invalid)` option object.
- * @returns The custom error message or a default message.
+ * @returns The default error message.
  */
-function getErrorMessage(ifInvalidOption: IfInvalidOption | undefined): string {
-    if (ifInvalidOption && ifInvalidOption.errorMsg) {
-        return ifInvalidOption.errorMsg;
-    }
+function getErrorMessage(): string {
     return 'Nested message validation failed.';
 }
 
@@ -117,7 +109,6 @@ function getErrorMessage(ifInvalidOption: IfInvalidOption | undefined): string {
  * @param fieldPath Array representing the field path from parent.
  * @param nestedMessage The nested message instance to validate.
  * @param nestedSchema The schema of the nested message.
- * @param ifInvalidOption The `(if_invalid)` option if present.
  * @param violations Array to collect constraint violations.
  */
 function validateNestedMessage(
@@ -125,7 +116,6 @@ function validateNestedMessage(
     fieldPath: string[],
     nestedMessage: any,
     nestedSchema: GenMessage<any>,
-    ifInvalidOption: IfInvalidOption | undefined,
     violations: ConstraintViolation[]
 ): void {
     const { validate } = require('../validation');
@@ -133,7 +123,7 @@ function validateNestedMessage(
     const nestedViolations = validate(nestedSchema, nestedMessage);
 
     if (nestedViolations.length > 0) {
-        const errorMessage = getErrorMessage(ifInvalidOption);
+        const errorMessage = getErrorMessage();
 
         violations.push(createViolation(
             parentTypeName,
@@ -174,7 +164,6 @@ function validateFieldValidate<T extends Message>(
     violations: ConstraintViolation[]
 ): void {
     const validateOpt = getRegisteredOption('validate');
-    const ifInvalidOpt = getRegisteredOption('if_invalid');
 
     if (!validateOpt) {
         return;
@@ -188,10 +177,6 @@ function validateFieldValidate<T extends Message>(
     if (validateValue !== true) {
         return;
     }
-
-    const ifInvalidOption = ifInvalidOpt && hasOption(field, ifInvalidOpt)
-        ? getOption(field, ifInvalidOpt) as IfInvalidOption
-        : undefined;
 
     const fieldValue = (message as any)[field.localName];
 
@@ -210,7 +195,6 @@ function validateFieldValidate<T extends Message>(
             [field.name],
             fieldValue,
             nestedSchema,
-            ifInvalidOption,
             violations
         );
     } else if (field.fieldKind === 'list') {
@@ -231,7 +215,6 @@ function validateFieldValidate<T extends Message>(
                     [field.name, String(index)],
                     element,
                     nestedSchema,
-                    ifInvalidOption,
                     violations
                 );
             }
@@ -254,7 +237,6 @@ function validateFieldValidate<T extends Message>(
                     [field.name, key],
                     value,
                     nestedSchema,
-                    ifInvalidOption,
                     violations
                 );
             }

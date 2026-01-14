@@ -49,9 +49,11 @@
  *
  * Examples:
  * ```protobuf
- * int32 rgb_value = 1 [(range) = "[0..255]"];  // RGB color value
- * int32 hour = 2 [(range) = "[0..24)"];  // Hour (0-23)
- * double percentage = 3 [(range) = "(0.0..1.0)"];  // Exclusive percentage
+ * int32 rgb_value = 1 [(range).value = "[0..255]"];  // RGB color value
+ * int32 hour = 2 [(range).value = "[0..24)"];  // Hour (0-23)
+ * double percentage = 3 [(range).value = "(0.0..1.0)"];  // Exclusive percentage
+ * // With custom error message:
+ * int32 age = 4 [(range) = {value: "[18..120]", error_msg: "Age must be between 18 and 120"}];
  * ```
  */
 
@@ -62,6 +64,7 @@ import type { ConstraintViolation } from '../generated/spine/validate/validation
 import { ConstraintViolationSchema } from '../generated/spine/validate/validation_error_pb';
 import { FieldPathSchema } from '../generated/spine/base/field_path_pb';
 import { TemplateStringSchema } from '../generated/spine/validate/error_message_pb';
+import type { RangeOption } from '../generated/spine/options_pb';
 import { getRegisteredOption } from '../options-registry';
 
 /**
@@ -81,14 +84,18 @@ interface ParsedRange {
  * @param fieldName Array representing the field path.
  * @param fieldValue The actual value of the field.
  * @param rangeStr The range string that was violated.
+ * @param customErrorMsg Optional custom error message from RangeOption.
  * @returns A `ConstraintViolation` object.
  */
 function createViolation(
     typeName: string,
     fieldName: string[],
     fieldValue: any,
-    rangeStr: string
+    rangeStr: string,
+    customErrorMsg?: string
 ): ConstraintViolation {
+    const errorMsg = customErrorMsg || `The number must be in range ${rangeStr}.`;
+
     return create(ConstraintViolationSchema, {
         typeName,
         fieldPath: create(FieldPathSchema, {
@@ -96,7 +103,7 @@ function createViolation(
         }),
         fieldValue: undefined,
         message: create(TemplateStringSchema, {
-            withPlaceholders: `The number must be in range ${rangeStr}.`,
+            withPlaceholders: errorMsg,
             placeholderValue: {
                 'value': String(fieldValue),
                 'range': rangeStr
@@ -249,10 +256,13 @@ function validateFieldRange<T extends Message>(
             return;
         }
 
-        const rangeStr = getOption(field, rangeOpt);
-        if (!rangeStr || typeof rangeStr !== 'string') {
+        const rangeOption = getOption(field, rangeOpt) as RangeOption | undefined;
+        if (!rangeOption || !rangeOption.value) {
             return;
         }
+
+        const rangeStr = rangeOption.value;
+        const customErrorMsg = rangeOption.errorMsg || undefined;
 
         const range = parseRange(rangeStr, scalarType);
         if (!range) {
@@ -269,7 +279,8 @@ function validateFieldRange<T extends Message>(
                     schema.typeName,
                     [field.name, String(index)],
                     element,
-                    rangeStr
+                    rangeStr,
+                    customErrorMsg
                 ));
             }
         });
@@ -287,10 +298,13 @@ function validateFieldRange<T extends Message>(
             return;
         }
 
-        const rangeStr = getOption(field, rangeOpt);
-        if (!rangeStr || typeof rangeStr !== 'string') {
+        const rangeOption = getOption(field, rangeOpt) as RangeOption | undefined;
+        if (!rangeOption || !rangeOption.value) {
             return;
         }
+
+        const rangeStr = rangeOption.value;
+        const customErrorMsg = rangeOption.errorMsg || undefined;
 
         const range = parseRange(rangeStr, scalarType);
         if (!range) {
@@ -306,7 +320,8 @@ function validateFieldRange<T extends Message>(
                 schema.typeName,
                 [field.name],
                 fieldValue,
-                rangeStr
+                rangeStr,
+                customErrorMsg
             ));
         }
     }

@@ -61,7 +61,6 @@ message GetUserRequest {
 }
 
 message GetUserResponse {
-    User user = 1 [(validate) = true,
-                   (if_invalid).error_msg = "User data is invalid."];
+    User user = 1 [(validate) = true];
     bool found = 2;
 }

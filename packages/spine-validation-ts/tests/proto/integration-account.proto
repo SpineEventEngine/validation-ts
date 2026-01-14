@@ -37,7 +37,7 @@ import "spine/options.proto";
 
 // Account message combining multiple validation constraints.
 message Account {
-    option (required_field) = "id | email";
+    option (require).fields = "id | email";
 
     int32 id = 1 [(min).value = "1"];
     // Must be a valid email address (basic format validation).
@@ -61,14 +61,14 @@ message Account {
     AccountType account_type = 5 [(required) = true];
     int32 age = 6 [
         (required) = true,
-        (range) = "[13..120]"
+        (range).value = "[13..120]"
     ];
     double balance = 7 [
         (min).value = "0.0",
         (max).value = "1000000.0"
     ];
-    int32 failed_login_attempts = 8 [(range) = "[0..5]"];
-    double rating = 9 [(range) = "[1.0..5.0]"];
+    int32 failed_login_attempts = 8 [(range).value = "[0..5]"];
+    double rating = 9 [(range).value = "[1.0..5.0]"];
 }
 
 // Account type enumeration.
