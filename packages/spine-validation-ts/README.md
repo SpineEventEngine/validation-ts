@@ -2,6 +2,8 @@
 
 TypeScript validation library for Protobuf messages with [Spine Validation](https://github.com/SpineEventEngine/validation/) options.
 
+> **🔧 This package is in its experimental stage, the public API should not be considered stable.**
+
 ## Features
 
 - ✅ Runtime validation of Protobuf messages against Spine validation constraints

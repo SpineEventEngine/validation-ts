@@ -3,7 +3,7 @@
 A TypeScript validation library for Protobuf messages using [Spine Validation](https://github.com/SpineEventEngine/validation/) options, 
 built on [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2).
 
----
+> **🔧 This library is in its experimental stage, the public API should not be considered stable.**
 
 ## 💡 Why Use This?
 
@@ -27,7 +27,6 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 - ✅ **Works with Protobuf-ES v2** and modern tooling.
 - ✅ **Extensible architecture** for custom validation logic.
 
----
 
 ## ✨ Features
 
@@ -38,7 +37,7 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 - **`(min)` / `(max)`** — Numeric bounds with inclusive/exclusive support.
 - **`(range)`** — Bounded ranges with bracket notation `(min..max]`.
 - **`(distinct)`** — Enforce uniqueness in repeated fields.
-- **`(validate)`** — Recursive nested message validation.
+- **``(`validate)`** — Recursive nested message validation.
 - **`(goes)`** — Field dependency constraints.
 - **`(require)`** — Complex required field combinations with boolean logic.
 - **`(choice)`** — Require that a oneof group has at least one field set.
@@ -56,7 +55,6 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 - **`(set_once)`** — Not currently supported. This option requires state tracking across multiple validations,
 which is outside the scope of single-message validation.
 
----
 
 ## 🚀 Quick Start
 
