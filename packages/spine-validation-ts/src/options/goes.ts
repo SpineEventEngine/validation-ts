@@ -60,7 +60,7 @@ import { getRegisteredOption } from '../options-registry';
 /**
  * Checks if a field has a non-default value (is "set") in proto3.
  *
- * For proto3 fields:
+ * For `proto3` fields:
  * - Message fields — non-default instance (not `undefined`/`null`)
  * - String fields — non-empty string
  * - Numeric fields — non-zero value

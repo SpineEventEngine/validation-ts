@@ -27,13 +27,13 @@
 /**
  * Validation logic for the `(choice)` option.
  *
- * The `(choice)` option is a oneof-level constraint that ensures at least one
- * field in a oneof group is set.
+ * The `(choice)` option is a `oneof`-level constraint that ensures at least one
+ * field in a `oneof` group is set.
  *
  * Features:
- * - Validates that a oneof group has at least one field set when required
+ * - Validates that a `oneof` group has at least one field set when required
  * - Supports custom error messages via ChoiceOption.errorMsg
- * - Works with any field types within the oneof group
+ * - Works with any field types within the `oneof` group
  *
  * Examples:
  * ```protobuf
@@ -64,8 +64,8 @@ import { getRegisteredOption } from '../options-registry';
  * Creates a constraint violation for `(choice)` validation failures.
  *
  * @param typeName The fully qualified message type name.
- * @param oneofName The name of the oneof group.
- * @param customErrorMsg Optional custom error message from ChoiceOption.
+ * @param oneofName The name of the `oneof` group.
+ * @param customErrorMsg Optional custom error message from `ChoiceOption`.
  * @returns A `ConstraintViolation` object.
  */
 function createViolation(
@@ -74,7 +74,7 @@ function createViolation(
     customErrorMsg?: string
 ): ConstraintViolation {
     const errorMsg = customErrorMsg ||
-        `The oneof group '${oneofName}' must have one of its fields set.`;
+        `The \`oneof\` group '${oneofName}' must have one of its fields set.`;
 
     return create(ConstraintViolationSchema, {
         typeName,
@@ -96,13 +96,13 @@ function createViolation(
 }
 
 /**
- * Checks if any field in a oneof group is set.
+ * Checks if any field in a `oneof` group is set.
  *
- * In Protobuf-ES v2, oneofs are represented as a single property with
- * `case` and `value` fields. The oneof is set if `case` is defined.
+ * In Protobuf-ES v2, `oneof`s are represented as a single property with
+ * `case` and `value` fields. The `oneof` is set if `case` is defined.
  *
  * @param message The message instance.
- * @param oneof The oneof descriptor.
+ * @param oneof The `oneof` descriptor.
  * @returns `true` if at least one field is set, `false` otherwise.
  */
 function isOneofSet(message: any, oneof: any): boolean {
@@ -147,8 +147,8 @@ function validateOneofChoice<T extends Message>(
 /**
  * Validates the `(choice)` option for all oneof groups in a message.
  *
- * This is a oneof-level constraint that ensures at least one field
- * in the oneof group is set when the option is enabled.
+ * This is a `oneof`-level constraint that ensures at least one field
+ * in the `oneof` group is set when the option is enabled.
  *
  * @param schema The message schema containing oneof descriptors.
  * @param message The message instance to validate.

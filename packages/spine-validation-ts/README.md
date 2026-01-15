@@ -2,6 +2,8 @@
 
 TypeScript validation library for Protobuf messages with [Spine Validation](https://github.com/SpineEventEngine/validation/) options.
 
+> **🔧 This package is in its experimental stage, the public API should not be considered stable.**
+
 ## Features
 
 - ✅ Runtime validation of Protobuf messages against Spine validation constraints
@@ -9,7 +11,6 @@ TypeScript validation library for Protobuf messages with [Spine Validation](http
 - ✅ Custom error messages with placeholder substitution
 - ✅ Type-safe validation with full TypeScript support
 - ✅ Works with [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2)
-- ✅ Comprehensive test coverage (200+ tests)
 
 ## Prerequisites
 
@@ -40,19 +41,15 @@ Install it using the `@snapshot` dist-tag:
 npm install @spine-event-engine/validation-ts@snapshot @bufbuild/protobuf
 ```
 
-To install a specific snapshot version:
+**Note:** `@bufbuild/protobuf` is a peer dependency and must be installed explicitly. You'll use it for creating and working with Protobuf messages in your application code.
 
-```bash
-npm install @spine-event-engine/validation-ts@2.0.0-snapshot.3 @bufbuild/protobuf
-```
+## Quick Start
 
-> **Note:** This library is in active development and therefore it is published as a snapshot.
+### Usage Guide
 
-### Setup Code Generation
+#### Step 1: Configure Buf for code generation
 
-Ensure your project uses [Buf](https://buf.build/) with the Protobuf-ES plugin.
-
-**buf.gen.yaml:**
+Create a `buf.gen.yaml` file in your project root:
 
 ```yaml
 version: v2
@@ -61,30 +58,58 @@ plugins:
     out: src/generated
 ```
 
-Generate TypeScript code from the Proto files:
+#### Step 2: Define validation in your Proto files
+
+Create your `.proto` file with Spine validation options:
+
+```protobuf
+syntax = "proto3";
+
+import "spine/options.proto";
+
+message User {
+  string name = 1 [(required) = true];
+
+  string email = 2 [
+    (required) = true,
+    (pattern).regex = "^[^@]+@[^@]+\\.[^@]+$",
+    (pattern).error_msg = "Email must be valid. Provided: `{value}`."
+  ];
+
+  int32 age = 3 [
+    (min).value = "0",
+    (max).value = "150"
+  ];
+
+  repeated string tags = 4 [(distinct) = true];
+}
+```
+
+#### Step 3: Generate TypeScript code
+
+Run Buf to generate TypeScript code from your proto files:
 
 ```bash
 buf generate
 ```
 
-## Quick Start
+This generates TypeScript schemas in `src/generated/` that include all validation metadata.
+
+#### Step 4: Use Validation library in your TypeScript code
 
 ```typescript
 import { create } from '@bufbuild/protobuf';
 import { validate, Violations } from '@spine-event-engine/validation-ts';
 import { UserSchema } from './generated/user_pb';
 
-// Create a message with validation constraints.
 const user = create(UserSchema, {
-    name: '',  // This field is marked as `(required) = true`
-    email: ''  // This field is also required
+    name: '',   // Missing required field
+    email: 'invalid-email'  // Invalid pattern
 });
 
-// Validate the message.
 const violations = validate(UserSchema, user);
 
 if (violations.length > 0) {
-    // Use Violations utility object to access violation details.
     violations.forEach(violation => {
         const fieldPath = Violations.failurePath(violation);
         const message = Violations.formatMessage(violation);
@@ -187,7 +212,7 @@ to build custom error displays tailored to your application.
 
 - ✅ **`(require)`** — Requires specific field combinations using boolean logic
 
-### Oneof-level options
+### `oneof`-Level Options
 
 - ✅ **`(choice)`** — Requires that a `oneof` group has at least one field set
 
@@ -317,7 +342,7 @@ message ContactInfo {
 }
 ```
 
-### `Oneof` constraints
+### `oneof` Constraints
 
 Use `(choice)` to require that a `oneof` group has a field set:
 
@@ -336,7 +361,7 @@ message PaymentMethod {
 
 ## Testing
 
-The package includes comprehensive test coverage with 200+ tests across 11 test suites:
+The production code is covered at ~80% of statements with 200+ tests across 11 test suites:
 
 - `basic-validation.test.ts` - Basic validation and formatting
 - `required.test.ts` - `(required)` and `(if_missing)` options
@@ -355,6 +380,16 @@ Run tests with:
 ```bash
 npm test
 ```
+
+## Architecture
+
+The validation system is built with extensibility in mind:
+
+- **`validation.ts`** — Core validation engine using the visitor pattern
+- **`options-registry.ts`** — Dynamic registration of validation options
+- **`options/`** — Modular validators for each Spine option
+- **Proto-first** — Validation rules defined in `.proto` files
+- **Type-safe** — Full TypeScript support with generated types
 
 ## Development Notes
 
