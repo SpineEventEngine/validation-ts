@@ -40,7 +40,7 @@ Even if you're not using Spine Event Engine, this library provides a powerful wa
 - **`(validate)`** — Recursive nested message validation.
 - **`(goes)`** — Field dependency constraints.
 - **`(require)`** — Complex required field combinations with boolean logic.
-- **`(choice)`** — Require that a oneof group has at least one field set.
+- **`(choice)`** — Require that a `oneof` group has at least one field set.
 
 **Developer Experience**
 
@@ -182,13 +182,10 @@ validation-ts/
 └── README.md                    # You are here
 ```
 
----
 
 ## 🎓 Documentation
 
-- **[Package README](packages/spine-validation-ts/README.md)** - Complete API documentation and usage guide.
-- **[Descriptor API Guide](packages/spine-validation-ts/DESCRIPTOR_API_GUIDE.md)** - Working with message and field descriptors.
-- **[Quick Reference](packages/spine-validation-ts/QUICK_REFERENCE.md)** - Cheat sheet for common operations.
+See the [package-level README](packages/spine-validation-ts/README.md) for more details.
 
 ---
 
@@ -249,7 +246,7 @@ npm run example
 |--------|-------------|---------|
 | `(require)` | Required field combinations | `option (require).fields = "id \| email";` |
 
-### Oneof-Level Options
+### `oneof`-Level Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
@@ -285,7 +282,7 @@ Test suites:
 - Nested validation
 - Field dependencies (`goes`)
 - Required field combinations (`require`)
-- `fneof` validation (`choice`)
+- `oneof` validation (`choice`)
 - Integration scenarios
 
 ---
