@@ -48,7 +48,7 @@ describe('Choice Option Validation (oneof)', () => {
 
         it('should fail when no field in required oneof is set', () => {
             const payment = create(PaymentMethodSchema, {
-                // method oneof not set
+                // method `oneof` not set
             });
 
             const violations = validate(PaymentMethodSchema, payment);
@@ -77,7 +77,7 @@ describe('Choice Option Validation (oneof)', () => {
     describe('Custom Error Messages', () => {
         it('should use custom error message when provided', () => {
             const contact = create(ContactMethodSchema, {
-                // contact oneof not set, has custom error message
+                // contact `oneof` not set, has custom error message
             });
 
             const violations = validate(ContactMethodSchema, contact);
@@ -97,7 +97,7 @@ describe('Choice Option Validation (oneof)', () => {
     describe('Optional Oneofs', () => {
         it('should pass when optional oneof is not set', () => {
             const shipping = create(ShippingOptionSchema, {
-                // delivery oneof is optional (choice.required = false)
+                // delivery `oneof` is optional (choice.required = false)
             });
 
             const violations = validate(ShippingOptionSchema, shipping);

@@ -188,7 +188,7 @@ to build custom error displays tailored to your application.
 
 - ✅ **`(require)`** — Requires specific field combinations using boolean logic
 
-### Oneof-level options
+### `oneof`-Level Options
 
 - ✅ **`(choice)`** — Requires that a `oneof` group has at least one field set
 
@@ -318,7 +318,7 @@ message ContactInfo {
 }
 ```
 
-### `Oneof` constraints
+### `oneof` Constraints
 
 Use `(choice)` to require that a `oneof` group has a field set:
 

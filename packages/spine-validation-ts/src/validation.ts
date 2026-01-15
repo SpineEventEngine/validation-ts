@@ -67,7 +67,7 @@ export type { FieldPath } from './generated/spine/base/field_path_pb';
  * - `(distinct)` — ensures all elements in repeated fields are unique
  * - `(validate)` — enables recursive validation of nested message fields
  * - `(goes)` — enforces field dependency (field can only be set if another field is set)
- * - `(choice)` — requires that a oneof group has at least one field set
+ * - `(choice)` — requires that a `oneof` group has at least one field set
  *
  * @param schema The message schema containing validation metadata.
  * @param message The message instance to validate.
