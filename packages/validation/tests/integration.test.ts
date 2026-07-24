@@ -121,7 +121,7 @@ describe("Integration Tests", () => {
         v.message?.withPlaceholders.includes("must not contain duplicates"),
     );
     expect(tagViolation).toBeDefined();
-    expect(tagViolation?.message?.placeholderValue?.["field.duplicates"]).toBe('["developer"]');
+    expect(tagViolation?.message?.placeholderValue?.["field.duplicates"]).toBe("[developer]");
   });
 
   it("should detect multiple constraint violations including `distinct`", () => {

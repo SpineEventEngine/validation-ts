@@ -85,7 +85,7 @@ describe("Distinct Validation", () => {
       const numberViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "numbers");
       expect(numberViolation).toBeDefined();
       expect(numberViolation?.fieldPath?.fieldName).toEqual(["numbers"]);
-      expect(numberViolation?.message?.placeholderValue?.["field.value"]).toBe("[1,2,3,2,4]");
+      expect(numberViolation?.message?.placeholderValue?.["field.value"]).toBe("[1, 2, 3, 2, 4]");
       expect(numberViolation?.message?.placeholderValue?.["field.duplicates"]).toBe("[2]");
     });
 
@@ -100,7 +100,7 @@ describe("Distinct Validation", () => {
       const violations = validate(DistinctPrimitivesSchema, invalid);
       const tagViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "tags");
       expect(tagViolation).toBeDefined();
-      expect(tagViolation?.message?.placeholderValue?.["field.duplicates"]).toBe('["alpha"]');
+      expect(tagViolation?.message?.placeholderValue?.["field.duplicates"]).toBe("[alpha]");
     });
 
     it("should fail when doubles have duplicates", () => {
@@ -151,10 +151,10 @@ describe("Distinct Validation", () => {
       ).toEqual(["A", "B"]);
       expect(
         violations.map((violation) => violation.message?.placeholderValue?.["field.value"]),
-      ).toEqual(['["A","A","A","A","B","B","C","D"]', '["A","A","A","A","B","B","C","D"]']);
+      ).toEqual(["[A, A, A, A, B, B, C, D]", "[A, A, A, A, B, B, C, D]"]);
       expect(
         violations.map((violation) => violation.message?.placeholderValue?.["field.duplicates"]),
-      ).toEqual(['["A"]', '["B"]']);
+      ).toEqual(["[A]", "[B]"]);
     });
   });
 
@@ -239,7 +239,7 @@ describe("Distinct Validation", () => {
       );
       expect(distinctViolation).toBeDefined();
       expect(distinctViolation?.message?.placeholderValue?.["field.duplicates"]).toBe(
-        '["user1@example.com"]',
+        "[user1@example.com]",
       );
     });
 
@@ -498,6 +498,12 @@ describe("descriptor-aware distinct equality", () => {
     expect(
       nameViolations.map((violation) => anyUnpack(violation.fieldValue!, StringValueSchema)?.value),
     ).toEqual(["A", "B"]);
+    expect(
+      nameViolations.map((violation) => violation.message?.placeholderValue?.["field.value"]),
+    ).toEqual(["{first=A, second=A, third=B, fourth=B}", "{first=A, second=A, third=B, fourth=B}"]);
+    expect(
+      nameViolations.map((violation) => violation.message?.placeholderValue?.["field.duplicates"]),
+    ).toEqual(["[A]", "[B]"]);
     expect(
       violations.filter((violation) => violation.fieldPath?.fieldName[0] === "state_by_name"),
     ).toHaveLength(1);

@@ -128,13 +128,17 @@ function distinctDiagnostic(field: DescField): IfHasDuplicatesOption | undefined
 }
 
 function formatCollection(value: unknown): string {
+  return formatValue(value);
+}
+
+function formatValue(value: unknown): string {
   if (value instanceof Uint8Array) return bytesToHex(value);
   if (typeof value === "bigint") return value.toString();
-  if (typeof value === "object" && value !== null) {
-    return JSON.stringify(value, (_, nested) => {
-      if (nested instanceof Uint8Array) return bytesToHex(nested);
-      return typeof nested === "bigint" ? nested.toString() : nested;
-    });
+  if (Array.isArray(value)) return `[${value.map(formatValue).join(", ")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.entries(value)
+      .map(([key, nested]) => `${key}=${formatValue(nested)}`)
+      .join(", ")}}`;
   }
   return String(value);
 }
