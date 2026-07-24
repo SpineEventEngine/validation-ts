@@ -81,10 +81,10 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Task 5 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Buf equality, duplicate classes, diagnostics, packing, and unsupported targets | Approved after F-016; closed               |
 | Task 6 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Leaf recursion, root context, message paths, Any registry, and target errors   | Approved; closed                           |
 | Task 7 implementation          | `/root/implementer_coverage` | `gpt-5.6-terra` | medium             | Own branch-focused tests, Jest thresholds, README, and affected API comments   | Complete and closed                        |
-| Style/maintainability review   | Pending dispatch             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Pending                                    |
-| Documentation review           | Pending dispatch             | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Pending                                    |
-| TypeScript/API review          | Pending dispatch             | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Pending                                    |
-| Performance/reliability review | Pending dispatch             | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Pending                                    |
+| Style/maintainability review   | `/root/style_final`          | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Dispatched                                 |
+| Documentation review           | `/root/docs_final`           | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Dispatched                                 |
+| TypeScript/API review          | `/root/api_final`            | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Dispatched                                 |
+| Performance/reliability review | `/root/reliability_final`    | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Queued after first reviewer closes         |
 
 ## Scope And Ownership
 
