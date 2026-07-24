@@ -42,7 +42,7 @@ import { validatePatternFields } from "./options/pattern";
 import { validateRequireOption } from "./options/required-field";
 import { validateMinMaxField } from "./options/min-max";
 import { validateRangeField } from "./options/range";
-import { validateDistinctFields } from "./options/distinct";
+import { validateDistinctField } from "./options/distinct";
 import { validateNestedFields } from "./options/validate";
 import { validateGoesField } from "./options/goes";
 import { validateChoiceOptions } from "./options/choice";
@@ -66,7 +66,11 @@ const fieldValidators: readonly FieldValidator[] = [
       validateRangeField(context, schema, message, field, violations);
     },
   },
-  legacyFieldValidator(validateDistinctFields),
+  {
+    validate(context, schema, message, field, violations) {
+      validateDistinctField(context, schema, message, field, violations);
+    },
+  },
   legacyFieldValidator(validateNestedFields),
   {
     validate(context, schema, message, field, violations) {

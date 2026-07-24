@@ -113,3 +113,37 @@ message DistinctEdgeCases {
     repeated int32 zeros = 2 [(distinct) = true];
     repeated string case_sensitive = 3 [(distinct) = true];
 }
+
+// Exercises the descriptor-aware equality paths used by `(distinct)`.
+message DistinctAdvanced {
+    repeated bytes byte_values = 1 [(distinct) = true];
+    repeated int64 int64_values = 2 [(distinct) = true];
+    repeated Status statuses = 3 [(distinct) = true];
+    repeated DistinctValue messages = 4 [(distinct) = true];
+    map<string, string> names = 5 [(distinct) = true];
+    map<string, Status> state_by_name = 6 [(distinct) = true];
+    map<string, DistinctValue> value_by_name = 7 [(distinct) = true];
+}
+
+message DistinctValue {
+    string name = 1;
+    int64 sequence = 2;
+}
+
+// An invalid declaration must fail with a structured configuration error.
+message DistinctUnsupportedTarget {
+    string name = 1 [(distinct) = true];
+}
+
+// Explicit false is a no-op, not an invalid declaration.
+message DistinctDisabled {
+    repeated string values = 1 [(distinct) = false];
+}
+
+// Custom messages override the frozen default message.
+message DistinctCustomMessage {
+    repeated string values = 1 [
+        (distinct) = true,
+        (if_has_duplicates).error_msg = "Duplicate class: `${field.duplicates}`."
+    ];
+}

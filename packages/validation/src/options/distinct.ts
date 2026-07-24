@@ -7,217 +7,138 @@
  *
  * https://www.apache.org/licenses/LICENSE-2.0
  *
- * Redistribution and use in source and/or binary forms, with or without
- * modification, must retain the above copyright notice and the following
- * disclaimer.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-/**
- * Validation logic for the `(distinct)` option.
- *
- * The `(distinct)` option is a field-level constraint that enforces uniqueness
- * of elements in repeated fields and map field values.
- *
- * Supported field types:
- * - All repeated scalar types (`int32`, `int64`, `uint32`, `uint64`, `sint32`, `sint64`,
- *   `fixed32`, `fixed64`, `sfixed32`, `sfixed64`, `float`, `double`, `bool`, `string`, `bytes`)
- * - Repeated enum fields
- * - Map fields (validates that all values are unique; keys are inherently unique)
- *
- * Features:
- * - Ensures all elements in a repeated field are unique
- * - Ensures all values in a map field are unique (keys are always unique by definition)
- * - Detects duplicate values and reports violations with element indices or keys
- * - Works with primitive types (numbers, strings, booleans)
- * - Works with enum values
- *
- * Examples:
- * ```protobuf
- * repeated string tags = 1 [(distinct) = true];
- * repeated int32 product_ids = 2 [(distinct) = true];
- * repeated Status statuses = 3 [(distinct) = true];
- * map<string, Email> emails = 4 [(distinct) = true];  // Email values must be unique
- * ```
- */
+/** Validation of the descriptor-defined `(distinct)` option. */
 
-import type { Message } from "@bufbuild/protobuf";
-import { getOption, hasOption, create } from "@bufbuild/protobuf";
+import { equals, getOption, hasOption } from "@bufbuild/protobuf";
+import type { DescField } from "@bufbuild/protobuf";
+import { scalarEquals } from "@bufbuild/protobuf/reflect";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
-import { ConstraintViolationSchema } from "../generated/spine/validate/validation_error_pb";
-import { FieldPathSchema } from "../generated/spine/base/field_path_pb";
-import { TemplateStringSchema } from "../generated/spine/validate/error_message_pb";
+import {
+  default_message,
+  IfHasDuplicatesOptionSchema,
+  type IfHasDuplicatesOption,
+} from "../generated/spine/options_pb";
 import { getRegisteredOption } from "../options-registry";
+import { createConstraintViolation, ValidationContext } from "../validation-contract";
+import { ValidationConfigurationError } from "../validation-configuration-error";
 
-/**
- * Creates a constraint violation for `(distinct)` validation failures.
- *
- * @param typeName The fully qualified message type name.
- * @param fieldName Array representing the field path (including index or key).
- * @param duplicateValue The duplicate value found.
- * @param firstLocation Index (for repeated fields) or key (for map fields) of the first occurrence.
- * @param duplicateLocation Index (for repeated fields) or key (for map fields) of the duplicate occurrence.
- * @returns A `ConstraintViolation` object.
- */
-function createViolation(
-  typeName: string,
-  fieldName: string[],
-  duplicateValue: any,
-  firstLocation: number | string,
-  duplicateLocation: number | string,
-): ConstraintViolation {
-  return create(ConstraintViolationSchema, {
-    typeName,
-    fieldPath: create(FieldPathSchema, {
-      fieldName,
-    }),
-    fieldValue: undefined,
-    message: create(TemplateStringSchema, {
-      withPlaceholders: `Duplicate value found. Value {value} at location {duplicate_index} is a duplicate of the value at location {first_index}.`,
-      placeholderValue: {
-        value: String(duplicateValue),
-        first_index: String(firstLocation),
-        duplicate_index: String(duplicateLocation),
-      },
-    }),
-    msgFormat: "",
-    param: [],
-    violation: [],
-  });
+interface EqualityClass {
+  representative: unknown;
+  count: number;
 }
 
-/**
- * Checks if two values are considered equal for distinctness purposes.
- *
- * Uses strict equality for primitives (number, string, boolean, bigint).
- *
- * @param val1 The first value to compare.
- * @param val2 The second value to compare.
- * @returns `true` if the values are equal, `false` otherwise.
- */
-function valuesAreEqual(val1: any, val2: any): boolean {
-  return val1 === val2;
-}
-
-/**
- * Validates `(distinct)` constraint for a single field.
- *
- * @param schema The message schema containing field descriptors.
- * @param message The message instance being validated.
- * @param field The field descriptor to validate.
- * @param violations Array to collect constraint violations.
- */
-function validateFieldDistinct<T extends Message>(
-  schema: GenMessage<T>,
-  message: any,
-  field: any,
+/** Validates `(distinct)` for one field in deterministic orchestration order. */
+export function validateDistinctField(
+  context: ValidationContext,
+  schema: GenMessage<any>,
+  message: Record<string, unknown>,
+  field: DescField,
   violations: ConstraintViolation[],
 ): void {
-  const distinctOpt = getRegisteredOption("distinct");
-
-  if (!distinctOpt) {
-    return;
-  }
-
+  const extension = getRegisteredOption("distinct");
+  if (!extension || !hasOption(field, extension)) return;
+  if (getOption(field, extension) !== true) return;
   if (field.fieldKind !== "list" && field.fieldKind !== "map") {
-    return;
-  }
-
-  if (!hasOption(field, distinctOpt)) {
-    return;
-  }
-
-  const distinctValue = getOption(field, distinctOpt);
-  if (distinctValue !== true) {
-    return;
-  }
-
-  const fieldValue = (message as any)[field.localName];
-
-  if (field.fieldKind === "list") {
-    if (!Array.isArray(fieldValue) || fieldValue.length <= 1) {
-      return;
-    }
-
-    const seenValues = new Map<any, number>();
-
-    fieldValue.forEach((element: any, index: number) => {
-      let isDuplicate = false;
-      let firstIndex = -1;
-
-      for (const [seenValue, seenIndex] of seenValues.entries()) {
-        if (valuesAreEqual(element, seenValue)) {
-          isDuplicate = true;
-          firstIndex = seenIndex;
-          break;
-        }
-      }
-
-      if (isDuplicate) {
-        violations.push(
-          createViolation(schema.typeName, [field.name, String(index)], element, firstIndex, index),
-        );
-      } else {
-        seenValues.set(element, index);
-      }
+    throw new ValidationConfigurationError({
+      code: "UNSUPPORTED_OPTION_TARGET",
+      option: "distinct",
+      typeName: schema.typeName,
+      fieldPath: [field.name],
     });
-  } else if (field.fieldKind === "map") {
-    if (!fieldValue || Object.keys(fieldValue).length <= 1) {
-      return;
+  }
+
+  const collection = message[field.localName];
+  const values = collectionValues(field, collection);
+  if (values.length < 2) return;
+
+  const classes: EqualityClass[] = [];
+  for (const value of values) {
+    const existing = classes.find((candidate) =>
+      valuesAreEqual(field, candidate.representative, value),
+    );
+    if (existing) {
+      existing.count++;
+    } else {
+      classes.push({ representative: value, count: 1 });
     }
+  }
 
-    const seenValues = new Map<any, string>();
-    const entries = Object.entries(fieldValue);
-
-    entries.forEach(([key, value]) => {
-      let isDuplicate = false;
-      let firstKey = "";
-
-      for (const [seenValue, seenKey] of seenValues.entries()) {
-        if (valuesAreEqual(value, seenValue)) {
-          isDuplicate = true;
-          firstKey = seenKey;
-          break;
-        }
-      }
-
-      if (isDuplicate) {
-        violations.push(createViolation(schema.typeName, [field.name, key], value, firstKey, key));
-      } else {
-        seenValues.set(value, key);
-      }
-    });
+  const custom = distinctDiagnostic(field);
+  for (const duplicate of classes) {
+    if (duplicate.count < 2) continue;
+    violations.push(
+      createConstraintViolation(context.atField(field), field, duplicate.representative, {
+        customMessage: custom?.errorMsg || undefined,
+        defaultMessage: getOption(IfHasDuplicatesOptionSchema, default_message),
+        placeholders: {
+          "field.value": formatCollection(collection),
+          "field.duplicates": formatCollection([duplicate.representative]),
+        },
+      }),
+    );
   }
 }
 
-/**
- * Validates the `(distinct)` option for all fields in a message.
- *
- * This is a field-level constraint that enforces uniqueness of elements
- * in repeated fields. Only applies to repeated fields (lists).
- *
- * @param schema The message schema containing field descriptors.
- * @param message The message instance to validate.
- * @param violations Array to collect constraint violations.
- */
-export function validateDistinctFields<T extends Message>(
-  schema: GenMessage<T>,
-  message: any,
+/** Retained for internal callers that validate all fields outside orchestration. */
+export function validateDistinctFields(
+  schema: GenMessage<any>,
+  message: Record<string, unknown>,
   violations: ConstraintViolation[],
 ): void {
-  for (const field of schema.fields) {
-    validateFieldDistinct(schema, message, field, violations);
+  const context = new ValidationContext(schema.typeName);
+  for (const field of schema.fields)
+    validateDistinctField(context, schema, message, field, violations);
+}
+
+function collectionValues(field: DescField, collection: unknown): unknown[] {
+  if (field.fieldKind === "list") return Array.isArray(collection) ? collection : [];
+  if (collection === null || typeof collection !== "object") return [];
+  return Object.values(collection);
+}
+
+function valuesAreEqual(field: DescField, left: unknown, right: unknown): boolean {
+  if (field.fieldKind === "list") {
+    if (field.listKind === "scalar")
+      return scalarEquals(field.scalar, left as never, right as never);
+    if (field.listKind === "enum") return Number(left) === Number(right);
+    return equals(field.message, left as never, right as never);
   }
+  if (field.fieldKind !== "map") {
+    throw new Error("distinct values must come from a repeated or map field");
+  }
+  if (field.mapKind === "scalar") return scalarEquals(field.scalar, left as never, right as never);
+  if (field.mapKind === "enum") return Number(left) === Number(right);
+  return equals(field.message, left as never, right as never);
+}
+
+function distinctDiagnostic(field: DescField): IfHasDuplicatesOption | undefined {
+  const extension = getRegisteredOption("if_has_duplicates");
+  return extension && hasOption(field, extension)
+    ? (getOption(field, extension) as IfHasDuplicatesOption)
+    : undefined;
+}
+
+function formatCollection(value: unknown): string {
+  if (value instanceof Uint8Array) return bytesToHex(value);
+  if (typeof value === "bigint") return value.toString();
+  if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value, (_, nested) => {
+      if (nested instanceof Uint8Array) return bytesToHex(nested);
+      return typeof nested === "bigint" ? nested.toString() : nested;
+    });
+  }
+  return String(value);
+}
+
+function bytesToHex(value: Uint8Array): string {
+  return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
