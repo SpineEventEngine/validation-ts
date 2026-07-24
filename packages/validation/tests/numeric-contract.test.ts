@@ -52,6 +52,18 @@ import {
 
 describe("exact numeric validation contract", () => {
   it("keeps 64-bit integer bounds exact and packs a repeated offending value", () => {
+    const exactValues = 9007199254740993n;
+    expect(
+      validate(
+        NumericBoundsContractSchema,
+        create(NumericBoundsContractSchema, {
+          preciseMin: exactValues,
+          preciseMax: exactValues,
+          repeatedPrecise: [exactValues],
+        }),
+      ),
+    ).toEqual([]);
+
     const violations = validate(
       NumericBoundsContractSchema,
       create(NumericBoundsContractSchema, {
@@ -250,16 +262,43 @@ describe("exact numeric validation contract", () => {
   it("rejects NaN in repeated numeric values", () => {
     const minViolations = validate(
       RepeatedMinMaxSchema,
-      create(RepeatedMinMaxSchema, { prices: [Number.NaN] }),
+      create(RepeatedMinMaxSchema, {
+        prices: [Number.NaN],
+        measurements: [Number.NaN],
+      }),
     );
     const rangeViolations = validate(
       RepeatedRangeSchema,
       create(RepeatedRangeSchema, { percentages: [Number.NaN] }),
     );
 
-    expect(minViolations.map((violation) => violation.fieldPath?.fieldName)).toEqual([["prices"]]);
+    expect(minViolations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["prices"],
+      ["measurements"],
+      ["measurements"],
+    ]);
     expect(rangeViolations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
       ["percentages"],
     ]);
+  });
+
+  it("keeps Infinity subject to its numeric bounds", () => {
+    const violations = validate(
+      NumericTypesSchema,
+      create(NumericTypesSchema, {
+        uint64Field: 1n,
+        floatField: Number.POSITIVE_INFINITY,
+        doubleField: Number.NEGATIVE_INFINITY,
+      }),
+    );
+
+    expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["float_field"],
+      ["double_field"],
+    ]);
+    expect(
+      violations.map((violation) => violation.message?.placeholderValue["max.operator"]),
+    ).toEqual(["<=", undefined]);
+    expect(violations[1].message?.placeholderValue["min.operator"]).toBe(">=");
   });
 });

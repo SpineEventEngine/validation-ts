@@ -102,6 +102,7 @@ message NumericTypes {
 message RepeatedMinMax {
     repeated int32 scores = 1 [(min).value = "0", (max).value = "100"];
     repeated double prices = 2 [(min).value = "0.01"];
+    repeated float measurements = 3 [(min).value = "0.0", (max).value = "100.0"];
 }
 
 // Tests combined required and min/max constraints.
