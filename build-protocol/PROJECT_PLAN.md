@@ -4,7 +4,8 @@
 
 | ID     | Milestone                                                                         | Status      |
 | ------ | --------------------------------------------------------------------------------- | ----------- |
-| T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | In progress |
+| T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | Complete    |
+| T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | In progress |
 
 ## Accepted Follow-Up Boundaries
 
@@ -16,6 +17,8 @@
   substantial behavioral expansion.
 - Add Validation TS extensions from immutable
   `spine/time_options.proto` definitions in future approved milestones.
+- Keep Java `Pattern` compatibility unresolved during T-0002. Do not add a
+  third-party or project-owned regex engine without a later approved decision.
 
 No feature roadmap is inferred here. The human supplies future tasks, the
 orchestrator investigates and plans them, and implementation starts only after

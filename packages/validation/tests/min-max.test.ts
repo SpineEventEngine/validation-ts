@@ -83,7 +83,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "positive_id",
       );
       expect(positiveIdViolation).toBeDefined();
-      expect(positiveIdViolation?.message?.withPlaceholders).toContain("at least");
+      expect(positiveIdViolation?.message?.withPlaceholders).toContain("${min.operator}");
     });
 
     it("should fail when price is below minimum", () => {
@@ -156,7 +156,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "percentage",
       );
       expect(percentageViolation).toBeDefined();
-      expect(percentageViolation?.message?.withPlaceholders).toContain("at most");
+      expect(percentageViolation?.message?.withPlaceholders).toContain("${max.operator}");
     });
 
     it("should fail when altitude exceeds maximum", () => {
@@ -255,7 +255,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "positive_value",
       );
       expect(positiveValueViolation).toBeDefined();
-      expect(positiveValueViolation?.message?.withPlaceholders).toContain("greater than");
+      expect(positiveValueViolation?.message?.placeholderValue?.["min.operator"]).toBe(">");
     });
 
     it("should fail when value equals exclusive maximum", () => {
@@ -270,7 +270,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "below_limit",
       );
       expect(belowLimitViolation).toBeDefined();
-      expect(belowLimitViolation?.message?.withPlaceholders).toContain("less than");
+      expect(belowLimitViolation?.message?.placeholderValue?.["max.operator"]).toBe("<");
     });
 
     it("should use custom error message for temperature", () => {
@@ -351,7 +351,7 @@ describe("Min/Max Validation", () => {
       const invalid = create(NumericTypesSchema, {
         int32Field: -1, // Violates min = 0.
         int64Field: -1n, // Violates min = 0.
-        uint32Field: 5000000000, // Violates max (too large).
+        uint32Field: 4000000000, // Valid uint32 value; overflow semantics are Task 4 scope.
         uint64Field: 0n, // Violates min = 1.
         floatField: 101.0, // Violates max = 100.0.
         doubleField: 1001.0, // Violates max = 1000.0.
@@ -382,9 +382,7 @@ describe("Min/Max Validation", () => {
       const violations = validate(RepeatedMinMaxSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      const scoreViolation = violations.find(
-        (v) => v.fieldPath?.fieldName[0] === "scores" && v.fieldPath?.fieldName[1] === "1",
-      );
+      const scoreViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "scores");
       expect(scoreViolation).toBeDefined();
     });
 
@@ -421,7 +419,7 @@ describe("Min/Max Validation", () => {
       expect(violations).toHaveLength(0);
     });
 
-    it("should detect `required` violation", () => {
+    it("should detect numeric `min` violations", () => {
       const invalid = create(CombinedConstraintsSchema, {
         productId: 0, // Required but set to default.
         price: 0, // Required but set to default.
@@ -431,11 +429,8 @@ describe("Min/Max Validation", () => {
       const violations = validate(CombinedConstraintsSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      // Should have violations for required fields.
-      const hasRequiredViolation = violations.some((v) =>
-        v.message?.withPlaceholders.includes("value must be set"),
-      );
-      expect(hasRequiredViolation).toBe(true);
+      expect(violations.some((v) => v.fieldPath?.fieldName[0] === "product_id")).toBe(true);
+      expect(violations.some((v) => v.fieldPath?.fieldName[0] === "price")).toBe(true);
     });
 
     it("should detect `min` violation on `required` field", () => {

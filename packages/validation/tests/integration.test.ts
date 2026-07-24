@@ -87,7 +87,7 @@ describe("Integration Tests", () => {
 
     expect(formatted).toContain("spine.validation.testing.integration.User.name");
     expect(formatted).toContain("spine.validation.testing.integration.User.email");
-    expect(formatted).toContain("A value must be set");
+    expect(formatted).toContain("must have a non-default value");
   });
 
   it("should `validate` User with `distinct` tags", () => {
@@ -117,10 +117,11 @@ describe("Integration Tests", () => {
 
     const tagViolation = violations.find(
       (v) =>
-        v.fieldPath?.fieldName[0] === "tags" && v.message?.withPlaceholders.includes("Duplicate"),
+        v.fieldPath?.fieldName[0] === "tags" &&
+        v.message?.withPlaceholders.includes("must not contain duplicates"),
     );
     expect(tagViolation).toBeDefined();
-    expect(tagViolation?.message?.placeholderValue?.["value"]).toBe("developer");
+    expect(tagViolation?.message?.placeholderValue?.["field.duplicates"]).toBe("[developer]");
   });
 
   it("should detect multiple constraint violations including `distinct`", () => {
@@ -276,13 +277,13 @@ describe("Integration Tests", () => {
 
     const ageViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "age");
     expect(ageViolation).toBeDefined();
-    expect(ageViolation?.message?.withPlaceholders).toContain("[13..120]");
+    expect(ageViolation?.message?.placeholderValue?.["range.value"]).toBe("[13..120]");
 
     const attemptsViolation = violations.find(
       (v) => v.fieldPath?.fieldName[0] === "failed_login_attempts",
     );
     expect(attemptsViolation).toBeDefined();
-    expect(attemptsViolation?.message?.withPlaceholders).toContain("[0..5]");
+    expect(attemptsViolation?.message?.placeholderValue?.["range.value"]).toBe("[0..5]");
   });
 
   it("should detect both `required` and `range` violations on age field", () => {
@@ -385,7 +386,7 @@ describe("Integration Tests", () => {
     const violations3 = validate(AccountSchema, invalidRating);
     const ratingViolation = violations3.find((v) => v.fieldPath?.fieldName[0] === "rating");
     expect(ratingViolation).toBeDefined();
-    expect(ratingViolation?.message?.withPlaceholders).toContain("[1.0..5.0]");
+    expect(ratingViolation?.message?.placeholderValue?.["range.value"]).toBe("[1.0..5.0]");
   });
 
   describe("Nested Validation (validate) Integration", () => {
@@ -405,7 +406,7 @@ describe("Integration Tests", () => {
       expect(violations).toHaveLength(0);
     });
 
-    it("should detect nested User violations with default error message", () => {
+    it("should propagate nested User leaf violations without a parent summary", () => {
       const invalidResponse = create(GetUserResponseSchema, {
         user: create(UserSchema, {
           id: 1,
@@ -420,12 +421,10 @@ describe("Integration Tests", () => {
       const violations = validate(GetUserResponseSchema, invalidResponse);
       expect(violations.length).toBeGreaterThan(0);
 
-      // Should have parent-level violation with default message.
-      const parentViolation = violations.find(
+      const parentSummary = violations.find(
         (v) => v.fieldPath?.fieldName.length === 1 && v.fieldPath?.fieldName[0] === "user",
       );
-      expect(parentViolation).toBeDefined();
-      expect(parentViolation?.message?.withPlaceholders).toBe("Nested message validation failed.");
+      expect(parentSummary).toBeUndefined();
 
       // Should also have nested violation for name field.
       const nameViolation = violations.find(
@@ -486,8 +485,8 @@ describe("Integration Tests", () => {
       expect(violations.length).toBeGreaterThan(0);
 
       // Should have `required_field` violation.
-      const requiredFieldViolation = violations.find((v) =>
-        v.message?.withPlaceholders.includes("id | email"),
+      const requiredFieldViolation = violations.find(
+        (v) => v.message?.placeholderValue["require.fields"] === "email",
       );
       expect(requiredFieldViolation).toBeDefined();
     });
@@ -551,7 +550,7 @@ describe("Integration Tests", () => {
       const goesViolation = violations.find(
         (v) =>
           v.fieldPath?.fieldName[0] === "recovery_phone" &&
-          v.message?.withPlaceholders.includes("recovery_email"),
+          v.message?.placeholderValue["goes.companion"] === "recovery_email",
       );
       expect(goesViolation).toBeDefined();
     });
@@ -600,7 +599,7 @@ describe("Integration Tests", () => {
         (v) => v.fieldPath?.fieldName[0] === "max_connections",
       );
       expect(rangeViolation).toBeDefined();
-      expect(rangeViolation?.message?.withPlaceholders).toContain("[1..1000]");
+      expect(rangeViolation?.message?.placeholderValue?.["range.value"]).toBe("[1..1000]");
 
       const invalid2 = create(AdvancedConfigSchema, {
         configName: "", // Not set.
@@ -609,10 +608,7 @@ describe("Integration Tests", () => {
       });
 
       const violations2 = validate(AdvancedConfigSchema, invalid2);
-      const goesViolation = violations2.find(
-        (v) => v.fieldPath?.fieldName[0] === "max_connections",
-      );
-      expect(goesViolation).toBeDefined();
+      expect(violations2).toHaveLength(0);
     });
 
     it("should handle mutual dependencies with multiple constraint types", () => {
@@ -636,7 +632,9 @@ describe("Integration Tests", () => {
 
       const textColorViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "text_color");
       expect(textColorViolation).toBeDefined();
-      expect(textColorViolation?.message?.withPlaceholders).toContain("highlight_color");
+      expect(textColorViolation?.message?.placeholderValue["goes.companion"]).toBe(
+        "highlight_color",
+      );
     });
 
     it("should format `goes` violations correctly", () => {

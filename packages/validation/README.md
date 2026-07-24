@@ -7,7 +7,7 @@ TypeScript validation library for Protobuf messages with [Spine Validation](http
 ## Features
 
 - ✅ Runtime validation of Protobuf messages against Spine validation constraints
-- ✅ Support for all major Spine validation options
+- ✅ Support for the documented implemented Spine validation option surface
 - ✅ Custom error messages with placeholder substitution
 - ✅ Type-safe validation with full TypeScript support
 - ✅ Works with [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2)
@@ -81,7 +81,7 @@ message User {
   string email = 2 [
     (required) = true,
     (pattern).regex = "^[^@]+@[^@]+\\.[^@]+$",
-    (pattern).error_msg = "Email must be valid. Provided: `{value}`."
+    (pattern).error_msg = "Email must be valid. Provided: `${field.value}`."
   ];
 
   int32 age = 3 [
@@ -142,11 +142,24 @@ Validates a Protobuf message against its Spine validation constraints.
 
 Each `ConstraintViolation` contains:
 
-- `typeName` — the message type that failed validation
-- `fieldPath` — the path to the field that violated the constraint
-- `message` — the error message with placeholders replaced
-- `param` — additional parameters related to the violation
-- `violation` — nested violations for complex constraints
+- `typeName` — the root message type passed to `validate`, including for nested failures
+- `fieldPath` — the complete path of Proto field names, without list indices or map keys
+- `fieldValue` — the descriptor-packed offending value when the violation has one
+- `message` — a present `TemplateString`. It uses the custom or default option message;
+  when neither exists, `withPlaceholders` is the empty string.
+
+Validation walks fields in declaration order and uses a stable internal option
+order within each field. This is useful for predictable diagnostics, but is not
+a public ordering compatibility guarantee.
+
+### `ValidationConfigurationError`
+
+Invalid declarations throw the public `ValidationConfigurationError`. It has
+the stable fields `code`, `option`, `typeName`, optional `fieldPath`, and
+optional `cause`. Its codes are `UNSUPPORTED_OPTION_TARGET`,
+`INVALID_OPTION_VALUE`, `UNKNOWN_FIELD_REFERENCE`, and
+`INVALID_FIELD_REFERENCE`. The `option` is its canonical Proto option name,
+without parentheses.
 
 ### `Violations` Utility
 
@@ -215,14 +228,13 @@ to build custom error displays tailored to your application.
 
 ### Field-level options
 
-- ⚠️ **`(required)`** — Enforces string, message, and repeated-field presence; see the
-  contract-parity note below
+- ✅ **`(required)`** — Enforces presence for message, enum, string, bytes, repeated, and map fields
 - ✅ **`(if_missing)`** — Custom error message for required fields
 - ✅ **`(pattern)`** — Regex validation for string fields
-- ✅ **`(min)` / `(max)`** — Numeric range validation with inclusive/exclusive bounds
-- ✅ **`(range)`** — Bounded numeric ranges using bracket notation `[min..max]`, with custom error messages
-- ✅ **`(distinct)`** — Ensures unique elements in repeated fields and map values
-- ✅ **`(validate)`** — Enables recursive validation of nested messages
+- ✅ **`(min)` / `(max)`** — Exact numeric bounds, including inclusive/exclusive declarations and field references
+- ✅ **`(range)`** — Exact numeric ranges using bracket notation such as `[min..max]`, including references
+- ✅ **`(distinct)`** — One violation per duplicated equality class in repeated fields and map values
+- ✅ **`(validate)`** — Leaf-only recursive validation for singular, repeated, map, and resolvable `google.protobuf.Any` values
 - ✅ **`(goes)`** — Field dependency validation (field can only be set if another field is set)
 
 ### Message-level options
@@ -319,13 +331,24 @@ Numeric and boolean scalar fields are not supported by the `(required)`
 contract. Use numeric constraints such as `(min)`, `(max)`, or `(range)` where
 appropriate.
 
-The current runtime enforces presence for string, message, and repeated fields.
-Full bytes, enum-default, and map semantics remain known contract-parity debt;
-do not rely on `(required)` for those kinds yet.
+The implemented presence targets are message, enum, string, bytes, repeated,
+and map fields.
+
+`(min)`, `(max)`, and `(range)` parse exact supported numeric declarations,
+preserve 64-bit integer precision, and can use a scalar field reference as a
+bound. Invalid declarations or references throw `ValidationConfigurationError`.
+
+For `(distinct)`, equality is Buf Protobuf equality (including Protobuf
+messages and bytes), not JavaScript object identity. For a collection
+`[A, A, A, B, B, C]`, validation emits two violations: one with offending value
+`A` and one with offending value `B`. Each has the collection field path,
+the full collection in `${field.value}`, and its singleton equality class in
+`${field.duplicates}`.
 
 ### Nested validation
 
-Use `(validate) = true` on message fields to recursively validate nested messages:
+Use `(validate) = true` on singular message, repeated-message, map-message,
+or `google.protobuf.Any` fields to recursively validate nested messages:
 
 ```protobuf
 message Order {
@@ -335,6 +358,19 @@ message Order {
     ];
 }
 ```
+
+Nested validation emits only leaf violations—never the deprecated
+`(if_invalid)` parent summary. Every leaf retains the root entry `typeName` and
+a complete field-name path. Empty or unknown `Any` values are valid; a known
+payload is unpacked only when its descriptor is available from the root Proto
+file and its dependency closure.
+
+### Regular expressions
+
+`(pattern)` currently uses ECMAScript `RegExp`. The frozen Proto documentation
+uses Java `Pattern` as its syntax baseline, and full Java-pattern compatibility
+is an open question. Do not assume Java-only syntax has equivalent behavior in
+this package.
 
 ### Field dependencies
 
@@ -356,7 +392,7 @@ Use `(require)` for complex field requirements:
 
 ```protobuf
 message ContactInfo {
-    option (require).fields = "(phone & country_code) | email";
+    option (require).fields = "phone & country_code | email";
 
     string phone = 1;
     string country_code = 2;
@@ -383,8 +419,9 @@ message PaymentMethod {
 
 ## Testing
 
-The repository enforces at least 80% statements and lines, 70% branches, and
-90% functions. The current suite contains 232 tests across 11 suites:
+The repository enforces at least 90% statements, branches, functions, and
+lines. The test suite covers the package contract and runs from the workspace
+root:
 
 - `basic-validation.test.ts` - Basic validation and formatting
 - `required.test.ts` - `(required)` and `(if_missing)` options
@@ -397,6 +434,7 @@ The repository enforces at least 80% statements and lines, 70% branches, and
 - `goes.test.ts` - `(goes)` field dependency validation
 - `choice.test.ts` - `(choice)` `oneof` validation
 - `integration.test.ts` - Complex multi-option scenarios
+- `numeric-contract.test.ts`, `ordering.test.ts`, and `validation-contract.test.ts` - Contract regressions
 
 Run tests with:
 

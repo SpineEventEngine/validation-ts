@@ -30,7 +30,9 @@
  * Tests basic validation functionality and violation formatting.
  */
 
-import { validate, formatViolations } from "../src";
+import { create } from "@bufbuild/protobuf";
+import { formatViolations, validate, Violations } from "../src";
+import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb";
 
 describe("Basic Validation", () => {
   it("should export `validate` function", () => {
@@ -46,5 +48,24 @@ describe("Format Violations", () => {
   it('should return "No violations" for empty array', () => {
     const result = formatViolations([]);
     expect(result).toBe("No violations");
+  });
+
+  it("formats a field violation and gives useful fallbacks for incomplete diagnostics", () => {
+    const fieldViolation = create(ConstraintViolationSchema, {
+      typeName: "example.User",
+      fieldPath: { fieldName: ["email"] },
+      message: {
+        withPlaceholders: "Invalid ${field.value}",
+        placeholderValue: { "field.value": "not-an-email" },
+      },
+    });
+    const messageViolation = create(ConstraintViolationSchema, { typeName: "example.User" });
+
+    expect(formatViolations([fieldViolation, messageViolation])).toBe(
+      "1. example.User.email: Invalid not-an-email\n2. example.User.unknown: Validation failed",
+    );
+    expect(Violations.failurePath(fieldViolation)).toBe("email");
+    expect(Violations.failurePath(messageViolation)).toBe("unknown");
+    expect(Violations.formatMessage(messageViolation)).toBe("Validation failed");
   });
 });

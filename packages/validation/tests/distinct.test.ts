@@ -31,7 +31,13 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import {
+  anyUnpack,
+  BytesValueSchema,
+  Int64ValueSchema,
+  StringValueSchema,
+} from "@bufbuild/protobuf/wkt";
+import { ValidationConfigurationError, validate } from "../src";
 
 import {
   DistinctPrimitivesSchema,
@@ -44,6 +50,11 @@ import {
   ShoppingCartSchema,
   DistinctNumericTypesSchema,
   DistinctEdgeCasesSchema,
+  DistinctAdvancedSchema,
+  DistinctCustomMessageSchema,
+  DistinctDisabledSchema,
+  DistinctUnsupportedTargetSchema,
+  DistinctValueSchema,
 } from "./generated/test-distinct_pb";
 
 describe("Distinct Validation", () => {
@@ -71,13 +82,11 @@ describe("Distinct Validation", () => {
       const violations = validate(DistinctPrimitivesSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      const numberViolation = violations.find(
-        (v) => v.fieldPath?.fieldName[0] === "numbers" && v.fieldPath?.fieldName[1] === "3",
-      );
+      const numberViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "numbers");
       expect(numberViolation).toBeDefined();
-      expect(numberViolation?.message?.placeholderValue?.["value"]).toBe("2");
-      expect(numberViolation?.message?.placeholderValue?.["first_index"]).toBe("1");
-      expect(numberViolation?.message?.placeholderValue?.["duplicate_index"]).toBe("3");
+      expect(numberViolation?.fieldPath?.fieldName).toEqual(["numbers"]);
+      expect(numberViolation?.message?.placeholderValue?.["field.value"]).toBe("[1, 2, 3, 2, 4]");
+      expect(numberViolation?.message?.placeholderValue?.["field.duplicates"]).toBe("[2]");
     });
 
     it("should fail when strings have duplicates", () => {
@@ -91,7 +100,7 @@ describe("Distinct Validation", () => {
       const violations = validate(DistinctPrimitivesSchema, invalid);
       const tagViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "tags");
       expect(tagViolation).toBeDefined();
-      expect(tagViolation?.message?.placeholderValue?.["value"]).toBe("alpha");
+      expect(tagViolation?.message?.placeholderValue?.["field.duplicates"]).toBe("[alpha]");
     });
 
     it("should fail when doubles have duplicates", () => {
@@ -118,6 +127,34 @@ describe("Distinct Validation", () => {
       const violations = validate(DistinctPrimitivesSchema, invalid);
       const numberViolations = violations.filter((v) => v.fieldPath?.fieldName[0] === "numbers");
       expect(numberViolations.length).toBe(2); // Two violations for two duplicates.
+    });
+
+    it("emits one violation per duplicate class in first-occurrence order", () => {
+      const invalid = create(DistinctPrimitivesSchema, {
+        numbers: [1, 2, 1, 2, 1, 2],
+        tags: ["A", "A", "A", "A", "B", "B", "C", "D"],
+        scores: [],
+        flags: [],
+      });
+
+      const violations = validate(DistinctPrimitivesSchema, invalid).filter(
+        (violation) => violation.fieldPath?.fieldName[0] === "tags",
+      );
+
+      expect(violations).toHaveLength(2);
+      expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+        ["tags"],
+        ["tags"],
+      ]);
+      expect(
+        violations.map((violation) => anyUnpack(violation.fieldValue!, StringValueSchema)?.value),
+      ).toEqual(["A", "B"]);
+      expect(
+        violations.map((violation) => violation.message?.placeholderValue?.["field.value"]),
+      ).toEqual(["[A, A, A, A, B, B, C, D]", "[A, A, A, A, B, B, C, D]"]);
+      expect(
+        violations.map((violation) => violation.message?.placeholderValue?.["field.duplicates"]),
+      ).toEqual(["[A]", "[B]"]);
     });
   });
 
@@ -179,7 +216,7 @@ describe("Distinct Validation", () => {
       const distinctViolation = violations.find(
         (v) =>
           v.fieldPath?.fieldName[0] === "product_ids" &&
-          v.message?.withPlaceholders.includes("Duplicate"),
+          v.message?.withPlaceholders.includes("must not contain duplicates"),
       );
       expect(distinctViolation).toBeDefined();
     });
@@ -198,10 +235,12 @@ describe("Distinct Validation", () => {
       const distinctViolation = violations.find(
         (v) =>
           v.fieldPath?.fieldName[0] === "emails" &&
-          v.message?.withPlaceholders.includes("Duplicate"),
+          v.message?.withPlaceholders.includes("must not contain duplicates"),
       );
       expect(distinctViolation).toBeDefined();
-      expect(distinctViolation?.message?.placeholderValue?.["value"]).toBe("user1@example.com");
+      expect(distinctViolation?.message?.placeholderValue?.["field.duplicates"]).toBe(
+        "[user1@example.com]",
+      );
     });
 
     it("should detect both `distinct` and `range` violations", () => {
@@ -215,12 +254,14 @@ describe("Distinct Validation", () => {
       expect(violations.length).toBeGreaterThanOrEqual(2);
 
       const rangeViolation = violations.find(
-        (v) => v.fieldPath?.fieldName[1] === "1" && v.message?.withPlaceholders.includes("at most"),
+        (v) =>
+          v.fieldPath?.fieldName[0] === "scores" &&
+          v.message?.placeholderValue?.["max.operator"] === "<=",
       );
       expect(rangeViolation).toBeDefined();
 
       const distinctViolation = violations.find((v) =>
-        v.message?.withPlaceholders.includes("Duplicate"),
+        v.message?.withPlaceholders.includes("must not contain duplicates"),
       );
       expect(distinctViolation).toBeDefined();
     });
@@ -393,5 +434,116 @@ describe("Distinct Validation", () => {
       const caseViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "case_sensitive");
       expect(caseViolation).toBeDefined();
     });
+  });
+});
+
+describe("descriptor-aware distinct equality", () => {
+  it("uses Buf scalar equality for bytes and bigint values", () => {
+    const invalid = create(DistinctAdvancedSchema, {
+      byteValues: [new Uint8Array([0xca, 0xfe]), new Uint8Array([0xca, 0xfe])],
+      int64Values: [9007199254740993n, 9007199254740993n],
+    });
+
+    const violations = validate(DistinctAdvancedSchema, invalid);
+    const byteViolation = violations.find(
+      (violation) => violation.fieldPath?.fieldName[0] === "byte_values",
+    );
+    const int64Violation = violations.find(
+      (violation) => violation.fieldPath?.fieldName[0] === "int64_values",
+    );
+
+    expect(byteViolation).toBeDefined();
+    expect(int64Violation).toBeDefined();
+    expect(anyUnpack(byteViolation!.fieldValue!, BytesValueSchema)?.value).toEqual(
+      new Uint8Array([0xca, 0xfe]),
+    );
+    expect(anyUnpack(int64Violation!.fieldValue!, Int64ValueSchema)?.value).toBe(9007199254740993n);
+  });
+
+  it("uses numeric enum equality and structural message equality", () => {
+    const first = create(DistinctValueSchema, { name: "same", sequence: 7n });
+    const second = create(DistinctValueSchema, { name: "same", sequence: 7n });
+    const invalid = create(DistinctAdvancedSchema, {
+      statuses: [DistinctStatus.ACTIVE, DistinctStatus.ACTIVE],
+      messages: [first, second],
+    });
+
+    const violations = validate(DistinctAdvancedSchema, invalid);
+    expect(
+      violations.filter((violation) => violation.fieldPath?.fieldName[0] === "statuses"),
+    ).toHaveLength(1);
+    const messageViolation = violations.find(
+      (violation) => violation.fieldPath?.fieldName[0] === "messages",
+    );
+    expect(messageViolation).toBeDefined();
+    expect(anyUnpack(messageViolation!.fieldValue!, DistinctValueSchema)).toEqual(first);
+  });
+
+  it("compares scalar, enum, and message map values in entry order", () => {
+    const duplicate = create(DistinctValueSchema, { name: "duplicate", sequence: 1n });
+    const invalid = create(DistinctAdvancedSchema, {
+      names: { first: "A", second: "A", third: "B", fourth: "B" },
+      stateByName: { first: DistinctStatus.ACTIVE, second: DistinctStatus.ACTIVE },
+      valueByName: {
+        first: duplicate,
+        second: create(DistinctValueSchema, { name: "duplicate", sequence: 1n }),
+      },
+    });
+
+    const violations = validate(DistinctAdvancedSchema, invalid);
+    const nameViolations = violations.filter(
+      (violation) => violation.fieldPath?.fieldName[0] === "names",
+    );
+    expect(nameViolations).toHaveLength(2);
+    expect(
+      nameViolations.map((violation) => anyUnpack(violation.fieldValue!, StringValueSchema)?.value),
+    ).toEqual(["A", "B"]);
+    expect(
+      nameViolations.map((violation) => violation.message?.placeholderValue?.["field.value"]),
+    ).toEqual(["{first=A, second=A, third=B, fourth=B}", "{first=A, second=A, third=B, fourth=B}"]);
+    expect(
+      nameViolations.map((violation) => violation.message?.placeholderValue?.["field.duplicates"]),
+    ).toEqual(["[A]", "[B]"]);
+    expect(
+      violations.filter((violation) => violation.fieldPath?.fieldName[0] === "state_by_name"),
+    ).toHaveLength(1);
+    expect(
+      violations.filter((violation) => violation.fieldPath?.fieldName[0] === "value_by_name"),
+    ).toHaveLength(1);
+  });
+
+  it("uses the frozen default message or a non-empty custom message", () => {
+    const defaultViolation = validate(
+      DistinctPrimitivesSchema,
+      create(DistinctPrimitivesSchema, { numbers: [1, 1] }),
+    )[0];
+    const customViolation = validate(
+      DistinctCustomMessageSchema,
+      create(DistinctCustomMessageSchema, { values: ["A", "A"] }),
+    )[0];
+
+    expect(defaultViolation.message?.withPlaceholders).toContain("must not contain duplicates");
+    expect(customViolation.message?.withPlaceholders).toBe(
+      "Duplicate class: `${field.duplicates}`.",
+    );
+  });
+
+  it("rejects distinct on a singular field with a structured configuration error", () => {
+    expect(() =>
+      validate(DistinctUnsupportedTargetSchema, create(DistinctUnsupportedTargetSchema)),
+    ).toThrow(
+      expect.objectContaining({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "distinct",
+        typeName: DistinctUnsupportedTargetSchema.typeName,
+        fieldPath: ["name"],
+      }) satisfies Partial<ValidationConfigurationError>,
+    );
+  });
+
+  it("treats an explicit false declaration as a no-op", () => {
+    expect(
+      validate(DistinctDisabledSchema, create(DistinctDisabledSchema, { values: ["A", "A"] })),
+    ).toEqual([]);
   });
 });

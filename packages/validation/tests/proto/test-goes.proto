@@ -62,15 +62,29 @@ message PaymentInfo {
     string cardholder_name = 1;
     string card_number = 2 [(goes).with = "cardholder_name"];
     string cvv = 3 [(goes).with = "card_number"];
-    int32 expiry_month = 4 [(goes).with = "card_number"];
+    int32 expiry_month = 4;
 }
 
 // Tests goes constraint on different field types.
 message ProfileSettings {
     string username = 1;
+    int32 display_id = 2;
+    bool is_verified = 3;
+    double rating = 4;
+}
+
+message InvalidGoesTarget {
+    string username = 1;
     int32 display_id = 2 [(goes).with = "username"];
-    bool is_verified = 3 [(goes).with = "username"];
-    double rating = 4 [(goes).with = "username"];
+}
+
+message InvalidGoesUnknownCompanion {
+    string value = 1 [(goes).with = "missing"];
+}
+
+message InvalidGoesNumericCompanion {
+    string value = 1 [(goes).with = "number"];
+    int32 number = 2;
 }
 
 // Tests goes constraint on message field type.
@@ -128,19 +142,13 @@ message ReportGeneration {
 // Tests goes constraint on optional fields.
 message OptionalSettings {
     string base_url = 1;
-    int32 port = 2 [(goes).with = "base_url"];
+    int32 port = 2;
     string path = 3 [(goes).with = "base_url"];
 }
 
 // Tests goes combined with min/max/range constraints.
 message AdvancedConfig {
     string config_name = 1;
-    int32 max_connections = 2 [
-        (goes).with = "config_name",
-        (range).value = "[1..1000]"
-    ];
-    double timeout_seconds = 3 [
-        (goes).with = "config_name",
-        (min).value = "0.1"
-    ];
+    int32 max_connections = 2 [(range).value = "[1..1000]"];
+    double timeout_seconds = 3 [(min).value = "0.1"];
 }

@@ -74,16 +74,16 @@ message RepeatedRange {
 
 // Tests combined required and range constraints.
 message CombinedConstraints {
-    int32 product_id = 1 [(required) = true, (range).value = "[1..999999]"];
-    int32 quantity = 2 [(required) = true, (range).value = "[1..1000]"];
+    int32 product_id = 1 [(range).value = "[1..999999]"];
+    int32 quantity = 2 [(range).value = "[1..1000]"];
     double discount = 3 [(range).value = "[0.0..1.0]"];
 }
 
 // Tests range validation for payment card fields.
 message PaymentCard {
-    int32 expiry_month = 1 [(required) = true, (range).value = "[1..12]"];
-    int32 expiry_year = 2 [(required) = true, (range).value = "[2024..2050]"];
-    int32 cvv = 3 [(required) = true, (range).value = "[0..999]"];
+    int32 expiry_month = 1 [(range).value = "[1..12]"];
+    int32 expiry_year = 2 [(range).value = "[2024..2050]"];
+    int32 cvv = 3 [(range).value = "[0..999]"];
 }
 
 // Tests range validation for RGB color values.
@@ -96,8 +96,8 @@ message RGBColor {
 
 // Tests range validation for pagination parameters.
 message PaginationRequest {
-    int32 page = 1 [(required) = true, (range).value = "[1..10000]"];
-    int32 page_size = 2 [(required) = true, (range).value = "[1..100]"];
+    int32 page = 1 [(range).value = "[1..10000]"];
+    int32 page_size = 2 [(range).value = "[1..100]"];
 }
 
 // Tests optional fields with range constraints.
@@ -110,4 +110,24 @@ message OptionalRange {
 message EdgeCaseRanges {
     int32 exact_value = 1 [(range).value = "[42..42]"];
     double pi_approx = 2 [(range).value = "[3.14..3.15]"];
+}
+
+message RangeContract {
+    int64 precise = 1 [(range).value = "[9007199254740993..9007199254740995]"];
+    repeated int32 repeated = 2 [(range).value = "[0..10]"];
+}
+message ReversedRange { int32 value = 1 [(range).value = "[10..0]"]; }
+message MalformedRange { int32 value = 1 [(range).value = "[0..1..2]"]; }
+message InvalidRangeTarget { string value = 1 [(range).value = "[0..1]"]; }
+
+message RangeBounds { int32 upper = 1; }
+message RangeTextReferences {
+    RangeBounds limits = 1;
+    int32 value = 2 [(range).value = "[ -1 .. limits.upper ]"];
+    int32 literal = 3 [(range).value = "[ 1 .. 2 ]"];
+}
+
+message ExactLongRanges {
+    int64 signed_value = 1 [(range).value = "[9007199254740993..9007199254740995]"];
+    uint64 unsigned_value = 2 [(range).value = "[9007199254740993..9007199254740995]"];
 }

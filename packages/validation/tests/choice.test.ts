@@ -30,6 +30,7 @@ import {
   PaymentMethodSchema,
   ContactMethodSchema,
   ShippingOptionSchema,
+  MultipleRequiredChoicesSchema,
 } from "./generated/test-choice_pb";
 
 describe("Choice Option Validation (oneof)", () => {
@@ -54,8 +55,10 @@ describe("Choice Option Validation (oneof)", () => {
       const violations = validate(PaymentMethodSchema, payment);
       expect(violations.length).toBeGreaterThan(0);
 
-      const choiceViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "method");
+      const choiceViolation = violations[0];
       expect(choiceViolation).toBeDefined();
+      expect(choiceViolation?.fieldPath?.fieldName).toEqual([]);
+      expect(choiceViolation?.message?.placeholderValue?.["group.path"]).toBe("method");
       expect(choiceViolation?.message?.withPlaceholders).toContain("oneof");
     });
 
@@ -70,6 +73,14 @@ describe("Choice Option Validation (oneof)", () => {
       const violations = validate(PaymentMethodSchema, payment);
       expect(violations).toHaveLength(0);
     });
+
+    it("treats selected numeric zero and boolean false cases as present", () => {
+      const numeric = create(MultipleRequiredChoicesSchema, {
+        first: { case: "count", value: 0 },
+        second: { case: "enabled", value: false },
+      });
+      expect(validate(MultipleRequiredChoicesSchema, numeric)).toHaveLength(0);
+    });
   });
 
   describe("Custom Error Messages", () => {
@@ -81,8 +92,10 @@ describe("Choice Option Validation (oneof)", () => {
       const violations = validate(ContactMethodSchema, contact);
       expect(violations.length).toBeGreaterThan(0);
 
-      const choiceViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "contact");
+      const choiceViolation = violations[0];
       expect(choiceViolation).toBeDefined();
+      expect(choiceViolation?.fieldPath?.fieldName).toEqual([]);
+      expect(choiceViolation?.message?.placeholderValue?.["group.path"]).toBe("contact");
       expect(choiceViolation?.message?.withPlaceholders).toContain("must provide a contact method");
     });
   });
@@ -111,18 +124,16 @@ describe("Choice Option Validation (oneof)", () => {
   });
 
   describe("Multiple Oneofs in Same Message", () => {
-    it("should validate all oneofs independently", () => {
-      // Test case would require a proto with multiple oneofs
-      // For now, we verify that each oneof is validated separately
-      const payment = create(PaymentMethodSchema, {
-        method: {
-          case: "paypal",
-          value: "user@example.com",
-        },
-      });
-
-      const violations = validate(PaymentMethodSchema, payment);
-      expect(violations).toHaveLength(0);
+    it("emits one message-level violation per unset group in declaration order", () => {
+      const violations = validate(
+        MultipleRequiredChoicesSchema,
+        create(MultipleRequiredChoicesSchema),
+      );
+      expect(violations).toHaveLength(2);
+      expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([[], []]);
+      expect(
+        violations.map((violation) => violation.message?.placeholderValue["group.path"]),
+      ).toEqual(["first", "second"]);
     });
   });
 
@@ -144,9 +155,10 @@ describe("Choice Option Validation (oneof)", () => {
       const payment = create(PaymentMethodSchema, {});
 
       const violations = validate(PaymentMethodSchema, payment);
-      const choiceViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "method");
+      const choiceViolation = violations[0];
 
-      expect(choiceViolation?.fieldPath?.fieldName).toEqual(["method"]);
+      expect(choiceViolation?.fieldPath?.fieldName).toEqual([]);
+      expect(choiceViolation?.message?.placeholderValue?.["group.path"]).toBe("method");
       expect(choiceViolation?.typeName).toBe("test.PaymentMethod");
     });
   });

@@ -38,7 +38,6 @@ import {
   ShippingDetailsSchema,
   ColorSettingsSchema,
   PaymentInfoSchema,
-  ProfileSettingsSchema,
   DocumentMetadataSchema,
   TimestampSchema,
   SecureAccountSchema,
@@ -48,6 +47,9 @@ import {
   ReportGenerationSchema,
   OptionalSettingsSchema,
   AdvancedConfigSchema,
+  InvalidGoesTargetSchema,
+  InvalidGoesUnknownCompanionSchema,
+  InvalidGoesNumericCompanionSchema,
 } from "./generated/test-goes_pb";
 
 describe("Field Dependency Validation (goes)", () => {
@@ -86,7 +88,12 @@ describe("Field Dependency Validation (goes)", () => {
 
       const goesViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "time");
       expect(goesViolation).toBeDefined();
-      expect(goesViolation?.message?.withPlaceholders).toContain("date");
+      expect(goesViolation?.message?.placeholderValue).toMatchObject({
+        "goes.companion": "date",
+        "field.path": "time",
+        "field.value": "14:30",
+      });
+      expect(goesViolation?.fieldValue?.typeUrl).toContain("StringValue");
     });
 
     it("should pass when both fields are unset", () => {
@@ -243,44 +250,37 @@ describe("Field Dependency Validation (goes)", () => {
     });
   });
 
-  describe("Different Field Types", () => {
-    it("should `validate` `goes` constraint on int32 field", () => {
-      const invalid = create(ProfileSettingsSchema, {
-        username: "", // Not set.
-        displayId: 12345, // Set - violates goes constraint.
-      });
-
-      const violations = validate(ProfileSettingsSchema, invalid);
-      expect(violations.length).toBeGreaterThan(0);
-
-      const displayIdViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "display_id");
-      expect(displayIdViolation).toBeDefined();
+  describe("Configuration errors", () => {
+    it("rejects a numeric `(goes)` target even when it is unset", () => {
+      expect(() => validate(InvalidGoesTargetSchema, create(InvalidGoesTargetSchema))).toThrow(
+        expect.objectContaining({
+          code: "UNSUPPORTED_OPTION_TARGET",
+          option: "goes",
+          fieldPath: ["display_id"],
+        }),
+      );
     });
-
-    it("should `validate` `goes` constraint on bool field", () => {
-      const invalid = create(ProfileSettingsSchema, {
-        username: "", // Not set.
-        isVerified: true, // Set - violates goes constraint.
-      });
-
-      const violations = validate(ProfileSettingsSchema, invalid);
-      expect(violations.length).toBeGreaterThan(0);
-
-      const verifiedViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "is_verified");
-      expect(verifiedViolation).toBeDefined();
-    });
-
-    it("should `validate` `goes` constraint on double field", () => {
-      const invalid = create(ProfileSettingsSchema, {
-        username: "", // Not set.
-        rating: 4.5, // Set - violates goes constraint.
-      });
-
-      const violations = validate(ProfileSettingsSchema, invalid);
-      expect(violations.length).toBeGreaterThan(0);
-
-      const ratingViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "rating");
-      expect(ratingViolation).toBeDefined();
+    it("rejects unknown and unsupported companions", () => {
+      expect(() =>
+        validate(InvalidGoesUnknownCompanionSchema, create(InvalidGoesUnknownCompanionSchema)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "UNKNOWN_FIELD_REFERENCE",
+          option: "goes",
+          typeName: InvalidGoesUnknownCompanionSchema.typeName,
+          fieldPath: ["value"],
+        }),
+      );
+      expect(() =>
+        validate(InvalidGoesNumericCompanionSchema, create(InvalidGoesNumericCompanionSchema)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "INVALID_FIELD_REFERENCE",
+          option: "goes",
+          typeName: InvalidGoesNumericCompanionSchema.typeName,
+          fieldPath: ["number"],
+        }),
+      );
     });
 
     it("should `validate` `goes` constraint on message field", () => {
@@ -402,18 +402,15 @@ describe("Field Dependency Validation (goes)", () => {
       expect(violations).toHaveLength(0);
     });
 
-    it("should fail when port is set without base_url", () => {
+    it("does not apply `(goes)` to an unsupported numeric field", () => {
       const invalid = create(OptionalSettingsSchema, {
         baseUrl: "", // Not set.
-        port: 8080, // Violates goes constraint.
+        port: 8080,
         path: "",
       });
 
       const violations = validate(OptionalSettingsSchema, invalid);
-      expect(violations.length).toBeGreaterThan(0);
-
-      const portViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "port");
-      expect(portViolation).toBeDefined();
+      expect(violations).toHaveLength(0);
     });
   });
 
@@ -495,21 +492,19 @@ describe("Field Dependency Validation (goes)", () => {
         (v) => v.fieldPath?.fieldName[0] === "max_connections",
       );
       expect(rangeViolation).toBeDefined();
-      expect(rangeViolation?.message?.withPlaceholders).toContain("[1..1000]");
+      expect(rangeViolation?.message?.placeholderValue?.["range.value"]).toBe("[1..1000]");
     });
 
-    it("should detect `goes` violation when max_connections is set without config_name", () => {
+    it("continues numeric range validation without an unsupported `(goes)` target", () => {
       const invalid = create(AdvancedConfigSchema, {
         configName: "", // Not set.
-        maxConnections: 500, // Violates goes constraint.
+        maxConnections: 500,
         timeoutSeconds: 0,
       });
 
       const violations = validate(AdvancedConfigSchema, invalid);
-      expect(violations.length).toBeGreaterThan(0);
-
-      const goesViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "max_connections");
-      expect(goesViolation).toBeDefined();
+      expect(violations).toHaveLength(1);
+      expect(violations[0].fieldPath?.fieldName).toEqual(["timeout_seconds"]);
     });
   });
 });

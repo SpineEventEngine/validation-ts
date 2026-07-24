@@ -33,6 +33,11 @@
  */
 
 export { validate, formatViolations, Violations } from "./validation";
+export {
+  ValidationConfigurationError,
+  type ValidationConfigurationErrorCode,
+  type ValidationConfigurationErrorInit,
+} from "./validation-configuration-error";
 
 /**
  * Internal utility function for formatting template strings.

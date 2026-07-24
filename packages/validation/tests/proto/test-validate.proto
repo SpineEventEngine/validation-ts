@@ -34,6 +34,7 @@ package spine.validation.testing.validate_suite;
 // and `(if_invalid)` provides custom error messages for validation failures.
 
 import "spine/options.proto";
+import "google/protobuf/any.proto";
 
 // Tests basic nested message validation.
 message PersonWithAddress {
@@ -53,7 +54,7 @@ message Address {
 
 // Tests custom error messages via `(if_invalid)`.
 message OrderWithCustomError {
-    int32 order_id = 1 [(required) = true];
+    int32 order_id = 1;
     Customer customer = 2 [
         (validate) = true,
         (if_invalid).error_msg = "Customer information is invalid: {value}."
@@ -66,7 +67,7 @@ message Customer {
         (required) = true,
         (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
     ];
-    int32 age = 2 [(required) = true, (range).value = "[18..120]"];
+    int32 age = 2 [(range).value = "[18..120]"];
 }
 
 // Tests validation on repeated message fields.
@@ -123,7 +124,7 @@ message PersonWithoutValidation {
 
 // Tests combining multiple validation types.
 message ProductOrder {
-    int32 product_id = 1 [(required) = true, (min).value = "1"];
+    int32 product_id = 1 [(min).value = "1"];
     ProductDetails product = 2 [
         (validate) = true,
         (if_invalid).error_msg = "Product details are invalid."
@@ -137,12 +138,12 @@ message ProductOrder {
 
 message ProductDetails {
     string name = 1 [(required) = true];
-    double price = 2 [(required) = true, (min).value = "0.01"];
+    double price = 2 [(min).value = "0.01"];
     repeated string tags = 3 [(distinct) = true];
 }
 
 message Review {
-    int32 rating = 1 [(required) = true, (range).value = "[1..5]"];
+    int32 rating = 1 [(range).value = "[1..5]"];
     string comment = 2;
 }
 
@@ -172,4 +173,46 @@ message Task {
     string title = 1 [(required) = true];
     int32 priority = 2 [(range).value = "[1..5]"];
     repeated string assignees = 3 [(distinct) = true];
+}
+
+// Exercises singular, collection, and Any recursion without collection keys in paths.
+message Leaf {
+    string value = 1 [(required) = true];
+    int32 quantity = 2 [(min).value = "1"];
+}
+
+message NestedValidationContainers {
+    Leaf singular = 1 [(validate) = true];
+    repeated Leaf repeated = 2 [(validate) = true];
+    map<string, Leaf> mapped = 3 [(validate) = true];
+    google.protobuf.Any packed = 4 [(validate) = true];
+    repeated google.protobuf.Any packed_repeated = 5 [(validate) = true];
+    map<string, google.protobuf.Any> packed_mapped = 6 [(validate) = true];
+}
+
+message ValidateDisabled {
+    Leaf leaf = 1 [(validate) = false];
+}
+
+message ValidateUnsupportedTarget {
+    string value = 1 [(validate) = true];
+}
+
+message RequireLeaf {
+    option (require).fields = "value";
+    string value = 1;
+    string marker = 2;
+}
+
+message ChoiceLeaf {
+    oneof selection {
+        option (choice).required = true;
+        string value = 1;
+    }
+    string marker = 2;
+}
+
+message NestedMessageOptionContainers {
+    RequireLeaf require_child = 1 [(validate) = true];
+    ChoiceLeaf choice_child = 2 [(validate) = true];
 }

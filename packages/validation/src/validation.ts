@@ -31,21 +31,58 @@
  * for validating Protobuf messages against Spine validation constraints.
  */
 
-import type { Message } from "@bufbuild/protobuf";
+import { createRegistry } from "@bufbuild/protobuf";
+import type { DescFile, Message, Registry } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb";
 import type { TemplateString } from "./generated/spine/validate/error_message_pb";
 
-import { validateRequiredFields } from "./options/required";
+import { validateRequiredField } from "./options/required";
 import { validatePatternFields } from "./options/pattern";
-import { validateRequiredFieldOption } from "./options/required-field";
-import { validateMinMaxFields } from "./options/min-max";
-import { validateRangeFields } from "./options/range";
-import { validateDistinctFields } from "./options/distinct";
-import { validateNestedFields } from "./options/validate";
-import { validateGoesFields } from "./options/goes";
-import { validateChoiceFields } from "./options/choice";
+import { validateRequireOption } from "./options/required-field";
+import { validateMinMaxField } from "./options/min-max";
+import { validateRangeField } from "./options/range";
+import { validateDistinctField } from "./options/distinct";
+import { validateNestedField } from "./options/validate";
+import { validateGoesField } from "./options/goes";
+import { validateChoiceOptions } from "./options/choice";
+import { legacyFieldValidator, type FieldValidator } from "./orchestration";
+import { createValidationContext } from "./validation-contract";
+
+const fieldValidators: readonly FieldValidator[] = [
+  {
+    validate(context, schema, message, field, violations) {
+      validateRequiredField(context, schema, message, field, violations);
+    },
+  },
+  legacyFieldValidator(validatePatternFields),
+  {
+    validate(context, schema, message, field, violations) {
+      validateMinMaxField(context, schema, message, field, violations);
+    },
+  },
+  {
+    validate(context, schema, message, field, violations) {
+      validateRangeField(context, schema, message, field, violations);
+    },
+  },
+  {
+    validate(context, schema, message, field, violations) {
+      validateDistinctField(context, schema, message, field, violations);
+    },
+  },
+  {
+    validate(context, schema, message, field, violations, registry) {
+      validateNestedField(context, schema, message, field, violations, registry, validateInternal);
+    },
+  },
+  {
+    validate(context, schema, message, field, violations) {
+      validateGoesField(context, schema, message, field, violations);
+    },
+  },
+];
 
 export type {
   ConstraintViolation,
@@ -61,14 +98,22 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb";
  * and returns an array of constraint violations. An empty array indicates
  * the message is valid.
  *
+ * Traversal follows declaration order and the internal validator order, but
+ * callers must not treat that order as a public compatibility guarantee.
+ *
+ * Each field violation retains the root entry type, a complete path of Proto
+ * field names, and a descriptor-packed offending value when one exists. Its
+ * diagnostic is always present; an option without a custom or default message
+ * produces an empty template string.
+ *
  * Currently supported validation options:
- * - `(required)` — validates required markers; see the package guide for current parity gaps
+ * - `(required)` — validates supported presence targets
  * - `(pattern)` — validates string fields against regular expressions
- * - `(required_field)` — requires specific combinations of fields at message level
+ * - `(require)` — requires specific combinations of fields at message level
  * - `(min)` / `(max)` — numeric range validation with inclusive/exclusive bounds
  * - `(range)` — bounded numeric ranges using bracket notation for inclusive/exclusive bounds
- * - `(distinct)` — ensures all elements in repeated fields are unique
- * - `(validate)` — enables recursive validation of nested message fields
+ * - `(distinct)` — emits one violation for each duplicated Buf-equality class
+ * - `(validate)` — returns only leaf violations from nested values and known `Any` payloads
  * - `(goes)` — enforces field dependency (field can only be set if another field is set)
  * - `(choice)` — requires that a `oneof` group has at least one field set
  *
@@ -94,19 +139,51 @@ export function validate<T extends Message>(
   schema: GenMessage<T>,
   message: any,
 ): ConstraintViolation[] {
+  return validateInternal(
+    schema,
+    message,
+    createValidationContext(schema),
+    createRootRegistry(schema),
+  );
+}
+
+/** Validates a nested message while preserving its original entry context and registry. */
+function validateInternal<T extends Message>(
+  schema: GenMessage<T>,
+  message: any,
+  context: ReturnType<typeof createValidationContext>,
+  registry: Registry,
+): ConstraintViolation[] {
   const violations: ConstraintViolation[] = [];
 
-  validateRequiredFields(schema, message, violations);
-  validatePatternFields(schema, message, violations);
-  validateRequiredFieldOption(schema, message, violations);
-  validateMinMaxFields(schema, message, violations);
-  validateRangeFields(schema, message, violations);
-  validateDistinctFields(schema, message, violations);
-  validateNestedFields(schema, message, violations);
-  validateGoesFields(schema, message, violations);
-  validateChoiceFields(schema, message, violations);
+  validateRequireOption(context, schema, message, violations);
+
+  for (const field of schema.fields) {
+    for (const validator of fieldValidators) {
+      validator.validate(context, schema, message, field, violations, registry);
+    }
+  }
+
+  validateChoiceOptions(context, schema, message, violations);
 
   return violations;
+}
+
+function createRootRegistry(schema: GenMessage<any>): Registry {
+  return createRegistry(...dependencyClosure(schema.file));
+}
+
+function dependencyClosure(root: DescFile): DescFile[] {
+  const files: DescFile[] = [];
+  const visited = new Set<string>();
+  const visit = (file: DescFile): void => {
+    if (visited.has(file.name)) return;
+    visited.add(file.name);
+    files.push(file);
+    for (const dependency of file.dependencies) visit(dependency);
+  };
+  visit(root);
+  return files;
 }
 
 /**
@@ -131,7 +208,7 @@ export function validate<T extends Message>(
 export function formatTemplateString(template: TemplateString): string {
   let result = template.withPlaceholders;
   for (const [key, value] of Object.entries(template.placeholderValue)) {
-    result = result.replace(new RegExp(`\\$\\{${key}\\}`, "g"), value);
+    result = result.split(`\${${key}}`).join(value);
   }
   return result;
 }

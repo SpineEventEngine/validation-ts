@@ -7,281 +7,117 @@
  *
  * https://www.apache.org/licenses/LICENSE-2.0
  *
- * Redistribution and use in source and/or binary forms, with or without
- * modification, must retain the above copyright notice and the following
- * disclaimer.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-/**
- * Validation logic for the `(required_field)` option.
- *
- * The `(required_field)` option is a message-level constraint that requires
- * at least one field from a set of alternatives or combinations of fields.
- *
- * Syntax:
- * - `|` (pipe) — OR operator, at least one field must be set
- * - `&` (ampersand) — AND operator, all fields must be set together
- * - Parentheses for grouping — `(field1 & field2) | field3`
- *
- * Examples:
- * ```protobuf
- * message User {
- *   option (required_field) = "id | email";  // Either id OR email must be set
- *   string id = 1;
- *   string email = 2;
- * }
- *
- * message PhoneNumber {
- *   option (required_field) = "phone & country_code";  // Both phone AND country_code must be set
- *   string phone = 1;
- *   string country_code = 2;
- * }
- *
- * message PersonName {
- *   option (required_field) = "given_name | (honorific_prefix & family_name)";
- *   // Either given_name alone OR both honorific_prefix AND family_name
- *   string given_name = 1;
- *   string honorific_prefix = 2;
- *   string family_name = 3;
- * }
- * ```
- */
+/** Validation of the message-level `(require)` option. */
 
-import type { Message } from "@bufbuild/protobuf";
-import { create, getExtension, hasExtension, ScalarType } from "@bufbuild/protobuf";
+import { getExtension, getOption, hasExtension } from "@bufbuild/protobuf";
+import type { DescField, DescOneof } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
-import { ConstraintViolationSchema } from "../generated/spine/validate/validation_error_pb";
-import { FieldPathSchema } from "../generated/spine/base/field_path_pb";
-import { TemplateStringSchema } from "../generated/spine/validate/error_message_pb";
+import { default_message, RequireOptionSchema } from "../generated/spine/options_pb";
 import type { RequireOption } from "../generated/spine/options_pb";
 import { getRegisteredOption } from "../options-registry";
+import { isOneofPresent, isPresent, supportsPresence } from "../presence";
+import { createConstraintViolation, type ValidationContext } from "../validation-contract";
+import { ValidationConfigurationError } from "../validation-configuration-error";
 
-/**
- * Creates a constraint violation for `(required_field)` at the message level.
- *
- * @param typeName The fully qualified message type name.
- * @param expression The required field expression that was not satisfied.
- * @param violationMessage The error message describing the violation.
- * @returns A `ConstraintViolation` object.
- */
-function createViolation(
-  typeName: string,
-  expression: string,
-  violationMessage: string,
-): ConstraintViolation {
-  return create(ConstraintViolationSchema, {
-    typeName,
-    fieldPath: create(FieldPathSchema, {
-      fieldName: [],
-    }),
-    fieldValue: undefined,
-    message: create(TemplateStringSchema, {
-      withPlaceholders: violationMessage,
-      placeholderValue: {
-        expression: expression,
-      },
-    }),
-    msgFormat: "",
-    param: [],
-    violation: [],
+type Requirement = { readonly field?: DescField; readonly oneof?: DescOneof };
+
+function requireDefaultMessage(): string | undefined {
+  return getOption(RequireOptionSchema, default_message);
+}
+
+function invalidOption(schema: GenMessage<any>): never {
+  throw new ValidationConfigurationError({
+    code: "INVALID_OPTION_VALUE",
+    option: "require",
+    typeName: schema.typeName,
   });
 }
 
-/**
- * Checks if a field is set (has a non-default value).
- *
- * @param message The message instance to check.
- * @param fieldName The name of the field to check.
- * @param schema The message schema containing field descriptors.
- * @returns `true` if the field is set, `false` otherwise.
- */
-function isFieldSet(message: any, fieldName: string, schema: GenMessage<any>): boolean {
-  const field = schema.fields.find((f) => f.name === fieldName);
-  if (!field) {
-    console.warn(`Field "${fieldName}" not found in schema ${schema.typeName}`);
-    return false;
-  }
+/** Parses the documented OR-of-AND grammar, resolving every token eagerly. */
+function parseRequirements(
+  expression: string,
+  schema: GenMessage<any>,
+): readonly (readonly Requirement[])[] {
+  if (!expression.trim() || /[()]/.test(expression)) invalidOption(schema);
 
-  const fieldValue = (message as any)[field.localName];
+  const groups = expression.split("|").map((group) => group.trim());
+  if (groups.some((group) => !group)) invalidOption(schema);
 
-  if (field.fieldKind === "scalar") {
-    if (field.scalar) {
-      const scalarType = field.scalar;
-      if (scalarType === ScalarType.STRING || scalarType === ScalarType.BYTES) {
-        return fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
-      } else if (scalarType === ScalarType.BOOL) {
-        return fieldValue !== undefined && fieldValue !== null;
-      } else {
-        return fieldValue !== undefined && fieldValue !== null && fieldValue !== 0;
-      }
-    }
-  } else if (field.fieldKind === "message") {
-    return fieldValue !== undefined && fieldValue !== null;
-  } else if (field.fieldKind === "enum") {
-    return fieldValue !== undefined && fieldValue !== null && fieldValue !== 0;
-  } else if (field.fieldKind === "list" || field.fieldKind === "map") {
-    return (
-      fieldValue !== undefined &&
-      fieldValue !== null &&
-      (Array.isArray(fieldValue) ? fieldValue.length > 0 : Object.keys(fieldValue).length > 0)
-    );
-  }
-
-  return false;
+  return groups.map((group) => {
+    const tokens = group.split("&").map((token) => token.trim());
+    if (tokens.some((token) => !token || /\s/.test(token))) invalidOption(schema);
+    return tokens.map((token) => resolveRequirement(token, schema));
+  });
 }
 
-/**
- * Tokenizes the `(required_field)` expression into tokens.
- *
- * @param expression The expression string to tokenize.
- * @returns Array of tokens (field names, operators, parentheses).
- */
-function tokenize(expression: string): string[] {
-  const tokens: string[] = [];
-  let current = "";
+function resolveRequirement(token: string, schema: GenMessage<any>): Requirement {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) invalidOption(schema);
 
-  for (let i = 0; i < expression.length; i++) {
-    const char = expression[i];
-
-    if (char === "(" || char === ")" || char === "|" || char === "&") {
-      if (current.trim()) {
-        tokens.push(current.trim());
-        current = "";
-      }
-      tokens.push(char);
-    } else if (char === " " || char === "\t" || char === "\n") {
-      if (current.trim()) {
-        tokens.push(current.trim());
-        current = "";
-      }
-    } else {
-      current += char;
+  const field = schema.fields.find((candidate) => candidate.name === token);
+  if (field !== undefined) {
+    if (!supportsPresence(field)) {
+      throw new ValidationConfigurationError({
+        code: "INVALID_FIELD_REFERENCE",
+        option: "require",
+        typeName: schema.typeName,
+        fieldPath: [field.name],
+      });
     }
+    return { field };
   }
 
-  if (current.trim()) {
-    tokens.push(current.trim());
-  }
+  const oneof = schema.oneofs.find((candidate) => candidate.name === token);
+  if (oneof !== undefined) return { oneof };
 
-  return tokens;
+  throw new ValidationConfigurationError({
+    code: "UNKNOWN_FIELD_REFERENCE",
+    option: "require",
+    typeName: schema.typeName,
+    fieldPath: [token],
+  });
 }
 
-/**
- * Parses and evaluates the `(required_field)` expression.
- *
- * @param expression The expression string to evaluate.
- * @param message The message instance to validate.
- * @param schema The message schema containing field descriptors.
- * @returns `true` if the expression is satisfied, `false` otherwise.
- */
-function evaluateExpression(expression: string, message: any, schema: GenMessage<any>): boolean {
-  const tokens = tokenize(expression);
-
-  let index = 0;
-
-  function parseOr(): boolean {
-    let result = parseAnd();
-
-    while (index < tokens.length && tokens[index] === "|") {
-      index++;
-      const right = parseAnd();
-      result = result || right;
-    }
-
-    return result;
+function requirementIsPresent(requirement: Requirement, message: Record<string, unknown>): boolean {
+  if (requirement.field !== undefined) {
+    return isPresent(requirement.field, message[requirement.field.localName]);
   }
-
-  function parseAnd(): boolean {
-    let result = parsePrimary();
-
-    while (index < tokens.length && tokens[index] === "&") {
-      index++;
-      const right = parsePrimary();
-      result = result && right;
-    }
-
-    return result;
-  }
-
-  function parsePrimary(): boolean {
-    if (index >= tokens.length) {
-      return false;
-    }
-
-    const token = tokens[index];
-
-    if (token === "(") {
-      index++;
-      const result = parseOr();
-      if (index < tokens.length && tokens[index] === ")") {
-        index++;
-      }
-      return result;
-    } else if (token === "|" || token === "&" || token === ")") {
-      return false;
-    } else {
-      index++;
-      return isFieldSet(message, token, schema);
-    }
-  }
-
-  return parseOr();
+  return isOneofPresent(requirement.oneof as DescOneof, message);
 }
 
-/**
- * Validates the `(required_field)` option for messages.
- *
- * This is a message-level constraint that requires specific combinations
- * of fields to be set according to the expression.
- *
- * @param schema The message schema containing field descriptors.
- * @param message The message instance to validate.
- * @param violations Array to collect constraint violations.
- */
-export function validateRequiredFieldOption<T extends Message>(
-  schema: GenMessage<T>,
-  message: any,
+/** Validates a `(require)` option once for the message validation entry. */
+export function validateRequireOption(
+  context: ValidationContext,
+  schema: GenMessage<any>,
+  message: Record<string, unknown>,
   violations: ConstraintViolation[],
 ): void {
-  const requireFieldsOption = getRegisteredOption("requireFields");
+  const requireOption = getRegisteredOption("requireFields");
+  const options = schema.proto.options;
+  if (!requireOption || !options || !hasExtension(options, requireOption)) return;
 
-  if (!requireFieldsOption) {
+  const require = getExtension(options, requireOption) as RequireOption;
+  const expression = require.fields;
+  const groups = parseRequirements(expression, schema);
+  if (
+    groups.some((group) => group.every((requirement) => requirementIsPresent(requirement, message)))
+  ) {
     return;
   }
 
-  const options = (schema.proto as any).options;
-  if (!options) {
-    return;
-  }
-
-  if (!hasExtension(options, requireFieldsOption)) {
-    return;
-  }
-
-  const requireOption = getExtension(options, requireFieldsOption) as RequireOption;
-  if (!requireOption || !requireOption.fields) {
-    return;
-  }
-
-  const expression = requireOption.fields;
-
-  const satisfied = evaluateExpression(expression, message, schema);
-
-  if (!satisfied) {
-    const violationMessage = `At least one of the required field combinations must be satisfied: ${expression}`;
-    violations.push(createViolation(schema.typeName, expression, violationMessage));
-  }
+  violations.push(
+    createConstraintViolation(context, undefined, undefined, {
+      customMessage: require.errorMsg,
+      defaultMessage: requireDefaultMessage(),
+      placeholders: { "require.fields": expression },
+    }),
+  );
 }

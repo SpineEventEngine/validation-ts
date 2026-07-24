@@ -31,7 +31,7 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 
 **Comprehensive Validation Support**
 
-- **`(required)`** — Validate required markers, with current contract-parity gaps documented in the package guide.
+- **`(required)`** — Validate the supported Proto-defined presence targets.
 - **`(pattern)`** — Regex validation for strings.
 - **`(min)` / `(max)`** — Numeric bounds with inclusive/exclusive support.
 - **`(range)`** — Bounded ranges with bracket notation `(min..max]`.
@@ -45,7 +45,7 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 
 - 🚀 Full TypeScript type safety.
 - 📝 Custom error messages.
-- 🧪 200+ comprehensive tests.
+- 🧪 Comprehensive contract and regression tests.
 - 📚 Extensive documentation.
 - 🎨 Clean, readable error formatting.
 
@@ -53,6 +53,8 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 
 - **`(set_once)`** — Not currently supported. This option requires state tracking across multiple validations,
   which is outside the scope of single-message validation.
+- **`(pattern)`** — Uses ECMAScript `RegExp`; the frozen Proto contract uses Java `Pattern` as its syntax
+  baseline. See the [package regular-expression limitation](packages/validation/README.md#regular-expressions).
 
 ## 🚀 Getting Started
 
@@ -75,7 +77,7 @@ validation-ts/
 ├── packages/
 │   ├── validation/              # 📦 Main validation package
 │   │   ├── src/                 # Source code
-│   │   ├── tests/               # 200+ comprehensive tests
+│   │   ├── tests/               # Contract and regression tests
 │   │   ├── proto/               # Spine validation proto definitions
 │   │   └── README.md            # Full package documentation
 │   │

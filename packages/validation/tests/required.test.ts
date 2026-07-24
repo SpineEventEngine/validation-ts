@@ -31,12 +31,14 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import { ValidationConfigurationError, validate } from "../src";
 
 import {
   RequiredFieldsSchema,
   CustomErrorMessagesSchema as RequiredCustomErrorMessagesSchema,
   OptionalFieldsSchema,
+  InvalidRequiredNumericSchema,
+  InvalidRequiredBooleanSchema,
   Status,
 } from "./generated/test-required_pb";
 
@@ -49,6 +51,8 @@ describe("Required Field Validation", () => {
         address: { street: "123 Main St", city: "Boston" },
         status: Status.ACTIVE,
         tags: ["tag1"],
+        payload: new Uint8Array([1]),
+        scores: { a: 1 },
       });
 
       const violations = validate(RequiredFieldsSchema, valid);
@@ -69,7 +73,15 @@ describe("Required Field Validation", () => {
 
       const nameViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "name");
       expect(nameViolation).toBeDefined();
-      expect(nameViolation?.message?.withPlaceholders).toBe("A value must be set.");
+      expect(nameViolation?.message?.withPlaceholders).toBe(
+        "The field `${parent.type}.${field.path}` of the type `${field.type}` must have a non-default value.",
+      );
+      expect(nameViolation?.fieldValue).toBeUndefined();
+      expect(nameViolation?.message?.placeholderValue).toMatchObject({
+        "parent.type": RequiredFieldsSchema.typeName,
+        "field.path": "name",
+        "field.type": "string",
+      });
     });
 
     it("should detect missing `required` message field", () => {
@@ -142,6 +154,41 @@ describe("Required Field Validation", () => {
     });
   });
 
+  it("requires non-empty bytes and maps with field-only paths", () => {
+    const violations = validate(
+      RequiredFieldsSchema,
+      create(RequiredFieldsSchema, {
+        name: "name",
+        address: { street: "street" },
+        status: Status.ACTIVE,
+        tags: ["tag"],
+        payload: new Uint8Array(),
+        scores: {},
+      }),
+    );
+    expect(violations.map((v) => v.fieldPath?.fieldName)).toEqual([["payload"], ["scores"]]);
+    for (const violation of violations) {
+      expect(violation.fieldValue).toBeUndefined();
+      expect(violation.message?.placeholderValue).toMatchObject({
+        "parent.type": RequiredFieldsSchema.typeName,
+        "field.path": violation.fieldPath?.fieldName[0],
+      });
+    }
+    expect(
+      validate(
+        RequiredFieldsSchema,
+        create(RequiredFieldsSchema, {
+          name: "name",
+          address: { street: "street" },
+          status: Status.ACTIVE,
+          tags: ["tag"],
+          payload: new Uint8Array([1]),
+          scores: { a: 1 },
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
   describe("Optional Fields", () => {
     it("should not validate optional fields when empty", () => {
       const valid = create(OptionalFieldsSchema, {
@@ -152,5 +199,34 @@ describe("Required Field Validation", () => {
       const violations = validate(OptionalFieldsSchema, valid);
       expect(violations).toHaveLength(0);
     });
+  });
+
+  it("rejects numeric `(required)` targets before validating values", () => {
+    expect(() =>
+      validate(InvalidRequiredNumericSchema, create(InvalidRequiredNumericSchema)),
+    ).toThrow(ValidationConfigurationError);
+    expect(() =>
+      validate(InvalidRequiredNumericSchema, create(InvalidRequiredNumericSchema)),
+    ).toThrow(
+      expect.objectContaining({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "required",
+        typeName: InvalidRequiredNumericSchema.typeName,
+        fieldPath: ["age"],
+      }),
+    );
+  });
+
+  it("rejects boolean `(required)` targets", () => {
+    expect(() =>
+      validate(InvalidRequiredBooleanSchema, create(InvalidRequiredBooleanSchema)),
+    ).toThrow(
+      expect.objectContaining({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "required",
+        typeName: InvalidRequiredBooleanSchema.typeName,
+        fieldPath: ["enabled"],
+      }),
+    );
   });
 });
