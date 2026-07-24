@@ -15,7 +15,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import type { DescField } from "@bufbuild/protobuf";
+import type { DescField, Registry } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb";
@@ -36,6 +36,7 @@ export interface FieldValidator {
     message: any,
     field: DescField,
     violations: ConstraintViolation[],
+    registry: Registry,
   ): void;
 }
 

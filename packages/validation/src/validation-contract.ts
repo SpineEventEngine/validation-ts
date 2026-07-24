@@ -92,7 +92,7 @@ export function createConstraintViolation(
   return create(ConstraintViolationSchema, {
     typeName: context.rootTypeName,
     fieldPath: create(FieldPathSchema, {
-      fieldName: field === undefined ? [] : [...context.fieldPath],
+      fieldName: [...context.fieldPath],
     }),
     fieldValue: hasFieldValue ? packFieldValue(field, fieldValue) : undefined,
     message: create(TemplateStringSchema, {

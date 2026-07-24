@@ -31,7 +31,8 @@
  * for validating Protobuf messages against Spine validation constraints.
  */
 
-import type { Message } from "@bufbuild/protobuf";
+import { createRegistry } from "@bufbuild/protobuf";
+import type { DescFile, Message, Registry } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb";
@@ -43,7 +44,7 @@ import { validateRequireOption } from "./options/required-field";
 import { validateMinMaxField } from "./options/min-max";
 import { validateRangeField } from "./options/range";
 import { validateDistinctField } from "./options/distinct";
-import { validateNestedFields } from "./options/validate";
+import { validateNestedField } from "./options/validate";
 import { validateGoesField } from "./options/goes";
 import { validateChoiceOptions } from "./options/choice";
 import { legacyFieldValidator, type FieldValidator } from "./orchestration";
@@ -71,7 +72,11 @@ const fieldValidators: readonly FieldValidator[] = [
       validateDistinctField(context, schema, message, field, violations);
     },
   },
-  legacyFieldValidator(validateNestedFields),
+  {
+    validate(context, schema, message, field, violations, registry) {
+      validateNestedField(context, schema, message, field, violations, registry);
+    },
+  },
   {
     validate(context, schema, message, field, violations) {
       validateGoesField(context, schema, message, field, violations);
@@ -126,20 +131,51 @@ export function validate<T extends Message>(
   schema: GenMessage<T>,
   message: any,
 ): ConstraintViolation[] {
+  return validateInternal(
+    schema,
+    message,
+    createValidationContext(schema),
+    createRootRegistry(schema),
+  );
+}
+
+/** Validates a nested message while preserving its original entry context and registry. */
+export function validateInternal<T extends Message>(
+  schema: GenMessage<T>,
+  message: any,
+  context: ReturnType<typeof createValidationContext>,
+  registry: Registry,
+): ConstraintViolation[] {
   const violations: ConstraintViolation[] = [];
-  const context = createValidationContext(schema);
 
   validateRequireOption(context, schema, message, violations);
 
   for (const field of schema.fields) {
     for (const validator of fieldValidators) {
-      validator.validate(context, schema, message, field, violations);
+      validator.validate(context, schema, message, field, violations, registry);
     }
   }
 
   validateChoiceOptions(context, schema, message, violations);
 
   return violations;
+}
+
+function createRootRegistry(schema: GenMessage<any>): Registry {
+  return createRegistry(...dependencyClosure(schema.file));
+}
+
+function dependencyClosure(root: DescFile): DescFile[] {
+  const files: DescFile[] = [];
+  const visited = new Set<string>();
+  const visit = (file: DescFile): void => {
+    if (visited.has(file.name)) return;
+    visited.add(file.name);
+    files.push(file);
+    for (const dependency of file.dependencies) visit(dependency);
+  };
+  visit(root);
+  return files;
 }
 
 /**

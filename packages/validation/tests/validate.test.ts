@@ -31,7 +31,8 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import { anyPack, AnySchema } from "@bufbuild/protobuf/wkt";
+import { ValidationConfigurationError, validate } from "../src";
 
 import {
   PersonWithAddressSchema,
@@ -54,7 +55,15 @@ import {
   EmptyValidatedSchema,
   ProjectWithTasksSchema,
   TaskSchema,
+  LeafSchema,
+  NestedValidationContainersSchema,
+  ValidateDisabledSchema,
+  ValidateUnsupportedTargetSchema,
+  NestedMessageOptionContainersSchema,
+  RequireLeafSchema,
+  ChoiceLeafSchema,
 } from "./generated/test-validate_pb";
+import { UserIdentifierSchema } from "./generated/test-required-field_pb";
 
 describe("Nested Message Validation (validate)", () => {
   describe("Basic Nested Validation", () => {
@@ -130,8 +139,8 @@ describe("Nested Message Validation (validate)", () => {
     });
   });
 
-  describe("Custom Error Messages (if_invalid)", () => {
-    it("should use default error message when nested validation fails", () => {
+  describe("Deprecated parent diagnostics", () => {
+    it("does not emit a deprecated parent summary when nested validation fails", () => {
       const invalid = create(OrderWithCustomErrorSchema, {
         orderId: 123,
         customer: create(CustomerSchema, {
@@ -143,17 +152,11 @@ describe("Nested Message Validation (validate)", () => {
       const violations = validate(OrderWithCustomErrorSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      // Should have parent-level violation with default message.
-      const parentViolation = violations.find(
-        (v) =>
-          v.fieldPath?.fieldName.length === 1 &&
-          v.fieldPath?.fieldName[0] === "customer" &&
-          v.message?.withPlaceholders.includes("Nested message validation failed"),
-      );
-      expect(parentViolation).toBeDefined();
+      expect(violations).toHaveLength(1);
+      expect(violations[0].fieldPath?.fieldName).toEqual(["customer", "email"]);
     });
 
-    it("should include both parent and nested violations", () => {
+    it("propagates only leaves when multiple nested constraints fail", () => {
       const invalid = create(OrderWithCustomErrorSchema, {
         orderId: 123,
         customer: create(CustomerSchema, {
@@ -163,15 +166,7 @@ describe("Nested Message Validation (validate)", () => {
       });
 
       const violations = validate(OrderWithCustomErrorSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(3); // Parent + 2 nested.
-
-      // Parent violation.
-      const parentViolation = violations.find(
-        (v) => v.fieldPath?.fieldName.length === 1 && v.fieldPath?.fieldName[0] === "customer",
-      );
-      expect(parentViolation).toBeDefined();
-
-      // Nested violations.
+      expect(violations).toHaveLength(2);
       const emailViolation = violations.find((v) => v.fieldPath?.fieldName[1] === "email");
       expect(emailViolation).toBeDefined();
 
@@ -223,7 +218,7 @@ describe("Nested Message Validation (validate)", () => {
       });
 
       const violations = validate(TeamWithMembersSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(4); // 2 parent + 2 nested.
+      expect(violations).toHaveLength(2);
     });
   });
 
@@ -493,6 +488,140 @@ describe("Nested Message Validation (validate)", () => {
         (v) => v.fieldPath?.fieldName[0] === "tasks" && v.fieldPath?.fieldName[1] === "assignees",
       );
       expect(assigneeViolation).toBeDefined();
+    });
+  });
+
+  describe("Task 6 nested validation contract", () => {
+    it("keeps the root type and leaf envelope through singular, repeated, and map values", () => {
+      const invalid = create(NestedValidationContainersSchema, {
+        singular: create(LeafSchema, { value: "set", quantity: 0 }),
+        repeated: [create(LeafSchema, { value: "" })],
+        mapped: { first: create(LeafSchema, { value: "" }) },
+      });
+
+      const violations = validate(NestedValidationContainersSchema, invalid);
+      expect(violations).toHaveLength(5);
+      expect(violations.map((violation) => violation.typeName)).toEqual([
+        NestedValidationContainersSchema.typeName,
+        NestedValidationContainersSchema.typeName,
+        NestedValidationContainersSchema.typeName,
+        NestedValidationContainersSchema.typeName,
+        NestedValidationContainersSchema.typeName,
+      ]);
+      expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+        ["singular", "quantity"],
+        ["repeated", "value"],
+        ["repeated", "quantity"],
+        ["mapped", "value"],
+        ["mapped", "quantity"],
+      ]);
+      expect(violations[0].fieldValue?.typeUrl).toContain("google.protobuf.Int32Value");
+    });
+
+    it("skips the singular default message but validates explicit default collection values", () => {
+      const valid = create(NestedValidationContainersSchema, {
+        singular: create(LeafSchema),
+      });
+      expect(validate(NestedValidationContainersSchema, valid)).toHaveLength(0);
+
+      const invalid = create(NestedValidationContainersSchema, {
+        repeated: [create(LeafSchema)],
+        mapped: { default: create(LeafSchema) },
+      });
+      expect(validate(NestedValidationContainersSchema, invalid)).toHaveLength(4);
+    });
+
+    it("unpacks known Any values and leaves empty or unknown Any values valid", () => {
+      const invalidLeaf = create(LeafSchema, { value: "" });
+      const validLeaf = create(LeafSchema, { value: "set", quantity: 1 });
+      const result = validate(
+        NestedValidationContainersSchema,
+        create(NestedValidationContainersSchema, {
+          packed: anyPack(LeafSchema, invalidLeaf),
+          packedRepeated: [anyPack(LeafSchema, validLeaf)],
+          packedMapped: { invalid: anyPack(LeafSchema, invalidLeaf) },
+        }),
+      );
+      expect(result.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+        ["packed", "value"],
+        ["packed", "quantity"],
+        ["packed_mapped", "value"],
+        ["packed_mapped", "quantity"],
+      ]);
+      const packedQuantity = result.find(
+        (violation) => violation.fieldPath?.fieldName.join(".") === "packed.quantity",
+      );
+      expect(packedQuantity?.fieldValue?.typeUrl).toContain("google.protobuf.Int32Value");
+      expect(packedQuantity?.message?.withPlaceholders).toContain("${min.value}");
+
+      expect(
+        validate(
+          NestedValidationContainersSchema,
+          create(NestedValidationContainersSchema, {
+            packed: { typeUrl: "type.googleapis.com/example.Unknown", value: new Uint8Array([1]) },
+          }),
+        ),
+      ).toHaveLength(0);
+
+      expect(
+        validate(
+          NestedValidationContainersSchema,
+          create(NestedValidationContainersSchema, {
+            packed: create(AnySchema),
+            packedRepeated: [create(AnySchema)],
+            packedMapped: { empty: create(AnySchema) },
+          }),
+        ),
+      ).toHaveLength(0);
+
+      expect(
+        validate(
+          NestedValidationContainersSchema,
+          create(NestedValidationContainersSchema, {
+            packed: anyPack(UserIdentifierSchema, create(UserIdentifierSchema)),
+          }),
+        ),
+      ).toHaveLength(0);
+    });
+
+    it("prefixes nested message-level require and choice violations", () => {
+      const violations = validate(
+        NestedMessageOptionContainersSchema,
+        create(NestedMessageOptionContainersSchema, {
+          requireChild: create(RequireLeafSchema, { marker: "set" }),
+          choiceChild: create(ChoiceLeafSchema, { marker: "set" }),
+        }),
+      );
+      expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+        ["require_child"],
+        ["choice_child"],
+      ]);
+      expect(violations.map((violation) => violation.typeName)).toEqual([
+        NestedMessageOptionContainersSchema.typeName,
+        NestedMessageOptionContainersSchema.typeName,
+      ]);
+    });
+
+    it("treats false as a no-op and rejects unsupported true targets", () => {
+      expect(
+        validate(
+          ValidateDisabledSchema,
+          create(ValidateDisabledSchema, { leaf: create(LeafSchema) }),
+        ),
+      ).toHaveLength(0);
+      expect(() =>
+        validate(ValidateUnsupportedTargetSchema, create(ValidateUnsupportedTargetSchema)),
+      ).toThrow(ValidationConfigurationError);
+      try {
+        validate(ValidateUnsupportedTargetSchema, create(ValidateUnsupportedTargetSchema));
+      } catch (error) {
+        expect(error).toMatchObject({
+          code: "UNSUPPORTED_OPTION_TARGET",
+          option: "validate",
+          typeName: ValidateUnsupportedTargetSchema.typeName,
+          fieldPath: ["value"],
+        });
+      }
     });
   });
 });
