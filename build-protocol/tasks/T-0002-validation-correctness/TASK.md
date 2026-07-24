@@ -70,21 +70,22 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 
 ## Agent Dispatch
 
-| Role/function                  | Agent ID                     | Expected model  | Expected reasoning | Scope                                                                          | Status                                     |
-| ------------------------------ | ---------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------ |
-| Requirements splitting         | `/root/requirements_split`   | `gpt-5.6-sol`   | high               | Split the approved high-risk contract work into ordered implementation slices  | Complete and closed                        |
-| TypeScript implementation      | `/root/implementer_nested`   | `gpt-5.6-terra` | medium             | Own Task 6 nested-validation production code and focused behavior tests        | Task 6 complete and closed                 |
-| Task 1 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Contract-kernel spec compliance and code quality                               | Approved after F-001 through F-003; closed |
-| Task 2 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Deterministic orchestration spec compliance and code quality                   | Approved after F-004 through F-006; closed |
-| Task 3 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Presence semantics, diagnostics, configuration errors, and fixture migration   | Approved after F-007 through F-011; closed |
-| Task 4 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Numeric grammar, precision, references, envelopes, and configuration errors    | Approved after F-012 through F-015; closed |
-| Task 5 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Buf equality, duplicate classes, diagnostics, packing, and unsupported targets | Approved after F-016; closed               |
-| Task 6 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Leaf recursion, root context, message paths, Any registry, and target errors   | Approved; closed                           |
-| Task 7 implementation          | `/root/implementer_coverage` | `gpt-5.6-terra` | medium             | Own branch-focused tests, Jest thresholds, README, and affected API comments   | Complete and closed                        |
-| Style/maintainability review   | `/root/style_final`          | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Dispatched                                 |
-| Documentation review           | `/root/docs_final`           | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Dispatched                                 |
-| TypeScript/API review          | `/root/api_final`            | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Dispatched                                 |
-| Performance/reliability review | `/root/reliability_final`    | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Queued after first reviewer closes         |
+| Role/function                  | Agent ID                        | Expected model  | Expected reasoning | Scope                                                                          | Status                                     |
+| ------------------------------ | ------------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| Requirements splitting         | `/root/requirements_split`      | `gpt-5.6-sol`   | high               | Split the approved high-risk contract work into ordered implementation slices  | Complete and closed                        |
+| TypeScript implementation      | `/root/implementer_nested`      | `gpt-5.6-terra` | medium             | Own Task 6 nested-validation production code and focused behavior tests        | Task 6 complete and closed                 |
+| Task 1 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Contract-kernel spec compliance and code quality                               | Approved after F-001 through F-003; closed |
+| Task 2 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Deterministic orchestration spec compliance and code quality                   | Approved after F-004 through F-006; closed |
+| Task 3 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Presence semantics, diagnostics, configuration errors, and fixture migration   | Approved after F-007 through F-011; closed |
+| Task 4 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Numeric grammar, precision, references, envelopes, and configuration errors    | Approved after F-012 through F-015; closed |
+| Task 5 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Buf equality, duplicate classes, diagnostics, packing, and unsupported targets | Approved after F-016; closed               |
+| Task 6 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Leaf recursion, root context, message paths, Any registry, and target errors   | Approved; closed                           |
+| Task 7 implementation          | `/root/implementer_coverage`    | `gpt-5.6-terra` | medium             | Own branch-focused tests, Jest thresholds, README, and affected API comments   | Complete and closed                        |
+| Style/maintainability review   | `/root/style_final`             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Complete; F-017 accepted; closed           |
+| Documentation review           | `/root/docs_final`              | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Complete; F-019 through F-021; closed      |
+| TypeScript/API review          | `/root/api_final`               | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Complete; F-017, F-022, F-023; closed      |
+| Performance/reliability review | `/root/reliability_final`       | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Complete; F-018 accepted; closed           |
+| Final correction batch         | `/root/implementer_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-branch findings F-017 through F-023                     | Dispatched                                 |
 
 ## Scope And Ownership
 
