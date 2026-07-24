@@ -39,6 +39,7 @@ pnpm-debug.log*
 *.tmp
 .cache/
 .temp/
+.worktrees/
 
 # Environment and local config
 .env
