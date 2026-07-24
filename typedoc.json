@@ -5,7 +5,7 @@
   "out": "docs/api/reference",
   "exclude": ["**/dist/**", "**/coverage/**", "**/*.test.ts"],
   "cleanOutputDir": true,
-  "highlightLanguages": ["bash", "json", "protobuf", "typescript", "yaml"],
+  "highlightLanguages": ["bash", "js", "json", "protobuf", "typescript", "yaml"],
   "includeVersion": true,
   "treatWarningsAsErrors": true,
   "blockTags": ["@deprecated", "@example", "@generated", "@param", "@returns"],
