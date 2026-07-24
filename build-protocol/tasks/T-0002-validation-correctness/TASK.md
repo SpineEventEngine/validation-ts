@@ -70,18 +70,19 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 
 ## Agent Dispatch
 
-| Role/function                  | Agent ID                    | Expected model  | Expected reasoning | Scope                                                                          | Status                                     |
-| ------------------------------ | --------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------ |
-| Requirements splitting         | `/root/requirements_split`  | `gpt-5.6-sol`   | high               | Split the approved high-risk contract work into ordered implementation slices  | Complete and closed                        |
-| TypeScript implementation      | `/root/implementer_numeric` | `gpt-5.6-terra` | medium             | Own all overlapping production code and focused behavior tests                 | Task 4 complete and closed                 |
-| Task 1 scoped review           | `/root/task1_review`        | `gpt-5.6-terra` | high               | Contract-kernel spec compliance and code quality                               | Approved after F-001 through F-003; closed |
-| Task 2 scoped review           | `/root/task1_review`        | `gpt-5.6-terra` | high               | Deterministic orchestration spec compliance and code quality                   | Approved after F-004 through F-006; closed |
-| Task 3 scoped review           | `/root/task1_review`        | `gpt-5.6-terra` | high               | Presence semantics, diagnostics, configuration errors, and fixture migration   | Approved after F-007 through F-011; closed |
-| Task 4 scoped review           | `/root/task1_review`        | `gpt-5.6-terra` | high               | Numeric grammar, precision, references, envelopes, and configuration errors    | Approved after F-012 through F-015; closed |
-| Style/maintainability review   | Pending dispatch            | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Pending                                    |
-| Documentation review           | Pending dispatch            | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Pending                                    |
-| TypeScript/API review          | Pending dispatch            | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Pending                                    |
-| Performance/reliability review | Pending dispatch            | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Pending                                    |
+| Role/function                  | Agent ID                     | Expected model  | Expected reasoning | Scope                                                                          | Status                                     |
+| ------------------------------ | ---------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| Requirements splitting         | `/root/requirements_split`   | `gpt-5.6-sol`   | high               | Split the approved high-risk contract work into ordered implementation slices  | Complete and closed                        |
+| TypeScript implementation      | `/root/implementer_distinct` | `gpt-5.6-terra` | medium             | Own all overlapping production code and focused behavior tests                 | Task 5 complete and closed                 |
+| Task 1 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Contract-kernel spec compliance and code quality                               | Approved after F-001 through F-003; closed |
+| Task 2 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Deterministic orchestration spec compliance and code quality                   | Approved after F-004 through F-006; closed |
+| Task 3 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Presence semantics, diagnostics, configuration errors, and fixture migration   | Approved after F-007 through F-011; closed |
+| Task 4 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Numeric grammar, precision, references, envelopes, and configuration errors    | Approved after F-012 through F-015; closed |
+| Task 5 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Buf equality, duplicate classes, diagnostics, packing, and unsupported targets | Approved after F-016; closed               |
+| Style/maintainability review   | Pending dispatch             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Pending                                    |
+| Documentation review           | Pending dispatch             | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Pending                                    |
+| TypeScript/API review          | Pending dispatch             | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Pending                                    |
+| Performance/reliability review | Pending dispatch             | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Pending                                    |
 
 ## Scope And Ownership
 
@@ -122,6 +123,7 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Task 2 focused tests             | Passed: affected wave 11 suites and 231 tests; independent focused wave 4 suites and 52 tests.                 |
 | Task 3 focused tests             | Passed: focused presence 4 suites and 88 tests; full package 13 suites and 249 tests.                          |
 | Task 4 focused tests             | Passed: focused 3 suites and 72 tests; full package 14 suites and 260 tests.                                   |
+| Task 5 focused tests             | Passed: distinct 33 tests; full package 14 suites and 280 tests.                                               |
 | `npm run verify`                 | Pending                                                                                                        |
 
 Coverage: fresh T-0002 baseline is 81.88% statements, 71.01% branches, 92.18%
@@ -156,6 +158,7 @@ functions, and 81.48% lines.
 | F-013 | P2       | Yes       | Resolved in `4339341`; the complete numeric edge matrix and full error assertions pass.                                                         |
 | F-014 | P2       | Yes       | Resolved in `4339341`; rewritten min/max and range modules use the complete standard header.                                                    |
 | F-015 | P2       | Yes       | Resolved in `d6dc7a3`; the numeric contract test uses the complete standard test header.                                                        |
+| F-016 | P1       | Yes       | Resolved in `88bc9b3`; duplicate singleton diagnostics use `[A]`/`[B]` and deterministic list/map formatting.                                   |
 
 ## Integration
 
