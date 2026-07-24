@@ -3,14 +3,12 @@ modules:
   - path: proto
 lint:
   use:
-    # The example imports an immutable legacy copy of spine/options.proto.
+    # These modules compile immutable legacy Spine Proto sources whose upstream
+    # naming predates the current STANDARD rules.
     - MINIMAL
   ignore_only:
     PACKAGE_DEFINED:
       - proto/spine/options.proto
-    PACKAGE_DIRECTORY_MATCH:
-      - proto/product.proto
-      - proto/user.proto
 breaking:
   use:
     - FILE

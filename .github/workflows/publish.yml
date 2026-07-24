@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read      # Read repository code
-      id-token: write     # Generate OIDC token for npm authentication
+      contents: read # Read repository code
+      id-token: write # Generate OIDC token for npm authentication
 
     steps:
       - name: Checkout code
@@ -22,15 +22,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build validation package
-        run: npm run build --workspace=@spine-event-engine/validation-ts
+      - name: Verify release candidate
+        run: npm run verify
 
       - name: Perform publishing to NPM registry
         # The version is still a `snapshot`, so NPM requires it to be tagged accordingly.
-        run: npm publish --workspace=@spine-event-engine/validation-ts --tag snapshot
+        run: npm publish --workspace=@spine-event-engine/validation --tag snapshot
