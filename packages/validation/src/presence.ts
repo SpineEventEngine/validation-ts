@@ -20,7 +20,7 @@ export function isPresent(field: DescField, value: unknown): boolean {
       !equals(field.message, value as never, create(field.message))
     );
   }
-  if (field.fieldKind === "enum") return value !== 0;
+  if (field.fieldKind === "enum") return typeof value === "number" && value !== 0;
   if (field.fieldKind === "list") return Array.isArray(value) && value.length > 0;
   if (field.fieldKind === "map")
     return !!value && typeof value === "object" && Object.keys(value).length > 0;

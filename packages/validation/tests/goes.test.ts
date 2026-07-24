@@ -48,6 +48,8 @@ import {
   OptionalSettingsSchema,
   AdvancedConfigSchema,
   InvalidGoesTargetSchema,
+  InvalidGoesUnknownCompanionSchema,
+  InvalidGoesNumericCompanionSchema,
 } from "./generated/test-goes_pb";
 
 describe("Field Dependency Validation (goes)", () => {
@@ -255,6 +257,28 @@ describe("Field Dependency Validation (goes)", () => {
           code: "UNSUPPORTED_OPTION_TARGET",
           option: "goes",
           fieldPath: ["display_id"],
+        }),
+      );
+    });
+    it("rejects unknown and unsupported companions", () => {
+      expect(() =>
+        validate(InvalidGoesUnknownCompanionSchema, create(InvalidGoesUnknownCompanionSchema)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "UNKNOWN_FIELD_REFERENCE",
+          option: "goes",
+          typeName: InvalidGoesUnknownCompanionSchema.typeName,
+          fieldPath: ["value"],
+        }),
+      );
+      expect(() =>
+        validate(InvalidGoesNumericCompanionSchema, create(InvalidGoesNumericCompanionSchema)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "INVALID_FIELD_REFERENCE",
+          option: "goes",
+          typeName: InvalidGoesNumericCompanionSchema.typeName,
+          fieldPath: ["number"],
         }),
       );
     });

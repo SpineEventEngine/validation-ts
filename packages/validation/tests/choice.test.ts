@@ -73,6 +73,14 @@ describe("Choice Option Validation (oneof)", () => {
       const violations = validate(PaymentMethodSchema, payment);
       expect(violations).toHaveLength(0);
     });
+
+    it("treats selected numeric zero and boolean false cases as present", () => {
+      const numeric = create(MultipleRequiredChoicesSchema, {
+        first: { case: "count", value: 0 },
+        second: { case: "enabled", value: false },
+      });
+      expect(validate(MultipleRequiredChoicesSchema, numeric)).toHaveLength(0);
+    });
   });
 
   describe("Custom Error Messages", () => {

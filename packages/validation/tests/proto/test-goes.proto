@@ -78,6 +78,15 @@ message InvalidGoesTarget {
     int32 display_id = 2 [(goes).with = "username"];
 }
 
+message InvalidGoesUnknownCompanion {
+    string value = 1 [(goes).with = "missing"];
+}
+
+message InvalidGoesNumericCompanion {
+    string value = 1 [(goes).with = "number"];
+    int32 number = 2;
+}
+
 // Tests goes constraint on message field type.
 message DocumentMetadata {
     string title = 1;

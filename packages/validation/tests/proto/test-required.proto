@@ -42,8 +42,8 @@ message RequiredFields {
     Address address = 3 [(required) = true];
     Status status = 4 [(required) = true];
     repeated string tags = 5 [(required) = true];
-    bytes payload = 6;
-    map<string, int32> scores = 7;
+    bytes payload = 6 [(required) = true];
+    map<string, int32> scores = 7 [(required) = true];
 }
 
 message InvalidRequiredNumeric {
