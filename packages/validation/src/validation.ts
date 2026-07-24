@@ -44,9 +44,9 @@ import { validateMinMaxFields } from "./options/min-max";
 import { validateRangeFields } from "./options/range";
 import { validateDistinctFields } from "./options/distinct";
 import { validateNestedFields } from "./options/validate";
-import { validateGoesFields } from "./options/goes";
-import { validateChoiceFields } from "./options/choice";
-import { appendMessageViolation, legacyFieldValidator, type FieldValidator } from "./orchestration";
+import { validateGoesField } from "./options/goes";
+import { validateChoiceOptions } from "./options/choice";
+import { legacyFieldValidator, type FieldValidator } from "./orchestration";
 import { createValidationContext } from "./validation-contract";
 
 const fieldValidators: readonly FieldValidator[] = [
@@ -60,7 +60,11 @@ const fieldValidators: readonly FieldValidator[] = [
   legacyFieldValidator(validateRangeFields),
   legacyFieldValidator(validateDistinctFields),
   legacyFieldValidator(validateNestedFields),
-  legacyFieldValidator(validateGoesFields),
+  {
+    validate(context, schema, message, field, violations) {
+      validateGoesField(context, schema, message, field, violations);
+    },
+  },
 ];
 
 export type {
@@ -121,11 +125,7 @@ export function validate<T extends Message>(
     }
   }
 
-  const choiceViolations: ConstraintViolation[] = [];
-  validateChoiceFields(schema, message, choiceViolations);
-  for (const violation of choiceViolations) {
-    appendMessageViolation(context, violation, violations);
-  }
+  validateChoiceOptions(context, schema, message, violations);
 
   return violations;
 }

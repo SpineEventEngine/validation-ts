@@ -30,6 +30,7 @@ import {
   PaymentMethodSchema,
   ContactMethodSchema,
   ShippingOptionSchema,
+  MultipleRequiredChoicesSchema,
 } from "./generated/test-choice_pb";
 
 describe("Choice Option Validation (oneof)", () => {
@@ -115,18 +116,16 @@ describe("Choice Option Validation (oneof)", () => {
   });
 
   describe("Multiple Oneofs in Same Message", () => {
-    it("should validate all oneofs independently", () => {
-      // Test case would require a proto with multiple oneofs
-      // For now, we verify that each oneof is validated separately
-      const payment = create(PaymentMethodSchema, {
-        method: {
-          case: "paypal",
-          value: "user@example.com",
-        },
-      });
-
-      const violations = validate(PaymentMethodSchema, payment);
-      expect(violations).toHaveLength(0);
+    it("emits one message-level violation per unset group in declaration order", () => {
+      const violations = validate(
+        MultipleRequiredChoicesSchema,
+        create(MultipleRequiredChoicesSchema),
+      );
+      expect(violations).toHaveLength(2);
+      expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([[], []]);
+      expect(
+        violations.map((violation) => violation.message?.placeholderValue["group.path"]),
+      ).toEqual(["first", "second"]);
     });
   });
 

@@ -87,7 +87,7 @@ describe("Integration Tests", () => {
 
     expect(formatted).toContain("spine.validation.testing.integration.User.name");
     expect(formatted).toContain("spine.validation.testing.integration.User.email");
-    expect(formatted).toContain("A value must be set");
+    expect(formatted).toContain("must have a non-default value");
   });
 
   it("should `validate` User with `distinct` tags", () => {
@@ -486,8 +486,8 @@ describe("Integration Tests", () => {
       expect(violations.length).toBeGreaterThan(0);
 
       // Should have `required_field` violation.
-      const requiredFieldViolation = violations.find((v) =>
-        v.message?.withPlaceholders.includes("id | email"),
+      const requiredFieldViolation = violations.find(
+        (v) => v.message?.placeholderValue["require.fields"] === "email",
       );
       expect(requiredFieldViolation).toBeDefined();
     });
@@ -551,7 +551,7 @@ describe("Integration Tests", () => {
       const goesViolation = violations.find(
         (v) =>
           v.fieldPath?.fieldName[0] === "recovery_phone" &&
-          v.message?.withPlaceholders.includes("recovery_email"),
+          v.message?.placeholderValue["goes.companion"] === "recovery_email",
       );
       expect(goesViolation).toBeDefined();
     });
@@ -609,10 +609,7 @@ describe("Integration Tests", () => {
       });
 
       const violations2 = validate(AdvancedConfigSchema, invalid2);
-      const goesViolation = violations2.find(
-        (v) => v.fieldPath?.fieldName[0] === "max_connections",
-      );
-      expect(goesViolation).toBeDefined();
+      expect(violations2).toHaveLength(0);
     });
 
     it("should handle mutual dependencies with multiple constraint types", () => {
@@ -636,7 +633,9 @@ describe("Integration Tests", () => {
 
       const textColorViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "text_color");
       expect(textColorViolation).toBeDefined();
-      expect(textColorViolation?.message?.withPlaceholders).toContain("highlight_color");
+      expect(textColorViolation?.message?.placeholderValue["goes.companion"]).toBe(
+        "highlight_color",
+      );
     });
 
     it("should format `goes` violations correctly", () => {

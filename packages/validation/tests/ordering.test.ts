@@ -40,7 +40,7 @@ describe("deterministic validation orchestration", () => {
       ["email"],
       ["username"],
       ["password"],
-      ["age"],
+      ["account_type"],
       ["age"],
       ["rating"],
     ]);
@@ -48,12 +48,12 @@ describe("deterministic validation orchestration", () => {
       true,
     );
     expect(violations.map((violation) => violation.message?.withPlaceholders)).toEqual([
-      expect.stringContaining("At least one"),
+      expect.stringContaining("at least one"),
       expect.stringContaining("at least"),
-      "A value must be set.",
+      expect.stringContaining("must have a non-default value"),
       expect.stringContaining("Username must"),
-      "A value must be set.",
-      "A value must be set.",
+      expect.stringContaining("must have a non-default value"),
+      expect.stringContaining("must have a non-default value"),
       expect.stringContaining("range"),
       expect.stringContaining("range"),
     ]);
