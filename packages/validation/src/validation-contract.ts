@@ -68,21 +68,34 @@ export interface ViolationMessage {
 /** Creates a shared violation envelope from a descriptor-aware field value. */
 export function createConstraintViolation(
   context: ValidationContext,
-  field: DescField,
+  field: DescField | undefined,
   fieldValue: unknown,
   message: ViolationMessage,
 ): ConstraintViolation {
+  const hasFieldValue = field !== undefined && fieldValue !== undefined;
+  const placeholderValue: Record<string, string> = {
+    "message.type": context.rootTypeName,
+  };
+
+  if (hasFieldValue) {
+    Object.assign(placeholderValue, {
+      "parent.type": context.rootTypeName,
+      "field.path": context.fieldPath.join("."),
+      "field.type": fieldTypeName(field),
+      "field.value": formatFieldValue(fieldValue),
+    });
+  }
+
   return create(ConstraintViolationSchema, {
     typeName: context.rootTypeName,
-    fieldPath: create(FieldPathSchema, { fieldName: [...context.fieldPath] }),
-    fieldValue: fieldValue === undefined ? undefined : packFieldValue(field, fieldValue),
+    fieldPath: create(FieldPathSchema, {
+      fieldName: field === undefined ? [] : [...context.fieldPath],
+    }),
+    fieldValue: hasFieldValue ? packFieldValue(field, fieldValue) : undefined,
     message: create(TemplateStringSchema, {
       withPlaceholders: message.customMessage || message.defaultMessage || "",
       placeholderValue: {
-        "parent.type": context.rootTypeName,
-        "field.path": context.fieldPath.join("."),
-        "field.type": fieldTypeName(field),
-        "field.value": formatFieldValue(fieldValue),
+        ...placeholderValue,
         ...message.placeholders,
       },
     }),

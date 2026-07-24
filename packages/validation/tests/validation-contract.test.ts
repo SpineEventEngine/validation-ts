@@ -127,4 +127,21 @@ describe("validation contract kernel", () => {
         ?.withPlaceholders,
     ).toBe("");
   });
+
+  it("creates a message-level violation without a field value", () => {
+    const context = createValidationContext(RequiredFieldsSchema);
+    const violation = createConstraintViolation(context, undefined, undefined, {
+      defaultMessage: "`${message.type}` has incompatible fields.",
+    });
+
+    expect(violation.typeName).toBe(RequiredFieldsSchema.typeName);
+    expect(violation.fieldPath?.fieldName).toEqual([]);
+    expect(violation.fieldValue).toBeUndefined();
+    expect(violation.message).toEqual(
+      expect.objectContaining({
+        withPlaceholders: "`${message.type}` has incompatible fields.",
+        placeholderValue: { "message.type": RequiredFieldsSchema.typeName },
+      }),
+    );
+  });
 });
