@@ -119,6 +119,18 @@ message InvalidRequireGrammar {
     string other = 2;
 }
 
+message InvalidRequireBoolean {
+    option (require).fields = "enabled";
+    bool enabled = 1;
+}
+
+message InvalidRequireEmpty { option (require).fields = ""; string name = 1; }
+message InvalidRequireLeadingPipe { option (require).fields = "|name"; string name = 1; }
+message InvalidRequireLeadingAnd { option (require).fields = "&name"; string name = 1; }
+message InvalidRequireTrailingPipe { option (require).fields = "name|"; string name = 1; }
+message InvalidRequireTrailingAnd { option (require).fields = "name&"; string name = 1; }
+message InvalidRequireEmptyGroup { option (require).fields = "name||other"; string name = 1; string other = 2; }
+
 message RequireOneof {
     option (require).fields = "selection";
 

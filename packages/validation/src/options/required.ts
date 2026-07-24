@@ -1,3 +1,8 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
 /** Validation of the descriptor-defined `(required)` field option. */
 
 import { getOption, hasOption } from "@bufbuild/protobuf";

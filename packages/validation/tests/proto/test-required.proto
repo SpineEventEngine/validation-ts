@@ -50,6 +50,10 @@ message InvalidRequiredNumeric {
     int32 age = 1 [(required) = true];
 }
 
+message InvalidRequiredBoolean {
+    bool enabled = 1 [(required) = true];
+}
+
 // Nested message for testing required message fields.
 message Address {
     string street = 1;

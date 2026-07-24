@@ -45,6 +45,13 @@ import {
   InvalidRequireParenthesesSchema,
   InvalidRequireUnknownSchema,
   InvalidRequireGrammarSchema,
+  InvalidRequireBooleanSchema,
+  InvalidRequireEmptySchema,
+  InvalidRequireLeadingPipeSchema,
+  InvalidRequireLeadingAndSchema,
+  InvalidRequireTrailingPipeSchema,
+  InvalidRequireTrailingAndSchema,
+  InvalidRequireEmptyGroupSchema,
   RequireOneofSchema,
 } from "./generated/test-required-field_pb";
 
@@ -447,6 +454,34 @@ describe("Required Field Option Validation", () => {
       expect(() =>
         validate(InvalidRequireGrammarSchema, create(InvalidRequireGrammarSchema)),
       ).toThrow(expect.objectContaining({ code: "INVALID_OPTION_VALUE", option: "require" }));
+    });
+    it("rejects boolean references and grammar boundaries", () => {
+      expect(() =>
+        validate(InvalidRequireBooleanSchema, create(InvalidRequireBooleanSchema)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "INVALID_FIELD_REFERENCE",
+          option: "require",
+          typeName: InvalidRequireBooleanSchema.typeName,
+          fieldPath: ["enabled"],
+        }),
+      );
+      for (const schema of [
+        InvalidRequireEmptySchema,
+        InvalidRequireLeadingPipeSchema,
+        InvalidRequireLeadingAndSchema,
+        InvalidRequireTrailingPipeSchema,
+        InvalidRequireTrailingAndSchema,
+        InvalidRequireEmptyGroupSchema,
+      ]) {
+        expect(() => validate(schema as any, create(schema as any))).toThrow(
+          expect.objectContaining({
+            code: "INVALID_OPTION_VALUE",
+            option: "require",
+            typeName: schema.typeName,
+          }),
+        );
+      }
     });
   });
 

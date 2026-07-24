@@ -38,6 +38,7 @@ import {
   CustomErrorMessagesSchema as RequiredCustomErrorMessagesSchema,
   OptionalFieldsSchema,
   InvalidRequiredNumericSchema,
+  InvalidRequiredBooleanSchema,
   Status,
 } from "./generated/test-required_pb";
 
@@ -212,6 +213,19 @@ describe("Required Field Validation", () => {
         option: "required",
         typeName: InvalidRequiredNumericSchema.typeName,
         fieldPath: ["age"],
+      }),
+    );
+  });
+
+  it("rejects boolean `(required)` targets", () => {
+    expect(() =>
+      validate(InvalidRequiredBooleanSchema, create(InvalidRequiredBooleanSchema)),
+    ).toThrow(
+      expect.objectContaining({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "required",
+        typeName: InvalidRequiredBooleanSchema.typeName,
+        fieldPath: ["enabled"],
       }),
     );
   });
