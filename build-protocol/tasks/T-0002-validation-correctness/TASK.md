@@ -81,11 +81,11 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Task 5 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Buf equality, duplicate classes, diagnostics, packing, and unsupported targets | Approved after F-016; closed               |
 | Task 6 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Leaf recursion, root context, message paths, Any registry, and target errors   | Approved; closed                           |
 | Task 7 implementation          | `/root/implementer_coverage`    | `gpt-5.6-terra` | medium             | Own branch-focused tests, Jest thresholds, README, and affected API comments   | Complete and closed                        |
-| Style/maintainability review   | `/root/style_final`             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | F-017 re-review dispatched                 |
-| Documentation review           | `/root/docs_final`              | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | F-019 through F-022 re-review dispatched   |
-| TypeScript/API review          | `/root/api_final`               | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | F-017/F-023 re-review dispatched           |
-| Performance/reliability review | `/root/reliability_final`       | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | F-018 re-review queued                     |
-| Final correction batch         | `/root/implementer_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-branch findings F-017 through F-023                     | Complete and closed                        |
+| Style/maintainability review   | `/root/style_final`             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Clean; F-017 resolved; closed              |
+| Documentation review           | `/root/docs_final`              | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Clean; F-019 through F-022; closed         |
+| TypeScript/API review          | `/root/api_final`               | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Clean; F-017/F-023 resolved; closed        |
+| Performance/reliability review | `/root/reliability_final`       | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | F-024 accepted; closed                     |
+| Final correction batch         | `/root/implementer_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-branch findings F-017 through F-024                     | F-024 follow-up dispatched                 |
 
 ## Scope And Ownership
 
