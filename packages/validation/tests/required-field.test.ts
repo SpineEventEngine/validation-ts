@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import { ValidationConfigurationError, validate } from "../src";
 
 import {
   UserIdentifierSchema,
@@ -41,13 +41,18 @@ import {
   ShippingAddressSchema,
   AccountCreationSchema,
   OptionalDataSchema,
+  InvalidRequireDirectNumericSchema,
+  InvalidRequireParenthesesSchema,
+  InvalidRequireUnknownSchema,
+  InvalidRequireGrammarSchema,
+  RequireOneofSchema,
 } from "./generated/test-required-field_pb";
 
 describe("Required Field Option Validation", () => {
   describe("Simple OR Logic", () => {
     it("should pass when first `required` field is provided", () => {
       const valid = create(UserIdentifierSchema, {
-        id: 123,
+        id: "id-123",
         email: "",
       });
 
@@ -57,7 +62,7 @@ describe("Required Field Option Validation", () => {
 
     it("should pass when second `required` field is provided", () => {
       const valid = create(UserIdentifierSchema, {
-        id: 0,
+        id: "",
         email: "user@example.com",
       });
 
@@ -67,7 +72,7 @@ describe("Required Field Option Validation", () => {
 
     it("should pass when both `required` fields are provided", () => {
       const valid = create(UserIdentifierSchema, {
-        id: 123,
+        id: "id-123",
         email: "user@example.com",
       });
 
@@ -77,13 +82,13 @@ describe("Required Field Option Validation", () => {
 
     it("should fail when neither `required` field is provided", () => {
       const invalid = create(UserIdentifierSchema, {
-        id: 0,
+        id: "",
         email: "",
       });
 
       const violations = validate(UserIdentifierSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
-      expect(violations[0].message?.withPlaceholders).toContain("id | email");
+      expect(violations[0].message?.placeholderValue["require.fields"]).toBe("id | email");
     });
   });
 
@@ -106,7 +111,9 @@ describe("Required Field Option Validation", () => {
 
       const violations = validate(ContactInfoSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
-      expect(violations[0].message?.withPlaceholders).toContain("phone & country_code");
+      expect(violations[0].message?.placeholderValue["require.fields"]).toBe(
+        "phone & country_code",
+      );
     });
 
     it("should fail when only second field is provided", () => {
@@ -181,8 +188,8 @@ describe("Required Field Option Validation", () => {
 
       const violations = validate(PersonNameSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
-      expect(violations[0].message?.withPlaceholders).toContain(
-        "given_name | (honorific_prefix & family_name)",
+      expect(violations[0].message?.placeholderValue["require.fields"]).toBe(
+        "given_name | honorific_prefix & family_name",
       );
     });
 
@@ -256,7 +263,7 @@ describe("Required Field Option Validation", () => {
 
       const violations = validate(PaymentMethodSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
-      expect(violations[0].message?.withPlaceholders).toContain(
+      expect(violations[0].message?.placeholderValue["require.fields"]).toBe(
         "credit_card | bank_account | paypal_email",
       );
     });
@@ -287,7 +294,7 @@ describe("Required Field Option Validation", () => {
 
       const violations = validate(ShippingAddressSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
-      expect(violations[0].message?.withPlaceholders).toContain(
+      expect(violations[0].message?.placeholderValue["require.fields"]).toBe(
         "street & city & postal_code & country",
       );
     });
@@ -349,8 +356,8 @@ describe("Required Field Option Validation", () => {
 
       const violations = validate(AccountCreationSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
-      expect(violations[0].message?.withPlaceholders).toContain(
-        "(username & password) | oauth_token",
+      expect(violations[0].message?.placeholderValue["require.fields"]).toBe(
+        "username & password | oauth_token",
       );
     });
 
@@ -398,6 +405,62 @@ describe("Required Field Option Validation", () => {
 
       const violations = validate(OptionalDataSchema, valid);
       expect(violations).toHaveLength(0);
+    });
+  });
+
+  describe("Configuration errors", () => {
+    it("rejects a direct numeric field reference", () => {
+      expect(() =>
+        validate(InvalidRequireDirectNumericSchema, create(InvalidRequireDirectNumericSchema)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "INVALID_FIELD_REFERENCE",
+          option: "require",
+          typeName: InvalidRequireDirectNumericSchema.typeName,
+          fieldPath: ["number"],
+        }),
+      );
+    });
+
+    it("rejects unsupported parentheses in the documented grammar", () => {
+      expect(() =>
+        validate(InvalidRequireParenthesesSchema, create(InvalidRequireParenthesesSchema)),
+      ).toThrow(expect.objectContaining({ code: "INVALID_OPTION_VALUE", option: "require" }));
+    });
+
+    it("rejects unknown field references", () => {
+      expect(() =>
+        validate(InvalidRequireUnknownSchema, create(InvalidRequireUnknownSchema)),
+      ).toThrow(ValidationConfigurationError);
+      expect(() =>
+        validate(InvalidRequireUnknownSchema, create(InvalidRequireUnknownSchema)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "UNKNOWN_FIELD_REFERENCE",
+          option: "require",
+          fieldPath: ["missing"],
+        }),
+      );
+    });
+
+    it("rejects doubled operators", () => {
+      expect(() =>
+        validate(InvalidRequireGrammarSchema, create(InvalidRequireGrammarSchema)),
+      ).toThrow(expect.objectContaining({ code: "INVALID_OPTION_VALUE", option: "require" }));
+    });
+  });
+
+  describe("Oneof references", () => {
+    it("treats any selected oneof case as present, including numeric cases", () => {
+      expect(
+        validate(
+          RequireOneofSchema,
+          create(RequireOneofSchema, { selection: { case: "numericValue", value: 0 } }),
+        ),
+      ).toHaveLength(0);
+      const violations = validate(RequireOneofSchema, create(RequireOneofSchema));
+      expect(violations).toHaveLength(1);
+      expect(violations[0].fieldPath?.fieldName).toEqual([]);
     });
   });
 });

@@ -38,12 +38,16 @@ import "spine/options.proto";
 // Tests required field validation on various field types.
 message RequiredFields {
     string name = 1 [(required) = true];
-    int32 age = 2 [(required) = true];
+    int32 age = 2;
     Address address = 3 [(required) = true];
     Status status = 4 [(required) = true];
     repeated string tags = 5 [(required) = true];
     bytes payload = 6;
     map<string, int32> scores = 7;
+}
+
+message InvalidRequiredNumeric {
+    int32 age = 1 [(required) = true];
 }
 
 // Nested message for testing required message fields.

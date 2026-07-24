@@ -37,9 +37,9 @@ import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb";
 import type { TemplateString } from "./generated/spine/validate/error_message_pb";
 
-import { validateRequiredFields } from "./options/required";
+import { validateRequiredField } from "./options/required";
 import { validatePatternFields } from "./options/pattern";
-import { validateRequiredFieldOption } from "./options/required-field";
+import { validateRequireOption } from "./options/required-field";
 import { validateMinMaxFields } from "./options/min-max";
 import { validateRangeFields } from "./options/range";
 import { validateDistinctFields } from "./options/distinct";
@@ -50,7 +50,11 @@ import { appendMessageViolation, legacyFieldValidator, type FieldValidator } fro
 import { createValidationContext } from "./validation-contract";
 
 const fieldValidators: readonly FieldValidator[] = [
-  legacyFieldValidator(validateRequiredFields),
+  {
+    validate(context, schema, message, field, violations) {
+      validateRequiredField(context, schema, message, field, violations);
+    },
+  },
   legacyFieldValidator(validatePatternFields),
   legacyFieldValidator(validateMinMaxFields),
   legacyFieldValidator(validateRangeFields),
@@ -109,11 +113,7 @@ export function validate<T extends Message>(
   const violations: ConstraintViolation[] = [];
   const context = createValidationContext(schema);
 
-  const messageViolations: ConstraintViolation[] = [];
-  validateRequiredFieldOption(schema, message, messageViolations);
-  for (const violation of messageViolations) {
-    appendMessageViolation(context, violation, violations);
-  }
+  validateRequireOption(context, schema, message, violations);
 
   for (const field of schema.fields) {
     for (const validator of fieldValidators) {

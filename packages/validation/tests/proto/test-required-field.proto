@@ -39,7 +39,7 @@ import "spine/options.proto";
 message UserIdentifier {
     option (require).fields = "id | email";
 
-    int32 id = 1;
+    string id = 1;
     string email = 2;
 }
 
@@ -53,7 +53,7 @@ message ContactInfo {
 
 // Tests complex OR with AND groups.
 message PersonName {
-    option (require).fields = "given_name | (honorific_prefix & family_name)";
+    option (require).fields = "given_name | honorific_prefix & family_name";
 
     string honorific_prefix = 1;
     string given_name = 2;
@@ -84,7 +84,7 @@ message ShippingAddress {
 
 // Tests complex nested logic with grouping.
 message AccountCreation {
-    option (require).fields = "(username & password) | oauth_token";
+    option (require).fields = "username & password | oauth_token";
 
     string username = 1;
     string password = 2;
@@ -96,4 +96,34 @@ message OptionalData {
     string field1 = 1;
     string field2 = 2;
     int32 field3 = 3;
+}
+
+message InvalidRequireDirectNumeric {
+    option (require).fields = "number";
+    int32 number = 1;
+}
+
+message InvalidRequireParentheses {
+    option (require).fields = "(name)";
+    string name = 1;
+}
+
+message InvalidRequireUnknown {
+    option (require).fields = "missing";
+    string name = 1;
+}
+
+message InvalidRequireGrammar {
+    option (require).fields = "name && other";
+    string name = 1;
+    string other = 2;
+}
+
+message RequireOneof {
+    option (require).fields = "selection";
+
+    oneof selection {
+        int32 numeric_value = 1;
+        bool boolean_value = 2;
+    }
 }
