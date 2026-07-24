@@ -54,8 +54,10 @@ describe("Choice Option Validation (oneof)", () => {
       const violations = validate(PaymentMethodSchema, payment);
       expect(violations.length).toBeGreaterThan(0);
 
-      const choiceViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "method");
+      const choiceViolation = violations[0];
       expect(choiceViolation).toBeDefined();
+      expect(choiceViolation?.fieldPath?.fieldName).toEqual([]);
+      expect(choiceViolation?.message?.placeholderValue?.["group.path"]).toBe("method");
       expect(choiceViolation?.message?.withPlaceholders).toContain("oneof");
     });
 
@@ -81,8 +83,10 @@ describe("Choice Option Validation (oneof)", () => {
       const violations = validate(ContactMethodSchema, contact);
       expect(violations.length).toBeGreaterThan(0);
 
-      const choiceViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "contact");
+      const choiceViolation = violations[0];
       expect(choiceViolation).toBeDefined();
+      expect(choiceViolation?.fieldPath?.fieldName).toEqual([]);
+      expect(choiceViolation?.message?.placeholderValue?.["group.path"]).toBe("contact");
       expect(choiceViolation?.message?.withPlaceholders).toContain("must provide a contact method");
     });
   });
@@ -144,9 +148,10 @@ describe("Choice Option Validation (oneof)", () => {
       const payment = create(PaymentMethodSchema, {});
 
       const violations = validate(PaymentMethodSchema, payment);
-      const choiceViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "method");
+      const choiceViolation = violations[0];
 
-      expect(choiceViolation?.fieldPath?.fieldName).toEqual(["method"]);
+      expect(choiceViolation?.fieldPath?.fieldName).toEqual([]);
+      expect(choiceViolation?.message?.placeholderValue?.["group.path"]).toBe("method");
       expect(choiceViolation?.typeName).toBe("test.PaymentMethod");
     });
   });

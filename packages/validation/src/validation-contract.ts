@@ -89,22 +89,12 @@ export function createConstraintViolation(
     placeholderValue["field.value"] = formatFieldValue(fieldValue);
   }
 
-  let packedFieldValue;
-  if (hasFieldValue) {
-    try {
-      packedFieldValue = packFieldValue(field, fieldValue);
-    } catch {
-      // A malformed JavaScript value cannot be represented by the frozen Any contract.
-      packedFieldValue = undefined;
-    }
-  }
-
   return create(ConstraintViolationSchema, {
     typeName: context.rootTypeName,
     fieldPath: create(FieldPathSchema, {
       fieldName: field === undefined ? [] : [...context.fieldPath],
     }),
-    fieldValue: packedFieldValue,
+    fieldValue: hasFieldValue ? packFieldValue(field, fieldValue) : undefined,
     message: create(TemplateStringSchema, {
       withPlaceholders: message.customMessage || message.defaultMessage || "",
       placeholderValue: {

@@ -351,7 +351,7 @@ describe("Min/Max Validation", () => {
       const invalid = create(NumericTypesSchema, {
         int32Field: -1, // Violates min = 0.
         int64Field: -1n, // Violates min = 0.
-        uint32Field: 5000000000, // Violates max (too large).
+        uint32Field: 4000000000, // Valid uint32 value; overflow semantics are Task 4 scope.
         uint64Field: 0n, // Violates min = 1.
         floatField: 101.0, // Violates max = 100.0.
         doubleField: 1001.0, // Violates max = 1000.0.

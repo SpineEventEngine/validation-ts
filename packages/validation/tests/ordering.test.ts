@@ -15,9 +15,11 @@
  */
 
 import { create } from "@bufbuild/protobuf";
+import { anyUnpack, StringValueSchema } from "@bufbuild/protobuf/wkt";
 
 import { validate } from "../src";
 import { AccountSchema } from "./generated/integration-account_pb";
+import { RepeatedPatternValidationSchema } from "./generated/test-pattern_pb";
 
 describe("deterministic validation orchestration", () => {
   it("runs message constraints first and then validators field by field", () => {
@@ -45,5 +47,31 @@ describe("deterministic validation orchestration", () => {
     expect(violations.every((violation) => violation.typeName === AccountSchema.typeName)).toBe(
       true,
     );
+    expect(violations.map((violation) => violation.message?.withPlaceholders)).toEqual([
+      expect.stringContaining("At least one"),
+      expect.stringContaining("at least"),
+      "A value must be set.",
+      expect.stringContaining("Username must"),
+      "A value must be set.",
+      "A value must be set.",
+      expect.stringContaining("range"),
+      expect.stringContaining("range"),
+    ]);
+  });
+
+  it("keeps repeated pattern offenders ordered, packed, and on the collection path", () => {
+    const message = create(RepeatedPatternValidationSchema, {
+      tags: ["good", "bad!", "wrong?"],
+    });
+
+    const violations = validate(RepeatedPatternValidationSchema, message);
+
+    expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["tags"],
+      ["tags"],
+    ]);
+    expect(
+      violations.map((violation) => anyUnpack(violation.fieldValue!, StringValueSchema)?.value),
+    ).toEqual(["bad!", "wrong?"]);
   });
 });

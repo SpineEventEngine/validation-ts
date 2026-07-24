@@ -86,10 +86,6 @@ export function appendMessageViolation(
     defaultMessage: legacyMessage?.withPlaceholders,
     placeholders: legacyMessage?.placeholderValue,
   });
-  const path = legacyViolation.fieldPath?.fieldName ?? [];
-  if (path.length > 0) {
-    normalized.fieldPath = create(FieldPathSchema, { fieldName: path });
-  }
   violations.push(normalized);
 }
 
@@ -97,8 +93,13 @@ function offendingValue(message: any, field: DescField, violation: ConstraintVio
   const value = message[field.localName];
   const path = violation.fieldPath?.fieldName ?? [];
 
-  if (path.length < 2) return value;
-  if (field.fieldKind === "list" && Array.isArray(value)) return value[Number(path[1])];
+  if (field.fieldKind === "list") {
+    if (!Array.isArray(value)) return undefined;
+    const bracketedIndex = path[0]?.match(new RegExp(`^${field.name}\\[(\\d+)]$`));
+    if (bracketedIndex) return value[Number(bracketedIndex[1])];
+    if (path.length >= 2) return value[Number(path[1])];
+    return undefined;
+  }
   if (field.fieldKind === "map" && value && typeof value === "object") return value[path[1]];
   return value;
 }
