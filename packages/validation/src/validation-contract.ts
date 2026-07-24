@@ -77,13 +77,16 @@ export function createConstraintViolation(
     "message.type": context.rootTypeName,
   };
 
-  if (hasFieldValue) {
+  if (field !== undefined) {
     Object.assign(placeholderValue, {
       "parent.type": context.rootTypeName,
       "field.path": context.fieldPath.join("."),
       "field.type": fieldTypeName(field),
-      "field.value": formatFieldValue(fieldValue),
     });
+  }
+
+  if (hasFieldValue) {
+    placeholderValue["field.value"] = formatFieldValue(fieldValue);
   }
 
   return create(ConstraintViolationSchema, {

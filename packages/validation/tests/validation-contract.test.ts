@@ -144,4 +144,27 @@ describe("validation contract kernel", () => {
       }),
     );
   });
+
+  it("keeps field metadata placeholders when no concrete field value exists", () => {
+    const context = createValidationContext(RequiredFieldsSchema).atField(
+      RequiredFieldsSchema.field.name,
+    );
+    const violation = createConstraintViolation(
+      context,
+      RequiredFieldsSchema.field.name,
+      undefined,
+      {
+        defaultMessage: "No value for `${field.path}`.",
+      },
+    );
+
+    expect(violation.fieldValue).toBeUndefined();
+    expect(violation.message?.placeholderValue).toEqual({
+      "message.type": RequiredFieldsSchema.typeName,
+      "parent.type": RequiredFieldsSchema.typeName,
+      "field.path": "name",
+      "field.type": "9",
+    });
+    expect(violation.message?.placeholderValue).not.toHaveProperty("field.value");
+  });
 });
