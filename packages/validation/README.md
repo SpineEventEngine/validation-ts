@@ -215,7 +215,7 @@ to build custom error displays tailored to your application.
 
 ### Field-level options
 
-- ✅ **`(required)`** — Ensures field has a non-default value
+- ✅ **`(required)`** — Requires supported message/enum, string/bytes, repeated, and map fields
 - ✅ **`(if_missing)`** — Custom error message for required fields
 - ✅ **`(pattern)`** — Regex validation for string fields
 - ✅ **`(min)` / `(max)`** — Numeric range validation with inclusive/exclusive bounds
@@ -250,10 +250,7 @@ import "spine/options.proto";
 message User {
     option (require).fields = "id | email";
 
-    int32 id = 1 [
-        (set_once) = true,
-        (min).value = "1"
-    ];
+    int32 id = 1 [(min).value = "1"];
 
     string name = 2 [
         (required) = true,
@@ -311,13 +308,15 @@ In `proto3`, fields have default values:
 - Bool fields default to `false`
 - Message fields default to `undefined`
 
-The `(required)` validator considers a field "set" when:
+The frozen Proto contract supports `(required)` on these field kinds:
 
-- String fields are non-empty
-- Numeric fields are non-zero
-- Bool fields are `true` or `false` (both count as set)
-- Message fields are not `undefined`
-- Repeated fields have at least one element
+- Message and enum fields
+- String and bytes fields
+- Repeated and map fields
+
+Numeric and boolean scalar fields are not supported by the `(required)`
+contract. Use numeric constraints such as `(min)`, `(max)`, or `(range)` where
+appropriate.
 
 ### Nested validation
 

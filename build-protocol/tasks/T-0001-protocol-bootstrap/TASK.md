@@ -64,11 +64,15 @@ subagents.
 
 ## Agent Dispatch
 
-| Role/function                      | Agent ID                 | Expected model  | Expected reasoning | Scope                                  | Status   |
-| ---------------------------------- | ------------------------ | --------------- | ------------------ | -------------------------------------- | -------- |
-| Upstream Proto/provenance research | `/root/proto_provenance` | `gpt-5.6-terra` | medium             | Read-only source and Buf strategy      | Complete |
-| Dependency/tool verification       | `/root/tooling_research` | `gpt-5.6-terra` | medium             | Read-only retained-stack compatibility | Complete |
-| Implementer                        | Main orchestrator        | `gpt-5.6-sol`   | medium             | Approved bootstrap                     | Complete |
+| Role/function                      | Agent ID                      | Expected model  | Expected reasoning | Scope                                  | Status   |
+| ---------------------------------- | ----------------------------- | --------------- | ------------------ | -------------------------------------- | -------- |
+| Upstream Proto/provenance research | `/root/proto_provenance`      | `gpt-5.6-terra` | medium             | Read-only source and Buf strategy      | Complete |
+| Dependency/tool verification       | `/root/tooling_research`      | `gpt-5.6-terra` | medium             | Read-only retained-stack compatibility | Complete |
+| Implementer                        | Main orchestrator             | `gpt-5.6-sol`   | medium             | Approved bootstrap                     | Complete |
+| Style/maintainability review       | `/root/style_review`          | `gpt-5.6-terra` | high               | Protocol and repository quality        | Complete |
+| Documentation review               | `/root/docs_review`           | `gpt-5.6-terra` | medium             | Claims and contributor guidance        | Complete |
+| TypeScript/API review              | `/root/typescript_api_review` | `gpt-5.6-terra` | high               | Package and public API                 | Complete |
+| Performance/reliability review     | `/root/reliability_review`    | `gpt-5.6-terra` | high               | CI, generation, package reliability    | Complete |
 
 ## Scope And Ownership
 
@@ -97,13 +101,13 @@ lines. Generated output digest:
 
 ## Review Dispositions
 
-| Concern                 | Reviewer | Disposition                                                   | Evidence |
-| ----------------------- | -------- | ------------------------------------------------------------- | -------- |
-| Style/maintainability   | Pending  | Pending                                                       |          |
-| Documentation           | Pending  | Pending                                                       |          |
-| TypeScript/API          | Pending  | Pending                                                       |          |
-| Performance/reliability | Pending  | Pending                                                       |          |
-| Security                | N/A      | Release-readiness review; no release or master push in T-0001 | D-0004   |
+| Concern                 | Reviewer                      | Disposition                                                   | Evidence           |
+| ----------------------- | ----------------------------- | ------------------------------------------------------------- | ------------------ |
+| Style/maintainability   | `/root/style_review`          | Accepted P1/P2 correction; re-review pending                  | F-001–F-003        |
+| Documentation           | `/root/docs_review`           | Accepted P2 correction; re-review pending                     | F-004–F-005        |
+| TypeScript/API          | `/root/typescript_api_review` | Clean                                                         | Package/API review |
+| Performance/reliability | `/root/reliability_review`    | Accepted duplicate Node P1 correction; re-review pending      | F-002              |
+| Security                | N/A                           | Release-readiness review; no release or master push in T-0001 | D-0004             |
 
 ## Integration
 

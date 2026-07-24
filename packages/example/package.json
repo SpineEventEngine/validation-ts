@@ -5,7 +5,7 @@
   "description": "Example project demonstrating @spine-event-engine/validation usage",
   "type": "module",
   "engines": {
-    "node": ">=18.14.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "generate": "buf generate",

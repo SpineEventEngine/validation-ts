@@ -27,7 +27,8 @@
 /**
  * Validation logic for the `(required)` option.
  *
- * The `(required)` option ensures that a field has a non-default value set.
+ * The `(required)` option applies to message/enum, string/bytes, repeated, and
+ * map fields as defined by the frozen Proto contract.
  */
 
 import type { Message } from "@bufbuild/protobuf";
@@ -76,8 +77,7 @@ function createViolation(
 /**
  * Validates the `(required)` option for all fields in a message.
  *
- * This function checks each field with the `(required)` option to ensure it has
- * a non-default value. Custom error messages can be provided via the `(if_missing)` option.
+ * Custom error messages can be provided via the `(if_missing)` option.
  *
  * @param schema The message schema containing field descriptors.
  * @param message The message instance to validate.

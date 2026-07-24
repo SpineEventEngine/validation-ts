@@ -21,8 +21,8 @@ Run:
 npm run proto:verify
 ```
 
-Never edit a frozen Proto to satisfy local Buf style. The present Buf modules
-use the `MINIMAL` ruleset because both vendored and existing fixture packages
-predate current `STANDARD` naming rules. Compilation and generation remain
-mandatory. A later task may split project-owned Proto files into a stricter
-lint module without modifying upstream files.
+Never edit a frozen Proto to satisfy local Buf style. Every module uses the
+`STANDARD` ruleset, with path-and-rule-specific exceptions for immutable Spine
+inputs and pre-existing fixture names or package layouts. New project-owned
+Proto files receive the full ruleset. Compilation, generation, and checksum
+verification remain mandatory.

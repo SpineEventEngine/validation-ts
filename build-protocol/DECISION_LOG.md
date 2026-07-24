@@ -87,8 +87,7 @@ future approved intake task before replacement or addition.
 
 Date: 2026-07-24
 
-Existing vendored and fixture Proto packages predate current Buf `STANDARD`
-naming rules. Use Buf `MINIMAL` lint during T-0001 so immutable source style
-cannot break the gate while compilation and generation still run. A future
-task may isolate project-owned Proto files under stricter rules without editing
-frozen upstream inputs.
+Use Buf `STANDARD` lint for every module. Apply path-and-rule-specific
+exceptions only where a frozen upstream input or pre-existing fixture layout
+cannot comply without changing its contract or location. Compilation,
+generation, and checksum verification remain mandatory for frozen inputs.

@@ -31,7 +31,7 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 
 **Comprehensive Validation Support**
 
-- **`(required)`** — Ensure fields have non-default values.
+- **`(required)`** — Require supported message/enum, string/bytes, repeated, and map fields.
 - **`(pattern)`** — Regex validation for strings.
 - **`(min)` / `(max)`** — Numeric bounds with inclusive/exclusive support.
 - **`(range)`** — Bounded ranges with bracket notation `(min..max]`.

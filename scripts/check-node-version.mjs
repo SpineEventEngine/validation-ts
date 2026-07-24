@@ -1,4 +1,4 @@
-const minimum = [18, 14, 0];
+const minimum = [24, 0, 0];
 const current = process.versions.node.split(".").map(Number);
 
 function isAtLeast(actual, expected) {
@@ -11,8 +11,8 @@ function isAtLeast(actual, expected) {
 }
 
 if (!isAtLeast(current, minimum)) {
-  console.error(`Node ${process.versions.node} is unsupported; use Node >=18.14.0.`);
+  console.error(`Node ${process.versions.node} is unsupported; use Node >=24.0.0.`);
   process.exit(1);
 }
 
-console.log(`Node ${process.versions.node} satisfies the >=18.14.0 requirement.`);
+console.log(`Node ${process.versions.node} satisfies the >=24.0.0 requirement.`);
