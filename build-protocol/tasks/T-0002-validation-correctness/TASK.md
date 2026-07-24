@@ -1,6 +1,6 @@
 # T-0002: Correct Validation Semantics And Reach 90% Coverage
 
-Status: Ready for integration
+Status: Complete
 Classification: High-risk
 Baseline: `09b94d03828fb6f1ed264398dced327dbdaa67b5`
 Branch: `task/t-0002-validation-correctness`
@@ -169,12 +169,21 @@ functions, and 81.48% lines.
 
 ## Integration
 
-- Task commit:
-- Task push:
-- `dev` merge:
-- Post-merge verification:
-- Remote refs:
-- Worktree cleanup:
+- Task commit: reviewed and canonically verified task closure at
+  `a8e1baf763bd42e7b5e6c7009bd5f2eeaa1c3c69`.
+- Task push: `origin/task/t-0002-validation-correctness` verified at
+  `a8e1baf763bd42e7b5e6c7009bd5f2eeaa1c3c69` before this closure record.
+- `dev` merge: `86d6092e94e8fb7b5e6b4778237d65acfc927c2c`.
+- Post-merge verification: full `npm run verify` passed on merged `dev`, with
+  14 suites, 293 tests, and all four coverage dimensions above 90%.
+- Remote refs: initial verified integration was
+  `dev@86d6092e94e8fb7b5e6b4778237d65acfc927c2c` and
+  `task@a8e1baf763bd42e7b5e6c7009bd5f2eeaa1c3c69`. This closure record is
+  merged and pushed afterward; final refs are verified directly rather than
+  creating another record-only commit. `master` remained
+  `24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- Worktree cleanup: terminal orchestrator action after this closure record is
+  pushed.
 
 ## Open Risks And Follow-Up
 
