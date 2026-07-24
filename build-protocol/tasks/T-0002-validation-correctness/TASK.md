@@ -1,6 +1,6 @@
 # T-0002: Correct Validation Semantics And Reach 90% Coverage
 
-Status: In progress
+Status: Ready for integration
 Classification: High-risk
 Baseline: `09b94d03828fb6f1ed264398dced327dbdaa67b5`
 Branch: `task/t-0002-validation-correctness`
@@ -131,7 +131,7 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Post-Task-6 coverage             | Passed tests; 92.23% statements, 87.37% branches, 94.17% functions, and 93.53% lines.                          |
 | Task 7 90% coverage gate         | Passed: 94.72% statements, 91.44% branches, 98.05% functions, and 95.87% lines.                                |
 | Final numeric focus              | Passed: 27 tests; generated typecheck and diff whitespace checks passed.                                       |
-| `npm run verify`                 | Pending clean rerun after F-025.                                                                               |
+| `npm run verify`                 | Passed: all canonical gates, 14 suites/293 tests, and 94.72/91.53/99.03/95.87 coverage.                        |
 
 Coverage: fresh T-0002 baseline is 81.88% statements, 71.01% branches, 92.18%
 functions, and 81.48% lines.
