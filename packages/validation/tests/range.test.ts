@@ -83,7 +83,7 @@ describe("Range Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "percentage",
       );
       expect(percentageViolation).toBeDefined();
-      expect(percentageViolation?.message?.withPlaceholders).toContain("[0..100]");
+      expect(percentageViolation?.message?.placeholderValue?.["range.value"]).toBe("[0..100]");
     });
 
     it("should fail when value exceeds maximum", () => {
@@ -96,7 +96,7 @@ describe("Range Validation", () => {
       const violations = validate(ClosedRangeSchema, invalid);
       const rgbViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "rgb_value");
       expect(rgbViolation).toBeDefined();
-      expect(rgbViolation?.message?.withPlaceholders).toContain("[0..255]");
+      expect(rgbViolation?.message?.placeholderValue?.["range.value"]).toBe("[0..255]");
     });
   });
 
@@ -293,7 +293,7 @@ describe("Range Validation", () => {
       const violations = validate(RangeCombinedConstraintsSchema, invalid);
       const quantityViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "quantity");
       expect(quantityViolation).toBeDefined();
-      expect(quantityViolation?.message?.withPlaceholders).toContain("[1..1000]");
+      expect(quantityViolation?.message?.placeholderValue?.["range.value"]).toBe("[1..1000]");
     });
 
     it("should detect both `required` and `range` violations", () => {

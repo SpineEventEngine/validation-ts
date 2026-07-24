@@ -276,13 +276,13 @@ describe("Integration Tests", () => {
 
     const ageViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "age");
     expect(ageViolation).toBeDefined();
-    expect(ageViolation?.message?.withPlaceholders).toContain("[13..120]");
+    expect(ageViolation?.message?.placeholderValue?.["range.value"]).toBe("[13..120]");
 
     const attemptsViolation = violations.find(
       (v) => v.fieldPath?.fieldName[0] === "failed_login_attempts",
     );
     expect(attemptsViolation).toBeDefined();
-    expect(attemptsViolation?.message?.withPlaceholders).toContain("[0..5]");
+    expect(attemptsViolation?.message?.placeholderValue?.["range.value"]).toBe("[0..5]");
   });
 
   it("should detect both `required` and `range` violations on age field", () => {
@@ -385,7 +385,7 @@ describe("Integration Tests", () => {
     const violations3 = validate(AccountSchema, invalidRating);
     const ratingViolation = violations3.find((v) => v.fieldPath?.fieldName[0] === "rating");
     expect(ratingViolation).toBeDefined();
-    expect(ratingViolation?.message?.withPlaceholders).toContain("[1.0..5.0]");
+    expect(ratingViolation?.message?.placeholderValue?.["range.value"]).toBe("[1.0..5.0]");
   });
 
   describe("Nested Validation (validate) Integration", () => {
@@ -600,7 +600,7 @@ describe("Integration Tests", () => {
         (v) => v.fieldPath?.fieldName[0] === "max_connections",
       );
       expect(rangeViolation).toBeDefined();
-      expect(rangeViolation?.message?.withPlaceholders).toContain("[1..1000]");
+      expect(rangeViolation?.message?.placeholderValue?.["range.value"]).toBe("[1..1000]");
 
       const invalid2 = create(AdvancedConfigSchema, {
         configName: "", // Not set.

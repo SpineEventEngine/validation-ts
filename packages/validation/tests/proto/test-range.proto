@@ -111,3 +111,11 @@ message EdgeCaseRanges {
     int32 exact_value = 1 [(range).value = "[42..42]"];
     double pi_approx = 2 [(range).value = "[3.14..3.15]"];
 }
+
+message RangeContract {
+    int64 precise = 1 [(range).value = "[9007199254740993..9007199254740995]"];
+    repeated int32 repeated = 2 [(range).value = "[0..10]"];
+}
+message ReversedRange { int32 value = 1 [(range).value = "[10..0]"]; }
+message MalformedRange { int32 value = 1 [(range).value = "[0..1..2]"]; }
+message InvalidRangeTarget { string value = 1 [(range).value = "[0..1]"]; }

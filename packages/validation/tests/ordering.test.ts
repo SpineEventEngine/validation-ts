@@ -49,7 +49,7 @@ describe("deterministic validation orchestration", () => {
     );
     expect(violations.map((violation) => violation.message?.withPlaceholders)).toEqual([
       expect.stringContaining("at least one"),
-      expect.stringContaining("at least"),
+      expect.stringContaining("${min.operator}"),
       expect.stringContaining("must have a non-default value"),
       expect.stringContaining("Username must"),
       expect.stringContaining("must have a non-default value"),

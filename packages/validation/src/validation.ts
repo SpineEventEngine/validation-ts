@@ -40,8 +40,8 @@ import type { TemplateString } from "./generated/spine/validate/error_message_pb
 import { validateRequiredField } from "./options/required";
 import { validatePatternFields } from "./options/pattern";
 import { validateRequireOption } from "./options/required-field";
-import { validateMinMaxFields } from "./options/min-max";
-import { validateRangeFields } from "./options/range";
+import { validateMinMaxField } from "./options/min-max";
+import { validateRangeField } from "./options/range";
 import { validateDistinctFields } from "./options/distinct";
 import { validateNestedFields } from "./options/validate";
 import { validateGoesField } from "./options/goes";
@@ -56,8 +56,16 @@ const fieldValidators: readonly FieldValidator[] = [
     },
   },
   legacyFieldValidator(validatePatternFields),
-  legacyFieldValidator(validateMinMaxFields),
-  legacyFieldValidator(validateRangeFields),
+  {
+    validate(context, schema, message, field, violations) {
+      validateMinMaxField(context, schema, message, field, violations);
+    },
+  },
+  {
+    validate(context, schema, message, field, violations) {
+      validateRangeField(context, schema, message, field, violations);
+    },
+  },
   legacyFieldValidator(validateDistinctFields),
   legacyFieldValidator(validateNestedFields),
   {

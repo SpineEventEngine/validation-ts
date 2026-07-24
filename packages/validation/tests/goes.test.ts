@@ -492,7 +492,7 @@ describe("Field Dependency Validation (goes)", () => {
         (v) => v.fieldPath?.fieldName[0] === "max_connections",
       );
       expect(rangeViolation).toBeDefined();
-      expect(rangeViolation?.message?.withPlaceholders).toContain("[1..1000]");
+      expect(rangeViolation?.message?.placeholderValue?.["range.value"]).toBe("[1..1000]");
     });
 
     it("continues numeric range validation without an unsupported `(goes)` target", () => {

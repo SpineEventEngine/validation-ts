@@ -214,7 +214,8 @@ describe("Distinct Validation", () => {
 
       const rangeViolation = violations.find(
         (v) =>
-          v.fieldPath?.fieldName[0] === "scores" && v.message?.withPlaceholders.includes("at most"),
+          v.fieldPath?.fieldName[0] === "scores" &&
+          v.message?.placeholderValue?.["max.operator"] === "<=",
       );
       expect(rangeViolation).toBeDefined();
 

@@ -83,7 +83,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "positive_id",
       );
       expect(positiveIdViolation).toBeDefined();
-      expect(positiveIdViolation?.message?.withPlaceholders).toContain("at least");
+      expect(positiveIdViolation?.message?.withPlaceholders).toContain("${min.operator}");
     });
 
     it("should fail when price is below minimum", () => {
@@ -156,7 +156,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "percentage",
       );
       expect(percentageViolation).toBeDefined();
-      expect(percentageViolation?.message?.withPlaceholders).toContain("at most");
+      expect(percentageViolation?.message?.withPlaceholders).toContain("${max.operator}");
     });
 
     it("should fail when altitude exceeds maximum", () => {
@@ -255,7 +255,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "positive_value",
       );
       expect(positiveValueViolation).toBeDefined();
-      expect(positiveValueViolation?.message?.withPlaceholders).toContain("greater than");
+      expect(positiveValueViolation?.message?.placeholderValue?.["min.operator"]).toBe(">");
     });
 
     it("should fail when value equals exclusive maximum", () => {
@@ -270,7 +270,7 @@ describe("Min/Max Validation", () => {
         (v) => v.fieldPath?.fieldName[0] === "below_limit",
       );
       expect(belowLimitViolation).toBeDefined();
-      expect(belowLimitViolation?.message?.withPlaceholders).toContain("less than");
+      expect(belowLimitViolation?.message?.placeholderValue?.["max.operator"]).toBe("<");
     });
 
     it("should use custom error message for temperature", () => {

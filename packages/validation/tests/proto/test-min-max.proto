@@ -121,3 +121,28 @@ message OptionalMinMax {
     int32 optional_count = 1 [(min).value = "1"];
     double optional_rating = 2 [(max).value = "5.0"];
 }
+
+// Contract cases for exact literal parsing, descriptors, and 64-bit values.
+message NumericBoundsContract {
+    int64 precise_min = 1 [(min).value = "9007199254740993"];
+    uint64 precise_max = 2 [(max).value = "9007199254740993"];
+    repeated int64 repeated_precise = 3 [(min).value = "9007199254740993"];
+}
+
+message InvalidMinSuffix { int32 value = 1 [(min).value = "1x"]; }
+message InvalidMinFloat { double value = 1 [(min).value = "1"]; }
+message InvalidMinUnsigned { uint32 value = 1 [(min).value = "-1"]; }
+message InvalidMinTarget { string value = 1 [(min).value = "1"]; }
+
+message NumericLimits {
+    int64 lower = 1;
+    double upper = 2;
+}
+
+message NumericReferences {
+    NumericLimits limits = 1;
+    int64 actual = 2 [(min).value = "limits.lower"];
+    double measured = 3 [(max).value = "limits.upper"];
+}
+message MissingNumericReference { int32 value = 1 [(min).value = "does_not_exist"]; }
+message IncompatibleNumericReference { NumericLimits limits = 1; int32 value = 2 [(min).value = "limits"]; }
