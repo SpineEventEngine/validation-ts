@@ -82,10 +82,10 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Task 6 scoped review           | `/root/task1_review`            | `gpt-5.6-terra` | high               | Leaf recursion, root context, message paths, Any registry, and target errors   | Approved; closed                           |
 | Task 7 implementation          | `/root/implementer_coverage`    | `gpt-5.6-terra` | medium             | Own branch-focused tests, Jest thresholds, README, and affected API comments   | Complete and closed                        |
 | Style/maintainability review   | `/root/style_final`             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Clean; F-017 resolved; closed              |
-| Documentation review           | `/root/docs_final`              | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Clean; F-019 through F-022; closed         |
+| Documentation review           | `/root/docs_final`              | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Clean; F-019 through F-022/F-025; closed   |
 | TypeScript/API review          | `/root/api_final`               | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Clean; F-017/F-023 resolved; closed        |
 | Performance/reliability review | `/root/reliability_final`       | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Clean; F-018/F-024 resolved; closed        |
-| Final correction batch         | `/root/implementer_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-branch findings F-017 through F-025                     | F-025 gate follow-up dispatched            |
+| Final correction batch         | `/root/implementer_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-branch findings F-017 through F-025                     | Complete and closed                        |
 
 ## Scope And Ownership
 
@@ -131,7 +131,7 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Post-Task-6 coverage             | Passed tests; 92.23% statements, 87.37% branches, 94.17% functions, and 93.53% lines.                          |
 | Task 7 90% coverage gate         | Passed: 94.72% statements, 91.44% branches, 98.05% functions, and 95.87% lines.                                |
 | Final numeric focus              | Passed: 27 tests; generated typecheck and diff whitespace checks passed.                                       |
-| `npm run verify`                 | Blocked at TypeDoc: unsupported `js` highlighting produced exit code 5; F-025 dispatched.                      |
+| `npm run verify`                 | Pending clean rerun after F-025.                                                                               |
 
 Coverage: fresh T-0002 baseline is 81.88% statements, 71.01% branches, 92.18%
 functions, and 81.48% lines.
