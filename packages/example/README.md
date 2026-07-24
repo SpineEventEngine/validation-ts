@@ -1,6 +1,6 @@
 # Spine Validation TypeScript - Example Project
 
-A standalone example demonstrating runtime validation of Protobuf messages 
+A standalone example demonstrating runtime validation of Protobuf messages
 with [Spine Validation](https://github.com/SpineEventEngine/validation/) constraints.
 
 ## What This Example Shows
@@ -15,7 +15,7 @@ with [Spine Validation](https://github.com/SpineEventEngine/validation/) constra
 ### Install dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
 ### Run the example
@@ -25,6 +25,7 @@ npm start
 ```
 
 This will:
+
 1. Generate TypeScript code from `.proto` files.
 2. Build the TypeScript code.
 3. Run the example showing various validation scenarios.

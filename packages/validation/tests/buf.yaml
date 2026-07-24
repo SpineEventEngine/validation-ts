@@ -1,0 +1,72 @@
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+  ignore_only:
+    PACKAGE_DEFINED:
+      - proto/spine/options.proto
+    PACKAGE_VERSION_SUFFIX:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+    FILE_LOWER_SNAKE_CASE:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+    FIELD_LOWER_SNAKE_CASE:
+      - proto/spine/options.proto
+    ENUM_NO_ALLOW_ALIAS:
+      - proto/spine/options.proto
+    ENUM_VALUE_PREFIX:
+      - proto/spine/options.proto
+    ENUM_ZERO_VALUE_SUFFIX:
+      - proto/spine/options.proto
+    DIRECTORY_SAME_PACKAGE:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+    PACKAGE_DIRECTORY_MATCH:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+breaking:
+  use:
+    - FILE

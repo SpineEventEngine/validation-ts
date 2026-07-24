@@ -1,0 +1,10 @@
+node_modules
+.worktrees
+dist
+coverage
+docs/api/reference
+packages/*/src/generated
+packages/*/tests/generated
+packages/*/proto/spine
+packages/*/tests/proto/spine
+package-lock.json

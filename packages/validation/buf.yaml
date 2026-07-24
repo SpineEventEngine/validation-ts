@@ -8,8 +8,9 @@ lint:
     PACKAGE_DEFINED:
       - proto/spine/options.proto
     PACKAGE_VERSION_SUFFIX:
-      - proto/product.proto
-      - proto/user.proto
+      - proto/spine/base/field_path.proto
+      - proto/spine/validate/error_message.proto
+      - proto/spine/validate/validation_error.proto
     FIELD_LOWER_SNAKE_CASE:
       - proto/spine/options.proto
     ENUM_NO_ALLOW_ALIAS:
@@ -18,9 +19,6 @@ lint:
       - proto/spine/options.proto
     ENUM_ZERO_VALUE_SUFFIX:
       - proto/spine/options.proto
-    PACKAGE_DIRECTORY_MATCH:
-      - proto/product.proto
-      - proto/user.proto
 breaking:
   use:
     - FILE

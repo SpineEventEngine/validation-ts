@@ -1,15 +1,39 @@
-name: Build and Test
+name: Verify
 
-on: push
+on:
+  push:
+    branches:
+      - dev
+      - master
+  pull_request:
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  verify:
+    name: Full verification
     runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify repository
+        run: npm run verify
+
+  compatibility:
+    name: Node.js ${{ matrix.node-version }} compatibility
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 24.x]
+        node-version: [24.x]
 
     steps:
       - name: Checkout code
@@ -19,15 +43,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build validation package
+      - name: Build packages
         run: npm run build
 
       - name: Run tests
         run: npm test
-
-      - name: Build example
-        run: npm run example

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["packages/validation/src/index.ts"],
+  "tsconfig": "packages/validation/tsconfig.json",
+  "out": "docs/api/reference",
+  "exclude": ["**/dist/**", "**/coverage/**", "**/*.test.ts"],
+  "cleanOutputDir": true,
+  "highlightLanguages": ["bash", "json", "protobuf", "typescript", "yaml"],
+  "includeVersion": true,
+  "treatWarningsAsErrors": true,
+  "blockTags": ["@deprecated", "@example", "@generated", "@param", "@returns"],
+  "excludeTags": ["@generated"]
+}
