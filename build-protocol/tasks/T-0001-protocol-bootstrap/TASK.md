@@ -1,6 +1,6 @@
 # T-0001: Protocol And Verification Bootstrap
 
-Status: Ready to integrate
+Status: Complete
 Classification: High-risk
 Baseline: `c7527325ce2130e3766bacc6effabc1af238f2b6`
 Branch: `task/t-0001-protocol-bootstrap`
@@ -112,12 +112,18 @@ lines. Generated output digest:
 ## Integration
 
 - Task commits: implementation `4d4a04b`, review correction `cd20671`, and
-  final cleanup at branch HEAD.
-- Task push: Pending.
-- `dev` merge: Pending.
-- Post-merge verification: Pending.
-- Remote refs: Pending.
-- Worktree cleanup: Pending.
+  final review cleanup `2653a8a`, plus integration correction `2b6a1bb`.
+- Task push: `origin/task/t-0001-protocol-bootstrap` verified at
+  `2b6a1bbc8214339962995a07dcfc4b1658739229` before this closure record.
+- `dev` merge: `7d89378` plus integration correction merge `615649a`.
+- Post-merge verification: `npm ci` and full `npm run verify` passed on `dev`.
+- Remote refs: initial verified integration was
+  `dev@615649a0499d3c5763f40451a0c04a4df8621557` and
+  `task@2b6a1bbc8214339962995a07dcfc4b1658739229`. The closure record itself is
+  merged and pushed afterward; final refs are verified directly rather than
+  creating another record-only commit.
+- Worktree cleanup: terminal orchestrator action after the closure record is
+  pushed.
 
 ## Open Risks And Follow-Up
 
