@@ -73,12 +73,13 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Role/function                  | Agent ID                     | Expected model  | Expected reasoning | Scope                                                                          | Status                                     |
 | ------------------------------ | ---------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------ |
 | Requirements splitting         | `/root/requirements_split`   | `gpt-5.6-sol`   | high               | Split the approved high-risk contract work into ordered implementation slices  | Complete and closed                        |
-| TypeScript implementation      | `/root/implementer_distinct` | `gpt-5.6-terra` | medium             | Own all overlapping production code and focused behavior tests                 | Task 5 complete and closed                 |
+| TypeScript implementation      | `/root/implementer_nested`   | `gpt-5.6-terra` | medium             | Own Task 6 nested-validation production code and focused behavior tests        | Task 6 complete and closed                 |
 | Task 1 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Contract-kernel spec compliance and code quality                               | Approved after F-001 through F-003; closed |
 | Task 2 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Deterministic orchestration spec compliance and code quality                   | Approved after F-004 through F-006; closed |
 | Task 3 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Presence semantics, diagnostics, configuration errors, and fixture migration   | Approved after F-007 through F-011; closed |
 | Task 4 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Numeric grammar, precision, references, envelopes, and configuration errors    | Approved after F-012 through F-015; closed |
 | Task 5 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Buf equality, duplicate classes, diagnostics, packing, and unsupported targets | Approved after F-016; closed               |
+| Task 6 scoped review           | `/root/task1_review`         | `gpt-5.6-terra` | high               | Leaf recursion, root context, message paths, Any registry, and target errors    | Approved; closed                           |
 | Style/maintainability review   | Pending dispatch             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Pending                                    |
 | Documentation review           | Pending dispatch             | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Pending                                    |
 | TypeScript/API review          | Pending dispatch             | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Pending                                    |
@@ -124,6 +125,8 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Task 3 focused tests             | Passed: focused presence 4 suites and 88 tests; full package 13 suites and 249 tests.                          |
 | Task 4 focused tests             | Passed: focused 3 suites and 72 tests; full package 14 suites and 260 tests.                                   |
 | Task 5 focused tests             | Passed: distinct 33 tests; full package 14 suites and 280 tests.                                               |
+| Task 6 focused tests             | Passed: validate/integration 57 tests; full package 14 suites and 285 tests.                                    |
+| Post-Task-6 coverage             | Passed tests; 92.23% statements, 87.37% branches, 94.17% functions, and 93.53% lines.                           |
 | `npm run verify`                 | Pending                                                                                                        |
 
 Coverage: fresh T-0002 baseline is 81.88% statements, 71.01% branches, 92.18%
