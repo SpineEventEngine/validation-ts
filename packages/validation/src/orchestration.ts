@@ -1,0 +1,111 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { create } from "@bufbuild/protobuf";
+import type { DescField } from "@bufbuild/protobuf";
+import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+
+import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb";
+import { FieldPathSchema } from "./generated/spine/base/field_path_pb";
+import { createConstraintViolation, type ValidationContext } from "./validation-contract";
+
+type LegacyFieldValidator = (
+  schema: GenMessage<any>,
+  message: any,
+  violations: ConstraintViolation[],
+) => void;
+
+/** The common internal contract for field-level validation adapters. */
+export interface FieldValidator {
+  validate(
+    context: ValidationContext,
+    schema: GenMessage<any>,
+    message: any,
+    field: DescField,
+    violations: ConstraintViolation[],
+  ): void;
+}
+
+/**
+ * Adapts an existing all-fields validator to the field-first orchestration
+ * seam while normalizing its output through the shared violation envelope.
+ */
+export function legacyFieldValidator(legacy: LegacyFieldValidator): FieldValidator {
+  return {
+    validate(context, schema, message, field, violations) {
+      const legacyViolations: ConstraintViolation[] = [];
+      const fields = [field] as typeof schema.fields;
+      fields.find = schema.fields.find.bind(schema.fields);
+      const fieldSchema = { ...schema, fields } as GenMessage<any>;
+      legacy(fieldSchema, message, legacyViolations);
+
+      for (const legacyViolation of legacyViolations) {
+        const legacyMessage = legacyViolation.message;
+        const normalized = createConstraintViolation(
+          context.atField(field),
+          field,
+          offendingValue(message, field, legacyViolation),
+          {
+            defaultMessage: legacyMessage?.withPlaceholders,
+            placeholders: legacyMessage?.placeholderValue,
+          },
+        );
+        const nestedPath = nestedFieldPath(field, legacyViolation);
+        if (nestedPath.length > 0) {
+          normalized.fieldPath = create(FieldPathSchema, {
+            fieldName: [field.name, ...nestedPath],
+          });
+        }
+        violations.push(normalized);
+      }
+    },
+  };
+}
+
+/** Normalizes a message-level or oneof-level legacy violation. */
+export function appendMessageViolation(
+  context: ValidationContext,
+  legacyViolation: ConstraintViolation,
+  violations: ConstraintViolation[],
+): void {
+  const legacyMessage = legacyViolation.message;
+  const normalized = createConstraintViolation(context, undefined, undefined, {
+    defaultMessage: legacyMessage?.withPlaceholders,
+    placeholders: legacyMessage?.placeholderValue,
+  });
+  const path = legacyViolation.fieldPath?.fieldName ?? [];
+  if (path.length > 0) {
+    normalized.fieldPath = create(FieldPathSchema, { fieldName: path });
+  }
+  violations.push(normalized);
+}
+
+function offendingValue(message: any, field: DescField, violation: ConstraintViolation): unknown {
+  const value = message[field.localName];
+  const path = violation.fieldPath?.fieldName ?? [];
+
+  if (path.length < 2) return value;
+  if (field.fieldKind === "list" && Array.isArray(value)) return value[Number(path[1])];
+  if (field.fieldKind === "map" && value && typeof value === "object") return value[path[1]];
+  return value;
+}
+
+function nestedFieldPath(field: DescField, violation: ConstraintViolation): string[] {
+  const path = violation.fieldPath?.fieldName ?? [];
+  if (path.length <= 1 || path[0] !== field.name) return [];
+  if (field.fieldKind === "list" || field.fieldKind === "map") return path.slice(2);
+  return path.slice(1);
+}

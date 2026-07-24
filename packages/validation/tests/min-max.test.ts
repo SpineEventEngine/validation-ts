@@ -382,9 +382,7 @@ describe("Min/Max Validation", () => {
       const violations = validate(RepeatedMinMaxSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      const scoreViolation = violations.find(
-        (v) => v.fieldPath?.fieldName[0] === "scores" && v.fieldPath?.fieldName[1] === "1",
-      );
+      const scoreViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "scores");
       expect(scoreViolation).toBeDefined();
     });
 

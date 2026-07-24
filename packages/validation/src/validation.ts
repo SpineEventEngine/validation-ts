@@ -46,6 +46,18 @@ import { validateDistinctFields } from "./options/distinct";
 import { validateNestedFields } from "./options/validate";
 import { validateGoesFields } from "./options/goes";
 import { validateChoiceFields } from "./options/choice";
+import { appendMessageViolation, legacyFieldValidator, type FieldValidator } from "./orchestration";
+import { createValidationContext } from "./validation-contract";
+
+const fieldValidators: readonly FieldValidator[] = [
+  legacyFieldValidator(validateRequiredFields),
+  legacyFieldValidator(validatePatternFields),
+  legacyFieldValidator(validateMinMaxFields),
+  legacyFieldValidator(validateRangeFields),
+  legacyFieldValidator(validateDistinctFields),
+  legacyFieldValidator(validateNestedFields),
+  legacyFieldValidator(validateGoesFields),
+];
 
 export type {
   ConstraintViolation,
@@ -95,16 +107,25 @@ export function validate<T extends Message>(
   message: any,
 ): ConstraintViolation[] {
   const violations: ConstraintViolation[] = [];
+  const context = createValidationContext(schema);
 
-  validateRequiredFields(schema, message, violations);
-  validatePatternFields(schema, message, violations);
-  validateRequiredFieldOption(schema, message, violations);
-  validateMinMaxFields(schema, message, violations);
-  validateRangeFields(schema, message, violations);
-  validateDistinctFields(schema, message, violations);
-  validateNestedFields(schema, message, violations);
-  validateGoesFields(schema, message, violations);
-  validateChoiceFields(schema, message, violations);
+  const messageViolations: ConstraintViolation[] = [];
+  validateRequiredFieldOption(schema, message, messageViolations);
+  for (const violation of messageViolations) {
+    appendMessageViolation(context, violation, violations);
+  }
+
+  for (const field of schema.fields) {
+    for (const validator of fieldValidators) {
+      validator.validate(context, schema, message, field, violations);
+    }
+  }
+
+  const choiceViolations: ConstraintViolation[] = [];
+  validateChoiceFields(schema, message, choiceViolations);
+  for (const violation of choiceViolations) {
+    appendMessageViolation(context, violation, violations);
+  }
 
   return violations;
 }

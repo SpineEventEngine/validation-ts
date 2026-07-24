@@ -71,9 +71,7 @@ describe("Distinct Validation", () => {
       const violations = validate(DistinctPrimitivesSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      const numberViolation = violations.find(
-        (v) => v.fieldPath?.fieldName[0] === "numbers" && v.fieldPath?.fieldName[1] === "3",
-      );
+      const numberViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "numbers");
       expect(numberViolation).toBeDefined();
       expect(numberViolation?.message?.placeholderValue?.["value"]).toBe("2");
       expect(numberViolation?.message?.placeholderValue?.["first_index"]).toBe("1");
@@ -215,7 +213,8 @@ describe("Distinct Validation", () => {
       expect(violations.length).toBeGreaterThanOrEqual(2);
 
       const rangeViolation = violations.find(
-        (v) => v.fieldPath?.fieldName[1] === "1" && v.message?.withPlaceholders.includes("at most"),
+        (v) =>
+          v.fieldPath?.fieldName[0] === "scores" && v.message?.withPlaceholders.includes("at most"),
       );
       expect(rangeViolation).toBeDefined();
 

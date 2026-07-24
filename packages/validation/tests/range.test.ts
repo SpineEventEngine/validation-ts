@@ -254,9 +254,7 @@ describe("Range Validation", () => {
       const violations = validate(RepeatedRangeSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      const scoreViolation = violations.find(
-        (v) => v.fieldPath?.fieldName[0] === "scores" && v.fieldPath?.fieldName[1] === "2",
-      );
+      const scoreViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "scores");
       expect(scoreViolation).toBeDefined();
       expect(scoreViolation?.message?.placeholderValue?.["value"]).toBe("105");
     });

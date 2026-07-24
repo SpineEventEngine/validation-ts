@@ -206,12 +206,9 @@ describe("Nested Message Validation (validate)", () => {
       const violations = validate(TeamWithMembersSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      // Check for violation at `members[1].name`.
+      // Check for violation at `members.name`; collection indexes are not field names.
       const nameViolation = violations.find(
-        (v) =>
-          v.fieldPath?.fieldName[0] === "members" &&
-          v.fieldPath?.fieldName[1] === "1" &&
-          v.fieldPath?.fieldName[2] === "name",
+        (v) => v.fieldPath?.fieldName[0] === "members" && v.fieldPath?.fieldName[1] === "name",
       );
       expect(nameViolation).toBeDefined();
     });
@@ -408,10 +405,7 @@ describe("Nested Message Validation (validate)", () => {
       expect(violations.length).toBeGreaterThan(0);
 
       const ratingViolation = violations.find(
-        (v) =>
-          v.fieldPath?.fieldName[0] === "reviews" &&
-          v.fieldPath?.fieldName[1] === "1" &&
-          v.fieldPath?.fieldName[2] === "rating",
+        (v) => v.fieldPath?.fieldName[0] === "reviews" && v.fieldPath?.fieldName[1] === "rating",
       );
       expect(ratingViolation).toBeDefined();
     });
@@ -496,10 +490,7 @@ describe("Nested Message Validation (validate)", () => {
       expect(violations.length).toBeGreaterThan(0);
 
       const assigneeViolation = violations.find(
-        (v) =>
-          v.fieldPath?.fieldName[0] === "tasks" &&
-          v.fieldPath?.fieldName[1] === "0" &&
-          v.fieldPath?.fieldName[2] === "assignees",
+        (v) => v.fieldPath?.fieldName[0] === "tasks" && v.fieldPath?.fieldName[1] === "assignees",
       );
       expect(assigneeViolation).toBeDefined();
     });
