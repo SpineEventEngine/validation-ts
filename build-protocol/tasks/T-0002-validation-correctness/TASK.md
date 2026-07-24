@@ -84,8 +84,8 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Style/maintainability review   | `/root/style_final`             | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Clean; F-017 resolved; closed              |
 | Documentation review           | `/root/docs_final`              | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Clean; F-019 through F-022; closed         |
 | TypeScript/API review          | `/root/api_final`               | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Clean; F-017/F-023 resolved; closed        |
-| Performance/reliability review | `/root/reliability_final`       | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | F-024 accepted; closed                     |
-| Final correction batch         | `/root/implementer_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-branch findings F-017 through F-024                     | F-024 follow-up dispatched                 |
+| Performance/reliability review | `/root/reliability_final`       | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Clean; F-018/F-024 resolved; closed        |
+| Final correction batch         | `/root/implementer_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-branch findings F-017 through F-024                     | Complete and closed                        |
 
 ## Scope And Ownership
 
@@ -130,6 +130,7 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Task 6 focused tests             | Passed: validate/integration 57 tests; full package 14 suites and 285 tests.                                   |
 | Post-Task-6 coverage             | Passed tests; 92.23% statements, 87.37% branches, 94.17% functions, and 93.53% lines.                          |
 | Task 7 90% coverage gate         | Passed: 94.72% statements, 91.44% branches, 98.05% functions, and 95.87% lines.                                |
+| Final numeric focus              | Passed: 27 tests; generated typecheck and diff whitespace checks passed.                                       |
 | `npm run verify`                 | Pending                                                                                                        |
 
 Coverage: fresh T-0002 baseline is 81.88% statements, 71.01% branches, 92.18%
@@ -137,13 +138,13 @@ functions, and 81.48% lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer | Disposition                                                                               | Evidence |
-| ----------------------- | -------- | ----------------------------------------------------------------------------------------- | -------- |
-| Style/maintainability   | Pending  | Pending                                                                                   |          |
-| Documentation           | Pending  | Pending                                                                                   |          |
-| TypeScript/API          | Pending  | Pending                                                                                   |          |
-| Performance/reliability | Pending  | Pending                                                                                   |          |
-| Security                | N/A      | The task is not a release or security review and does not add an external trust boundary. | D-0004   |
+| Concern                 | Reviewer | Disposition                                                                               | Evidence  |
+| ----------------------- | -------- | ----------------------------------------------------------------------------------------- | --------- |
+| Style/maintainability   | Clean    | F-017 resolved; no remaining actionable P0-P2 findings.                                   | `35df598` |
+| Documentation           | Clean    | F-019 through F-022 resolved; affected public claims and examples are accurate.           | `35df598` |
+| TypeScript/API          | Clean    | F-017 and F-023 resolved; no accidental recursive public API or circular import remains.  | `35df598` |
+| Performance/reliability | Clean    | F-018 and F-024 resolved; numeric and recursion reliability concerns are clean.           | `dca5f17` |
+| Security                | N/A      | The task is not a release or security review and does not add an external trust boundary. | D-0004    |
 
 ## Findings
 
