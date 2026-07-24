@@ -2,10 +2,10 @@
 
 ## Active Milestone
 
-| ID     | Milestone                                                                         | Status      |
-| ------ | --------------------------------------------------------------------------------- | ----------- |
-| T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | Complete    |
-| T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | In progress |
+| ID     | Milestone                                                                         | Status   |
+| ------ | --------------------------------------------------------------------------------- | -------- |
+| T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | Complete |
+| T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | Complete |
 
 ## Accepted Follow-Up Boundaries
 
