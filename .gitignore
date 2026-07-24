@@ -41,6 +41,7 @@ pnpm-debug.log*
 *.tmp
 .cache/
 .temp/
+.superpowers/
 .worktrees/
 
 # Environment and local config
