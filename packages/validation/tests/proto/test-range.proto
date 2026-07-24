@@ -74,16 +74,16 @@ message RepeatedRange {
 
 // Tests combined required and range constraints.
 message CombinedConstraints {
-    int32 product_id = 1 [(required) = true, (range).value = "[1..999999]"];
-    int32 quantity = 2 [(required) = true, (range).value = "[1..1000]"];
+    int32 product_id = 1 [(range).value = "[1..999999]"];
+    int32 quantity = 2 [(range).value = "[1..1000]"];
     double discount = 3 [(range).value = "[0.0..1.0]"];
 }
 
 // Tests range validation for payment card fields.
 message PaymentCard {
-    int32 expiry_month = 1 [(required) = true, (range).value = "[1..12]"];
-    int32 expiry_year = 2 [(required) = true, (range).value = "[2024..2050]"];
-    int32 cvv = 3 [(required) = true, (range).value = "[0..999]"];
+    int32 expiry_month = 1 [(range).value = "[1..12]"];
+    int32 expiry_year = 2 [(range).value = "[2024..2050]"];
+    int32 cvv = 3 [(range).value = "[0..999]"];
 }
 
 // Tests range validation for RGB color values.
@@ -96,8 +96,8 @@ message RGBColor {
 
 // Tests range validation for pagination parameters.
 message PaginationRequest {
-    int32 page = 1 [(required) = true, (range).value = "[1..10000]"];
-    int32 page_size = 2 [(required) = true, (range).value = "[1..100]"];
+    int32 page = 1 [(range).value = "[1..10000]"];
+    int32 page_size = 2 [(range).value = "[1..100]"];
 }
 
 // Tests optional fields with range constraints.

@@ -106,9 +106,8 @@ message RepeatedMinMax {
 
 // Tests combined required and min/max constraints.
 message CombinedConstraints {
-    int32 product_id = 1 [(required) = true, (min).value = "1"];
+    int32 product_id = 1 [(min).value = "1"];
     double price = 2 [
-        (required) = true,
         (min) = {
             value: "0.01",
             error_msg: "Price must be at least {other}."

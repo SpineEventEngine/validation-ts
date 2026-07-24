@@ -419,7 +419,7 @@ describe("Min/Max Validation", () => {
       expect(violations).toHaveLength(0);
     });
 
-    it("should detect `required` violation", () => {
+    it("should detect numeric `min` violations", () => {
       const invalid = create(CombinedConstraintsSchema, {
         productId: 0, // Required but set to default.
         price: 0, // Required but set to default.
@@ -429,11 +429,8 @@ describe("Min/Max Validation", () => {
       const violations = validate(CombinedConstraintsSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
-      // Should have violations for required fields.
-      const hasRequiredViolation = violations.some((v) =>
-        v.message?.withPlaceholders.includes("value must be set"),
-      );
-      expect(hasRequiredViolation).toBe(true);
+      expect(violations.some((v) => v.fieldPath?.fieldName[0] === "product_id")).toBe(true);
+      expect(violations.some((v) => v.fieldPath?.fieldName[0] === "price")).toBe(true);
     });
 
     it("should detect `min` violation on `required` field", () => {

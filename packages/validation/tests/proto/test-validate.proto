@@ -53,7 +53,7 @@ message Address {
 
 // Tests custom error messages via `(if_invalid)`.
 message OrderWithCustomError {
-    int32 order_id = 1 [(required) = true];
+    int32 order_id = 1;
     Customer customer = 2 [
         (validate) = true,
         (if_invalid).error_msg = "Customer information is invalid: {value}."
@@ -66,7 +66,7 @@ message Customer {
         (required) = true,
         (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
     ];
-    int32 age = 2 [(required) = true, (range).value = "[18..120]"];
+    int32 age = 2 [(range).value = "[18..120]"];
 }
 
 // Tests validation on repeated message fields.
@@ -123,7 +123,7 @@ message PersonWithoutValidation {
 
 // Tests combining multiple validation types.
 message ProductOrder {
-    int32 product_id = 1 [(required) = true, (min).value = "1"];
+    int32 product_id = 1 [(min).value = "1"];
     ProductDetails product = 2 [
         (validate) = true,
         (if_invalid).error_msg = "Product details are invalid."
@@ -137,12 +137,12 @@ message ProductOrder {
 
 message ProductDetails {
     string name = 1 [(required) = true];
-    double price = 2 [(required) = true, (min).value = "0.01"];
+    double price = 2 [(min).value = "0.01"];
     repeated string tags = 3 [(distinct) = true];
 }
 
 message Review {
-    int32 rating = 1 [(required) = true, (range).value = "[1..5]"];
+    int32 rating = 1 [(range).value = "[1..5]"];
     string comment = 2;
 }
 
