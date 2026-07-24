@@ -70,14 +70,15 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 
 ## Agent Dispatch
 
-| Role/function                  | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                          | Status              |
-| ------------------------------ | -------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------- |
-| Requirements splitting         | `/root/requirements_split` | `gpt-5.6-sol`   | high               | Split the approved high-risk contract work into ordered implementation slices  | Complete and closed |
-| TypeScript implementation      | Pending dispatch           | `gpt-5.6-terra` | medium             | Own all overlapping production code and focused behavior tests                 | Pending             |
-| Style/maintainability review   | Pending dispatch           | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Pending             |
-| Documentation review           | Pending dispatch           | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Pending             |
-| TypeScript/API review          | Pending dispatch           | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Pending             |
-| Performance/reliability review | Pending dispatch           | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Pending             |
+| Role/function                  | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                          | Status                                     |
+| ------------------------------ | -------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| Requirements splitting         | `/root/requirements_split` | `gpt-5.6-sol`   | high               | Split the approved high-risk contract work into ordered implementation slices  | Complete and closed                        |
+| TypeScript implementation      | `/root/implementer`        | `gpt-5.6-terra` | medium             | Own all overlapping production code and focused behavior tests                 | Task 1 complete and closed                 |
+| Task 1 scoped review           | `/root/task1_review`       | `gpt-5.6-terra` | high               | Contract-kernel spec compliance and code quality                               | Approved after F-001 through F-003; closed |
+| Style/maintainability review   | Pending dispatch           | `gpt-5.6-terra` | high               | Whole task diff and maintainability                                            | Pending                                    |
+| Documentation review           | Pending dispatch           | `gpt-5.6-terra` | medium             | Proto-aligned claims and unresolved regex status                               | Pending                                    |
+| TypeScript/API review          | Pending dispatch           | `gpt-5.6-terra` | high               | Public error, declarations, Buf compatibility, serialized violation shape      | Pending                                    |
+| Performance/reliability review | Pending dispatch           | `gpt-5.6-terra` | high               | Ordering, recursion, cache behavior, equality cost, deterministic verification | Pending                                    |
 
 ## Scope And Ownership
 
@@ -114,7 +115,7 @@ Approved plan: Human approval in the Codex task on 2026-07-24
 | Baseline `npm ci`                | Passed; 430 packages installed from the lockfile. Existing deprecation and allow-script warnings were emitted. |
 | Baseline `npm test`              | Passed: 11 suites and 232 tests.                                                                               |
 | Baseline `npm run test:coverage` | Passed: 11 suites and 232 tests; 81.88% statements, 71.01% branches, 92.18% functions, and 81.48% lines.       |
-| Focused tests                    | Pending                                                                                                        |
+| Task 1 focused tests             | Passed: 2 suites and 9 tests; package TypeScript compilation and diff whitespace checks also passed.           |
 | `npm run verify`                 | Pending                                                                                                        |
 
 Coverage: fresh T-0002 baseline is 81.88% statements, 71.01% branches, 92.18%
@@ -132,8 +133,11 @@ functions, and 81.48% lines.
 
 ## Findings
 
-| ID  | Severity | Accepted? | Resolution |
-| --- | -------- | --------- | ---------- |
+| ID    | Severity | Accepted? | Resolution                                                                                                                                      |
+| ----- | -------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| F-001 | P1       | Yes       | Resolved in `d4a3f3c`; message-level constraints now use optional field context, an empty present path, `${message.type}`, and no packed value. |
+| F-002 | P1       | Yes       | Resolved in `d2eb687`; descriptor metadata remains present for an absent value while `${field.value}` and packed `fieldValue` remain absent.    |
+| F-003 | P1       | Yes       | Resolved in `4848a4c`; scalar, list-scalar, and map-scalar `${field.type}` values use canonical Proto spellings.                                |
 
 ## Integration
 
