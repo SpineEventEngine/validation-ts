@@ -23,6 +23,8 @@ import {
 } from "@bufbuild/protobuf/wkt";
 import { ValidationConfigurationError } from "../src";
 import { createConstraintViolation, createValidationContext } from "../src/validation-contract";
+import { appendMessageViolation, legacyFieldValidator } from "../src/orchestration";
+import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb";
 import { AddressSchema, RequiredFieldsSchema, Status } from "./generated/test-required_pb";
 
 describe("ValidationConfigurationError", () => {
@@ -46,6 +48,75 @@ describe("ValidationConfigurationError", () => {
 });
 
 describe("validation contract kernel", () => {
+  it("normalizes legacy nested, repeated, and map diagnostics through the common envelope", () => {
+    const message = create(RequiredFieldsSchema, {
+      name: "Ada",
+      tags: ["duplicate"],
+      scores: { primary: 7 },
+    });
+    const violations = [] as ReturnType<typeof createConstraintViolation>[];
+    const context = createValidationContext(RequiredFieldsSchema);
+    const adapter = legacyFieldValidator((_schema, _message, output) => {
+      output.push(
+        create(ConstraintViolationSchema, {
+          fieldPath: { fieldName: ["tags", "0", "nested"] },
+          message: { withPlaceholders: "Legacy list diagnostic." },
+        }),
+      );
+    });
+
+    adapter.validate(
+      context,
+      RequiredFieldsSchema,
+      message,
+      RequiredFieldsSchema.field.tags,
+      violations,
+      undefined as never,
+    );
+    expect(violations[0]).toEqual(
+      expect.objectContaining({
+        typeName: RequiredFieldsSchema.typeName,
+        fieldPath: expect.objectContaining({ fieldName: ["tags", "nested"] }),
+        message: expect.objectContaining({ withPlaceholders: "Legacy list diagnostic." }),
+      }),
+    );
+    expect(anyUnpack(violations[0].fieldValue!, StringValueSchema)?.value).toBe("duplicate");
+
+    const mapAdapter = legacyFieldValidator((_schema, _message, output) => {
+      output.push(
+        create(ConstraintViolationSchema, {
+          fieldPath: { fieldName: ["scores", "primary", "nested"] },
+        }),
+      );
+    });
+    mapAdapter.validate(
+      context,
+      RequiredFieldsSchema,
+      message,
+      RequiredFieldsSchema.field.scores,
+      violations,
+      undefined as never,
+    );
+    expect(violations[1].fieldPath?.fieldName).toEqual(["scores", "nested"]);
+    expect(anyUnpack(violations[1].fieldValue!, Int32ValueSchema)?.value).toBe(7);
+  });
+
+  it("normalizes legacy message-level diagnostics without inventing a field value", () => {
+    const violations = [] as ReturnType<typeof createConstraintViolation>[];
+    appendMessageViolation(
+      createValidationContext(RequiredFieldsSchema),
+      create(ConstraintViolationSchema, {
+        message: { withPlaceholders: "Legacy message diagnostic." },
+      }),
+      violations,
+    );
+
+    expect(violations).toHaveLength(1);
+    expect(violations[0].typeName).toBe(RequiredFieldsSchema.typeName);
+    expect(violations[0].fieldPath?.fieldName).toEqual([]);
+    expect(violations[0].fieldValue).toBeUndefined();
+  });
+
   it("keeps the root type and Proto field path while packing a primitive value", () => {
     const field = RequiredFieldsSchema.field.name;
     const context = createValidationContext(RequiredFieldsSchema).atField(field);

@@ -37,6 +37,7 @@ import {
   PatternValidationSchema,
   RepeatedPatternValidationSchema,
   OptionalPatternSchema,
+  CaseInsensitivePatternSchema,
 } from "./generated/test-pattern_pb";
 
 describe("Pattern Field Validation", () => {
@@ -199,6 +200,20 @@ describe("Pattern Field Validation", () => {
       expect(violations.length).toBeGreaterThan(0);
       const emailViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "optional_email");
       expect(emailViolation).toBeDefined();
+    });
+  });
+
+  describe("Pattern modifiers", () => {
+    it("honors the case-insensitive modifier exposed by the Proto option", () => {
+      const valid = create(CaseInsensitivePatternSchema, { yesOrNo: "YES" });
+      const invalid = create(CaseInsensitivePatternSchema, { yesOrNo: "perhaps" });
+
+      expect(validate(CaseInsensitivePatternSchema, valid)).toHaveLength(0);
+      expect(validate(CaseInsensitivePatternSchema, invalid)).toEqual([
+        expect.objectContaining({
+          fieldPath: expect.objectContaining({ fieldName: ["yes_or_no"] }),
+        }),
+      ]);
     });
   });
 });

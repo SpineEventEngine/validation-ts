@@ -98,14 +98,22 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb";
  * and returns an array of constraint violations. An empty array indicates
  * the message is valid.
  *
+ * Traversal follows declaration order and the internal validator order, but
+ * callers must not treat that order as a public compatibility guarantee.
+ *
+ * Each field violation retains the root entry type, a complete path of Proto
+ * field names, and a descriptor-packed offending value when one exists. Its
+ * diagnostic is always present; an option without a custom or default message
+ * produces an empty template string.
+ *
  * Currently supported validation options:
- * - `(required)` — validates required markers; see the package guide for current parity gaps
+ * - `(required)` — validates supported presence targets
  * - `(pattern)` — validates string fields against regular expressions
- * - `(required_field)` — requires specific combinations of fields at message level
+ * - `(require)` — requires specific combinations of fields at message level
  * - `(min)` / `(max)` — numeric range validation with inclusive/exclusive bounds
  * - `(range)` — bounded numeric ranges using bracket notation for inclusive/exclusive bounds
- * - `(distinct)` — ensures all elements in repeated fields are unique
- * - `(validate)` — enables recursive validation of nested message fields
+ * - `(distinct)` — emits one violation for each duplicated Buf-equality class
+ * - `(validate)` — returns only leaf violations from nested values and known `Any` payloads
  * - `(goes)` — enforces field dependency (field can only be set if another field is set)
  * - `(choice)` — requires that a `oneof` group has at least one field set
  *
