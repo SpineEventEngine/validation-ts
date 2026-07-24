@@ -81,7 +81,7 @@ message User {
   string email = 2 [
     (required) = true,
     (pattern).regex = "^[^@]+@[^@]+\\.[^@]+$",
-    (pattern).error_msg = "Email must be valid. Provided: `{value}`."
+    (pattern).error_msg = "Email must be valid. Provided: `${field.value}`."
   ];
 
   int32 age = 3 [
@@ -392,7 +392,7 @@ Use `(require)` for complex field requirements:
 
 ```protobuf
 message ContactInfo {
-    option (require).fields = "(phone & country_code) | email";
+    option (require).fields = "phone & country_code | email";
 
     string phone = 1;
     string country_code = 2;

@@ -35,7 +35,14 @@ import type { ConstraintViolation } from "../generated/spine/validate/validation
 import { getRegisteredOption } from "../options-registry";
 import type { ValidationContext } from "../validation-contract";
 import { ValidationConfigurationError } from "../validation-configuration-error";
-import { validateInternal } from "../validation";
+
+/** Internal recursive validation seam, supplied by the validation orchestrator. */
+export type NestedValidator = (
+  schema: GenMessage<any>,
+  message: unknown,
+  context: ValidationContext,
+  registry: Registry,
+) => ConstraintViolation[];
 
 /** Validates one field in declaration order, preserving the root validation context. */
 export function validateNestedField(
@@ -45,6 +52,7 @@ export function validateNestedField(
   field: DescField,
   violations: ConstraintViolation[],
   registry: Registry,
+  validateNested: NestedValidator,
 ): void {
   const option = getRegisteredOption("validate");
   if (!option || !hasOption(field, option) || !getOption(field, option)) return;
@@ -63,20 +71,20 @@ export function validateNestedField(
   const nestedContext = context.atField(field);
   if (field.fieldKind === "message") {
     if (value === undefined || value === null || isDefault(nestedSchema, value)) return;
-    appendNested(nestedSchema, value, nestedContext, registry, violations);
+    appendNested(nestedSchema, value, nestedContext, registry, violations, validateNested);
     return;
   }
 
   if (field.fieldKind === "list") {
     if (!Array.isArray(value)) return;
     for (const element of value)
-      appendNested(nestedSchema, element, nestedContext, registry, violations);
+      appendNested(nestedSchema, element, nestedContext, registry, violations, validateNested);
     return;
   }
 
   if (value === null || typeof value !== "object") return;
   for (const element of Object.values(value)) {
-    appendNested(nestedSchema, element, nestedContext, registry, violations);
+    appendNested(nestedSchema, element, nestedContext, registry, violations, validateNested);
   }
 }
 
@@ -97,13 +105,14 @@ function appendNested(
   context: ValidationContext,
   registry: Registry,
   violations: ConstraintViolation[],
+  validateNested: NestedValidator,
 ): void {
   if (schema.typeName === "google.protobuf.Any") {
-    appendPackedAny(value, context, registry, violations);
+    appendPackedAny(value, context, registry, violations, validateNested);
     return;
   }
   if (value === undefined || value === null) return;
-  violations.push(...validateInternal(schema as GenMessage<any>, value, context, registry));
+  violations.push(...validateNested(schema as GenMessage<any>, value, context, registry));
 }
 
 function appendPackedAny(
@@ -111,6 +120,7 @@ function appendPackedAny(
   context: ValidationContext,
   registry: Registry,
   violations: ConstraintViolation[],
+  validateNested: NestedValidator,
 ): void {
   if (!value || typeof value !== "object") return;
   let unpacked;
@@ -123,5 +133,5 @@ function appendPackedAny(
   if (!unpacked) return;
   const schema = registry.getMessage(unpacked.$typeName);
   if (schema)
-    violations.push(...validateInternal(schema as GenMessage<any>, unpacked, context, registry));
+    violations.push(...validateNested(schema as GenMessage<any>, unpacked, context, registry));
 }

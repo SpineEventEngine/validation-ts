@@ -132,6 +132,11 @@ export function compareNumeric(left: NumericValue, right: NumericValue): number 
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
+/** Returns whether a runtime floating-point value is not a numeric value. */
+export function isNaNNumeric(value: NumericValue): boolean {
+  return typeof value === "number" && Number.isNaN(value);
+}
+
 export function runtimeNumeric(value: unknown, scalar: ScalarType): NumericValue {
   if (is64Bit(scalar)) return typeof value === "bigint" ? value : BigInt(String(value));
   return Number(value);

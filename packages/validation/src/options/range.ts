@@ -30,6 +30,7 @@ import {
   assertNumericTarget,
   compareNumeric,
   configurationError,
+  isNaNNumeric,
   resolveBound,
   runtimeNumeric,
 } from "./numeric";
@@ -55,7 +56,7 @@ export function validateRangeField(
     const upperComparison = compareNumeric(value, parsed.upper.value);
     const validLower = parsed.lowerInclusive ? lowerComparison >= 0 : lowerComparison > 0;
     const validUpper = parsed.upperInclusive ? upperComparison <= 0 : upperComparison < 0;
-    if (validLower && validUpper) continue;
+    if (!isNaNNumeric(value) && validLower && validUpper) continue;
     violations.push(
       createConstraintViolation(context.atField(field), field, raw, {
         customMessage: option.errorMsg || undefined,

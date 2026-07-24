@@ -21,10 +21,11 @@ import {
   Int32ValueSchema,
   StringValueSchema,
 } from "@bufbuild/protobuf/wkt";
-import { ValidationConfigurationError } from "../src";
+import { formatTemplateString, ValidationConfigurationError } from "../src";
 import { createConstraintViolation, createValidationContext } from "../src/validation-contract";
 import { appendMessageViolation, legacyFieldValidator } from "../src/orchestration";
 import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb";
+import { TemplateStringSchema } from "../src/generated/spine/validate/error_message_pb";
 import { AddressSchema, RequiredFieldsSchema, Status } from "./generated/test-required_pb";
 
 describe("ValidationConfigurationError", () => {
@@ -48,6 +49,20 @@ describe("ValidationConfigurationError", () => {
 });
 
 describe("validation contract kernel", () => {
+  it("formats only literal placeholder tokens and preserves dollar-valued replacements", () => {
+    expect(
+      formatTemplateString(
+        create(TemplateStringSchema, {
+          withPlaceholders: "${field.value}; ${fieldXvalue}; ${field.value.extra}; ${other}",
+          placeholderValue: {
+            "field.value": "$& $1 $$",
+            other: "done",
+          },
+        }),
+      ),
+    ).toBe("$& $1 $$; ${fieldXvalue}; ${field.value.extra}; done");
+  });
+
   it("normalizes legacy nested, repeated, and map diagnostics through the common envelope", () => {
     const message = create(RequiredFieldsSchema, {
       name: "Ada",

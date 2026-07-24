@@ -28,7 +28,13 @@ import {
 } from "../generated/spine/options_pb";
 import { getRegisteredOption } from "../options-registry";
 import { createConstraintViolation, type ValidationContext } from "../validation-contract";
-import { assertNumericTarget, compareNumeric, resolveBound, runtimeNumeric } from "./numeric";
+import {
+  assertNumericTarget,
+  compareNumeric,
+  isNaNNumeric,
+  resolveBound,
+  runtimeNumeric,
+} from "./numeric";
 
 /** Validates `(min)` and `(max)` for a single field in orchestration order. */
 export function validateMinMaxField(
@@ -63,13 +69,14 @@ function validateBound(
     const value = runtimeNumeric(raw, scalar);
     const comparison = compareNumeric(value, bound.value);
     const valid =
-      name === "min"
+      !isNaNNumeric(value) &&
+      (name === "min"
         ? exclusive
           ? comparison > 0
           : comparison >= 0
         : exclusive
           ? comparison < 0
-          : comparison <= 0;
+          : comparison <= 0);
     if (valid) continue;
     const defaultMessage = getOption(
       name === "min" ? MinOptionSchema : MaxOptionSchema,

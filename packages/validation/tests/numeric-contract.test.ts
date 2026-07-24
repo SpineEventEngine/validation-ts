@@ -37,6 +37,8 @@ import {
   InvalidFloatExponentSchema,
   InvalidFloatOverflowSchema,
   InvalidDoubleOverflowSchema,
+  NumericTypesSchema,
+  RepeatedMinMaxSchema,
 } from "./generated/test-min-max_pb";
 import {
   ExactLongRangesSchema,
@@ -44,6 +46,8 @@ import {
   MalformedRangeSchema,
   RangeTextReferencesSchema,
   ReversedRangeSchema,
+  NumericTypeRangesSchema,
+  RepeatedRangeSchema,
 } from "./generated/test-range_pb";
 
 describe("exact numeric validation contract", () => {
@@ -208,5 +212,54 @@ describe("exact numeric validation contract", () => {
           violation.fieldValue?.typeUrl.endsWith("UInt64Value"),
       ),
     ).toBe(true);
+  });
+
+  it("rejects NaN for singular min, max, and range constraints", () => {
+    const minAndMax = validate(
+      NumericTypesSchema,
+      create(NumericTypesSchema, {
+        uint64Field: 1n,
+        floatField: Number.NaN,
+        doubleField: Number.NaN,
+      }),
+    );
+    const ranged = validate(
+      NumericTypeRangesSchema,
+      create(NumericTypeRangesSchema, {
+        int32Field: 1,
+        int64Field: 0n,
+        uint32Field: 1,
+        uint64Field: 1n,
+        floatField: Number.NaN,
+        doubleField: Number.NaN,
+      }),
+    );
+
+    expect(minAndMax.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["float_field"],
+      ["float_field"],
+      ["double_field"],
+      ["double_field"],
+    ]);
+    expect(ranged.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["float_field"],
+      ["double_field"],
+    ]);
+  });
+
+  it("rejects NaN in repeated numeric values", () => {
+    const minViolations = validate(
+      RepeatedMinMaxSchema,
+      create(RepeatedMinMaxSchema, { prices: [Number.NaN] }),
+    );
+    const rangeViolations = validate(
+      RepeatedRangeSchema,
+      create(RepeatedRangeSchema, { percentages: [Number.NaN] }),
+    );
+
+    expect(minViolations.map((violation) => violation.fieldPath?.fieldName)).toEqual([["prices"]]);
+    expect(rangeViolations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["percentages"],
+    ]);
   });
 });

@@ -53,6 +53,8 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 
 - **`(set_once)`** — Not currently supported. This option requires state tracking across multiple validations,
   which is outside the scope of single-message validation.
+- **`(pattern)`** — Uses ECMAScript `RegExp`; the frozen Proto contract uses Java `Pattern` as its syntax
+  baseline. See the [package regular-expression limitation](packages/validation/README.md#regular-expressions).
 
 ## 🚀 Getting Started
 

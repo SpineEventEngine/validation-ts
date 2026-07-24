@@ -46,9 +46,7 @@ generated `require` extension to `requireFields`.
 Known implementation debt is not silently fixed by the protocol bootstrap:
 
 - `any` appears at descriptor and message boundaries;
-- nested validation uses a CommonJS runtime import;
 - the validator sequence is fixed despite older extensibility wording;
-- `(required)` still lacks full bytes, enum-default, and map contract parity;
 - generated-code patching is coupled to generator output;
 - recursion and regular-expression resource limits need explicit future
   analysis.

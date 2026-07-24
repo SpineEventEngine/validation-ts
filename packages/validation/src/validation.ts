@@ -74,7 +74,7 @@ const fieldValidators: readonly FieldValidator[] = [
   },
   {
     validate(context, schema, message, field, violations, registry) {
-      validateNestedField(context, schema, message, field, violations, registry);
+      validateNestedField(context, schema, message, field, violations, registry, validateInternal);
     },
   },
   {
@@ -148,7 +148,7 @@ export function validate<T extends Message>(
 }
 
 /** Validates a nested message while preserving its original entry context and registry. */
-export function validateInternal<T extends Message>(
+function validateInternal<T extends Message>(
   schema: GenMessage<T>,
   message: any,
   context: ReturnType<typeof createValidationContext>,
@@ -208,7 +208,7 @@ function dependencyClosure(root: DescFile): DescFile[] {
 export function formatTemplateString(template: TemplateString): string {
   let result = template.withPlaceholders;
   for (const [key, value] of Object.entries(template.placeholderValue)) {
-    result = result.replace(new RegExp(`\\$\\{${key}\\}`, "g"), value);
+    result = result.split(`\${${key}}`).join(value);
   }
   return result;
 }
