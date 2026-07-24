@@ -215,7 +215,8 @@ to build custom error displays tailored to your application.
 
 ### Field-level options
 
-- ✅ **`(required)`** — Requires supported message/enum, string/bytes, repeated, and map fields
+- ⚠️ **`(required)`** — Enforces string, message, and repeated-field presence; see the
+  contract-parity note below
 - ✅ **`(if_missing)`** — Custom error message for required fields
 - ✅ **`(pattern)`** — Regex validation for string fields
 - ✅ **`(min)` / `(max)`** — Numeric range validation with inclusive/exclusive bounds
@@ -317,6 +318,10 @@ The frozen Proto contract supports `(required)` on these field kinds:
 Numeric and boolean scalar fields are not supported by the `(required)`
 contract. Use numeric constraints such as `(min)`, `(max)`, or `(range)` where
 appropriate.
+
+The current runtime enforces presence for string, message, and repeated fields.
+Full bytes, enum-default, and map semantics remain known contract-parity debt;
+do not rely on `(required)` for those kinds yet.
 
 ### Nested validation
 

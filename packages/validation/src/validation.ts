@@ -62,7 +62,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb";
  * the message is valid.
  *
  * Currently supported validation options:
- * - `(required)` — requires supported message/enum, string/bytes, repeated, and map fields
+ * - `(required)` — validates required markers; see the package guide for current parity gaps
  * - `(pattern)` — validates string fields against regular expressions
  * - `(required_field)` — requires specific combinations of fields at message level
  * - `(min)` / `(max)` — numeric range validation with inclusive/exclusive bounds

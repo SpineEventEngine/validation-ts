@@ -8,9 +8,6 @@ lint:
     PACKAGE_DEFINED:
       - proto/spine/options.proto
     PACKAGE_VERSION_SUFFIX:
-      - proto/spine/base/field_path.proto
-      - proto/spine/validate/error_message.proto
-      - proto/spine/validate/validation_error.proto
       - proto/integration-account.proto
       - proto/integration-product.proto
       - proto/integration-user.proto

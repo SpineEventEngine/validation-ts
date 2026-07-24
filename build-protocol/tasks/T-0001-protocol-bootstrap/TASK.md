@@ -1,6 +1,6 @@
 # T-0001: Protocol And Verification Bootstrap
 
-Status: In review
+Status: Ready to integrate
 Classification: High-risk
 Baseline: `c7527325ce2130e3766bacc6effabc1af238f2b6`
 Branch: `task/t-0001-protocol-bootstrap`
@@ -89,11 +89,11 @@ No unresolved human questions remain.
 
 ## Verification
 
-| Command             | Result                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------- |
-| Baseline `npm test` | 11 suites, 232 tests passed                                                           |
-| `npm ci`            | Passed; committed npm lockfile installed                                              |
-| `npm run verify`    | Passed through all 13 root gates, including package installation and consumer loading |
+| Command             | Result                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Baseline `npm test` | 11 suites, 232 tests passed                                                          |
+| `npm ci`            | Passed; committed npm lockfile installed                                             |
+| `npm run verify`    | Passed before review and again on the final corrected tree through all 13 root gates |
 
 Coverage: 81.88% statements, 71.01% branches, 92.18% functions, and 81.48%
 lines. Generated output digest:
@@ -101,17 +101,18 @@ lines. Generated output digest:
 
 ## Review Dispositions
 
-| Concern                 | Reviewer                      | Disposition                                                   | Evidence           |
-| ----------------------- | ----------------------------- | ------------------------------------------------------------- | ------------------ |
-| Style/maintainability   | `/root/style_review`          | Accepted P1/P2 correction; re-review pending                  | F-001–F-003        |
-| Documentation           | `/root/docs_review`           | Accepted P2 correction; re-review pending                     | F-004–F-005        |
-| TypeScript/API          | `/root/typescript_api_review` | Clean                                                         | Package/API review |
-| Performance/reliability | `/root/reliability_review`    | Accepted duplicate Node P1 correction; re-review pending      | F-002              |
-| Security                | N/A                           | Release-readiness review; no release or master push in T-0001 | D-0004             |
+| Concern                 | Reviewer                      | Disposition                                                   | Evidence                 |
+| ----------------------- | ----------------------------- | ------------------------------------------------------------- | ------------------------ |
+| Style/maintainability   | `/root/style_review`          | Accepted P1/P2 findings corrected; converged                  | F-001–F-003, F-007–F-008 |
+| Documentation           | `/root/docs_review`           | Accepted P2 findings corrected; converged                     | F-004–F-006              |
+| TypeScript/API          | `/root/typescript_api_review` | Clean                                                         | Package/API review       |
+| Performance/reliability | `/root/reliability_review`    | Clean after Node correction re-review                         | F-002                    |
+| Security                | N/A                           | Release-readiness review; no release or master push in T-0001 | D-0004                   |
 
 ## Integration
 
-- Task commit: Pending.
+- Task commits: implementation `4d4a04b`, review correction `cd20671`, and
+  final cleanup at branch HEAD.
 - Task push: Pending.
 - `dev` merge: Pending.
 - Post-merge verification: Pending.
