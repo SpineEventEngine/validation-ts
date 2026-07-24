@@ -43,6 +43,7 @@ message RequiredFields {
     Status status = 4 [(required) = true];
     repeated string tags = 5 [(required) = true];
     bytes payload = 6;
+    map<string, int32> scores = 7;
 }
 
 // Nested message for testing required message fields.

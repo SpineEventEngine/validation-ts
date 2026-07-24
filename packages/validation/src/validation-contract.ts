@@ -159,15 +159,50 @@ function packMessage(schema: DescMessage, value: unknown) {
 function fieldTypeName(field: DescField): string {
   if (field.fieldKind === "message") return field.message.typeName;
   if (field.fieldKind === "enum") return field.enum.typeName;
-  if (field.fieldKind === "scalar") return field.scalar.toString();
+  if (field.fieldKind === "scalar") return scalarProtoTypeName(field.scalar);
   if (field.fieldKind === "list") {
     if (field.listKind === "message") return field.message.typeName;
     if (field.listKind === "enum") return field.enum.typeName;
-    return field.scalar.toString();
+    return scalarProtoTypeName(field.scalar);
   }
   if (field.mapKind === "message") return field.message.typeName;
   if (field.mapKind === "enum") return field.enum.typeName;
-  return field.scalar.toString();
+  return scalarProtoTypeName(field.scalar);
+}
+
+function scalarProtoTypeName(scalar: ScalarType): string {
+  switch (scalar) {
+    case ScalarType.DOUBLE:
+      return "double";
+    case ScalarType.FLOAT:
+      return "float";
+    case ScalarType.INT64:
+      return "int64";
+    case ScalarType.UINT64:
+      return "uint64";
+    case ScalarType.INT32:
+      return "int32";
+    case ScalarType.FIXED64:
+      return "fixed64";
+    case ScalarType.FIXED32:
+      return "fixed32";
+    case ScalarType.BOOL:
+      return "bool";
+    case ScalarType.STRING:
+      return "string";
+    case ScalarType.BYTES:
+      return "bytes";
+    case ScalarType.UINT32:
+      return "uint32";
+    case ScalarType.SFIXED32:
+      return "sfixed32";
+    case ScalarType.SFIXED64:
+      return "sfixed64";
+    case ScalarType.SINT32:
+      return "sint32";
+    case ScalarType.SINT64:
+      return "sint64";
+  }
 }
 
 function formatFieldValue(value: unknown): string {

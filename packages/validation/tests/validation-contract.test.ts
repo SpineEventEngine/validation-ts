@@ -158,13 +158,28 @@ describe("validation contract kernel", () => {
       },
     );
 
+    const listViolation = createConstraintViolation(
+      createValidationContext(RequiredFieldsSchema).atField(RequiredFieldsSchema.field.tags),
+      RequiredFieldsSchema.field.tags,
+      undefined,
+      {},
+    );
+    const mapViolation = createConstraintViolation(
+      createValidationContext(RequiredFieldsSchema).atField(RequiredFieldsSchema.field.scores),
+      RequiredFieldsSchema.field.scores,
+      undefined,
+      {},
+    );
+
     expect(violation.fieldValue).toBeUndefined();
     expect(violation.message?.placeholderValue).toEqual({
       "message.type": RequiredFieldsSchema.typeName,
       "parent.type": RequiredFieldsSchema.typeName,
       "field.path": "name",
-      "field.type": "9",
+      "field.type": "string",
     });
+    expect(listViolation.message?.placeholderValue["field.type"]).toBe("string");
+    expect(mapViolation.message?.placeholderValue["field.type"]).toBe("int32");
     expect(violation.message?.placeholderValue).not.toHaveProperty("field.value");
   });
 });
