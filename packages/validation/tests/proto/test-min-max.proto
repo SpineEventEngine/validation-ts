@@ -146,3 +146,29 @@ message NumericReferences {
 }
 message MissingNumericReference { int32 value = 1 [(min).value = "does_not_exist"]; }
 message IncompatibleNumericReference { NumericLimits limits = 1; int32 value = 2 [(min).value = "limits"]; }
+
+message NumericScalarMatrix {
+    sint32 sint32_value = 1 [(min).value = "-1"];
+    sint64 sint64_value = 2 [(max).value = "9007199254740993"];
+    fixed32 fixed32_value = 3 [(min).value = "1"];
+    fixed64 fixed64_value = 4 [(max).value = "9007199254740993"];
+    sfixed32 sfixed32_value = 5 [(min).value = "-1"];
+    sfixed64 sfixed64_value = 6 [(max).value = "9007199254740993"];
+}
+
+message CrossTypeReferences {
+    double double_bound = 1;
+    int64 int64_bound = 2;
+    int64 integer_value = 3 [(min).value = "double_bound"];
+    double floating_value = 4 [(max).value = "int64_bound"];
+}
+
+message InvalidInt32Overflow { int32 value = 1 [(min).value = "2147483648"]; }
+message InvalidUint32Overflow { uint32 value = 1 [(max).value = "4294967296"]; }
+message InvalidInt64Overflow { int64 value = 1 [(min).value = "9223372036854775808"]; }
+message InvalidUint64Overflow { uint64 value = 1 [(max).value = "18446744073709551616"]; }
+message InvalidUint64Negative { uint64 value = 1 [(min).value = "-1"]; }
+message InvalidIntegerDecimal { sint32 value = 1 [(min).value = "1.0"]; }
+message InvalidFloatExponent { double value = 1 [(min).value = "1.0e"]; }
+message InvalidFloatOverflow { float value = 1 [(min).value = "3.5e38"]; }
+message InvalidDoubleOverflow { double value = 1 [(min).value = "1.8e308"]; }

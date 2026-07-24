@@ -1,7 +1,17 @@
 /*
  * Copyright 2026, TeamDev. All rights reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import { getOption, hasOption } from "@bufbuild/protobuf";
@@ -51,9 +61,9 @@ export function validateRangeField(
         customMessage: option.errorMsg || undefined,
         defaultMessage: getOption(RangeOptionSchema, default_message),
         placeholders: {
-          "range.value": `${parsed.open}${parsed.lower.display}..${parsed.upper.display}${parsed.close}`,
+          "range.value": parsed.display,
           value: String(raw),
-          range: `${parsed.open}${parsed.lower.display}..${parsed.upper.display}${parsed.close}`,
+          range: parsed.display,
         },
       }),
     );
@@ -67,19 +77,24 @@ function parseRange(
   message: Record<string, unknown>,
   field: DescField,
 ) {
-  const match = /^\s*([[(])\s*(.*?)\s*\.\.\s*(.*?)\s*([\])])\s*$/.exec(declaration);
-  if (!match || !match[2] || !match[3])
+  const match = /^(\s*)(\[|\()([\s\S]*?)(\.\.)([\s\S]*?)(\]|\))(\s*)$/.exec(declaration);
+  if (!match || !match[3].trim() || !match[5].trim())
     throw configurationError("INVALID_OPTION_VALUE", "range", schema.typeName, [field.name]);
-  const lower = resolveBound(match[2], scalar, "range", schema, message, field);
-  const upper = resolveBound(match[3], scalar, "range", schema, message, field);
+  const lowerToken = match[3].trim();
+  const upperToken = match[5].trim();
+  const lower = resolveBound(lowerToken, scalar, "range", schema, message, field);
+  const upper = resolveBound(upperToken, scalar, "range", schema, message, field);
   if (compareNumeric(lower.value, upper.value) > 0)
     throw configurationError("INVALID_OPTION_VALUE", "range", schema.typeName, [field.name]);
   return {
     lower,
     upper,
-    lowerInclusive: match[1] === "[",
-    upperInclusive: match[4] === "]",
-    open: match[1],
-    close: match[4],
+    lowerInclusive: match[2] === "[",
+    upperInclusive: match[6] === "]",
+    display: `${match[1]}${match[2]}${renderBound(match[3], lowerToken, lower)}${match[4]}${renderBound(match[5], upperToken, upper)}${match[6]}${match[7]}`,
   };
+}
+
+function renderBound(raw: string, token: string, bound: ReturnType<typeof resolveBound>): string {
+  return bound.display === token ? raw : raw.replace(token, bound.display);
 }

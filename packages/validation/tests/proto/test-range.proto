@@ -119,3 +119,15 @@ message RangeContract {
 message ReversedRange { int32 value = 1 [(range).value = "[10..0]"]; }
 message MalformedRange { int32 value = 1 [(range).value = "[0..1..2]"]; }
 message InvalidRangeTarget { string value = 1 [(range).value = "[0..1]"]; }
+
+message RangeBounds { int32 upper = 1; }
+message RangeTextReferences {
+    RangeBounds limits = 1;
+    int32 value = 2 [(range).value = "[ -1 .. limits.upper ]"];
+    int32 literal = 3 [(range).value = "[ 1 .. 2 ]"];
+}
+
+message ExactLongRanges {
+    int64 signed_value = 1 [(range).value = "[9007199254740993..9007199254740995]"];
+    uint64 unsigned_value = 2 [(range).value = "[9007199254740993..9007199254740995]"];
+}

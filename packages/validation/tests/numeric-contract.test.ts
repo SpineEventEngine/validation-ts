@@ -16,10 +16,23 @@ import {
   InvalidMinTargetSchema,
   MissingNumericReferenceSchema,
   IncompatibleNumericReferenceSchema,
+  NumericScalarMatrixSchema,
+  CrossTypeReferencesSchema,
+  InvalidInt32OverflowSchema,
+  InvalidUint32OverflowSchema,
+  InvalidInt64OverflowSchema,
+  InvalidUint64OverflowSchema,
+  InvalidUint64NegativeSchema,
+  InvalidIntegerDecimalSchema,
+  InvalidFloatExponentSchema,
+  InvalidFloatOverflowSchema,
+  InvalidDoubleOverflowSchema,
 } from "./generated/test-min-max_pb";
 import {
+  ExactLongRangesSchema,
   InvalidRangeTargetSchema,
   MalformedRangeSchema,
+  RangeTextReferencesSchema,
   ReversedRangeSchema,
 } from "./generated/test-range_pb";
 
@@ -57,6 +70,27 @@ describe("exact numeric validation contract", () => {
     );
   });
 
+  it.each([
+    [InvalidInt32OverflowSchema, "min"],
+    [InvalidUint32OverflowSchema, "max"],
+    [InvalidInt64OverflowSchema, "min"],
+    [InvalidUint64OverflowSchema, "max"],
+    [InvalidUint64NegativeSchema, "min"],
+    [InvalidIntegerDecimalSchema, "min"],
+    [InvalidFloatExponentSchema, "min"],
+    [InvalidFloatOverflowSchema, "min"],
+    [InvalidDoubleOverflowSchema, "min"],
+  ])("rejects scalar limit and complete-grammar errors", (schema, option) => {
+    expect(() => validate(schema as any, create(schema as any))).toThrow(
+      expect.objectContaining({
+        code: "INVALID_OPTION_VALUE",
+        option,
+        typeName: schema.typeName,
+        fieldPath: ["value"],
+      }),
+    );
+  });
+
   it("uses default nested-message values for a referenced bound and renders it", () => {
     const violations = validate(
       NumericReferencesSchema,
@@ -71,8 +105,53 @@ describe("exact numeric validation contract", () => {
     [IncompatibleNumericReferenceSchema, "INVALID_FIELD_REFERENCE"],
   ])("reports reference errors", (schema, code) => {
     expect(() => validate(schema as any, create(schema as any))).toThrow(
-      expect.objectContaining({ code, option: "min" }),
+      expect.objectContaining({
+        code,
+        option: "min",
+        typeName: schema.typeName,
+        fieldPath: ["value"],
+      }),
     );
+  });
+
+  it("compares referenced numeric fields across runtime scalar types", () => {
+    const violations = validate(
+      CrossTypeReferencesSchema,
+      create(CrossTypeReferencesSchema, {
+        doubleBound: 1.5,
+        int64Bound: 3n,
+        integerValue: 1n,
+        floatingValue: 3.5,
+      }),
+    );
+    expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["integer_value"],
+      ["floating_value"],
+    ]);
+    expect(violations[0].message?.placeholderValue["min.value"]).toBe("double_bound (1.5)");
+    expect(violations[1].message?.placeholderValue["max.value"]).toBe("int64_bound (3)");
+  });
+
+  it("executes all remaining signed and fixed scalar families", () => {
+    const violations = validate(
+      NumericScalarMatrixSchema,
+      create(NumericScalarMatrixSchema, {
+        sint32Value: -2,
+        sint64Value: 9007199254740994n,
+        fixed32Value: 0,
+        fixed64Value: 9007199254740994n,
+        sfixed32Value: -2,
+        sfixed64Value: 9007199254740994n,
+      }),
+    );
+    expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["sint32_value"],
+      ["sint64_value"],
+      ["fixed32_value"],
+      ["fixed64_value"],
+      ["sfixed32_value"],
+      ["sfixed64_value"],
+    ]);
   });
 
   it.each([
@@ -88,5 +167,36 @@ describe("exact numeric validation contract", () => {
         fieldPath: ["value"],
       }),
     );
+  });
+
+  it("preserves exact range declaration text while annotating references", () => {
+    const violations = validate(
+      RangeTextReferencesSchema,
+      create(RangeTextReferencesSchema, { value: 1, literal: 0 }),
+    );
+    expect(
+      violations.map((violation) => violation.message?.placeholderValue["range.value"]),
+    ).toEqual(["[ -1 .. limits.upper (0) ]", "[ 1 .. 2 ]"]);
+  });
+
+  it("keeps signed and unsigned 64-bit range endpoints exact", () => {
+    const violations = validate(
+      ExactLongRangesSchema,
+      create(ExactLongRangesSchema, {
+        signedValue: 9007199254740992n,
+        unsignedValue: 9007199254740996n,
+      }),
+    );
+    expect(violations.map((violation) => violation.fieldPath?.fieldName)).toEqual([
+      ["signed_value"],
+      ["unsigned_value"],
+    ]);
+    expect(
+      violations.every(
+        (violation) =>
+          violation.fieldValue?.typeUrl.endsWith("Int64Value") ||
+          violation.fieldValue?.typeUrl.endsWith("UInt64Value"),
+      ),
+    ).toBe(true);
   });
 });
