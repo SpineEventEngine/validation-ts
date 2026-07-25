@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify repository
+      - name: Verify validation package and example
         run: npm run verify
 
   compatibility:
@@ -51,5 +51,8 @@ jobs:
       - name: Build packages
         run: npm run build
 
-      - name: Run tests
-        run: npm test
+      - name: Run validation tests
+        run: npm run test:validation
+
+      - name: Run example tests
+        run: npm run test:example

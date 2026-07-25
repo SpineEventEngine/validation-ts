@@ -73,7 +73,7 @@ message Category {
 
 message PaymentMethod {
     oneof method {
-        option (is_required) = true;
+        option (choice).required = true;
 
         PaymentCardNumber payment_card = 1 [(validate) = true];
 

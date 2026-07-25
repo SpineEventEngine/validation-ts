@@ -18,7 +18,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm test --workspace=@spine-event-engine/validation && npm test --workspace=@spine-event-engine/example-smoke",
+    "test:validation": "npm test --workspace=@spine-event-engine/validation",
+    "test:example": "npm test --workspace=@spine-event-engine/example-smoke",
+    "test": "npm run test:validation && npm run test:example",
     "test:coverage": "npm run test:coverage --workspace=@spine-event-engine/validation",
     "docs:api": "typedoc --options typedoc.json",
     "docs:check": "typedoc --options typedoc.json && node scripts/check-documentation.mjs",
@@ -28,7 +30,7 @@
     "package:check": "node scripts/check-package.mjs",
     "git:check": "node scripts/check-git-diff.mjs",
     "example": "npm start --workspace=@spine-event-engine/example-smoke",
-    "verify": "npm run check:node && npm run proto:verify && npm run generate && npm run typecheck:generated && npm run lint && npm run format:check && npm run test:coverage && npm run docs:check && npm run proto:lint && npm run proto:check-generated && npm run build && npm run package:check && npm run git:check"
+    "verify": "npm run check:node && npm run proto:verify && npm run generate && npm run typecheck:generated && npm run lint && npm run format:check && npm run test:coverage && npm run test:example && npm run docs:check && npm run proto:lint && npm run proto:check-generated && npm run build && npm run package:check && npm run git:check"
   },
   "keywords": [],
   "author": "",

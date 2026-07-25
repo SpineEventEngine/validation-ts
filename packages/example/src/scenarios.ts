@@ -1,4 +1,6 @@
 import { create } from "@bufbuild/protobuf";
+import type { Message } from "@bufbuild/protobuf";
+import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { anyPack } from "@bufbuild/protobuf/wkt";
 import { validate, type ConstraintViolation } from "@spine-event-engine/validation";
 
@@ -55,7 +57,11 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
   ];
 }
 
-function result(name: string, schema: any, message: any): ExampleScenarioResult {
+function result<T extends Message>(
+  name: string,
+  schema: GenMessage<T>,
+  message: T,
+): ExampleScenarioResult {
   const violations = validate(schema, message);
   return {
     name,
