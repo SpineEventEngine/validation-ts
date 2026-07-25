@@ -1,6 +1,6 @@
 # T-0003: Modernize The Example And Documentation
 
-Status: Active
+Status: Ready for integration
 Classification: Standard
 Baseline: `d7cfbf74882801373ea171e47453777729edb572`
 Branch: `task/t-0003-example-and-docs`
@@ -62,14 +62,15 @@ Approved plan: Human approval in the Codex task on 2026-07-25
 
 ## Agent Dispatch
 
-| Role/function                  | Agent ID                       | Expected model  | Expected reasoning | Scope                                                                  | Status              |
-| ------------------------------ | ------------------------------ | --------------- | ------------------ | ---------------------------------------------------------------------- | ------------------- |
-| TypeScript implementation      | `/root/t0003_implementer`      | `gpt-5.6-terra` | medium             | Own example schemas/source/tests and CI scripts                        | Complete and closed |
-| Documentation correction       | `/root/t0003_docs_implementer` | `gpt-5.6-terra` | medium             | Own maintained docs, checker/tests, and permanent baseline corrections | Complete and closed |
-| Style/maintainability review   | `/root/t0003_style`            | `gpt-5.6-terra` | high               | Whole-task maintainability and test quality                            | In progress         |
-| Documentation/reader review    | `/root/t0003_docs`             | `gpt-5.6-terra` | medium             | Accuracy, navigation, agent usability, and reader questions            | In progress         |
-| TypeScript/API review          | `/root/t0003_api`              | `gpt-5.6-terra` | high               | Public imports, generated-schema use, package/API claims               | In progress         |
-| Performance/reliability review | `/root/t0003_reliability`      | `gpt-5.6-terra` | high               | CI determinism, scripts, docs gate, and example execution              | Queued              |
+| Role/function                  | Agent ID                        | Expected model  | Expected reasoning | Scope                                                                  | Status              |
+| ------------------------------ | ------------------------------- | --------------- | ------------------ | ---------------------------------------------------------------------- | ------------------- |
+| TypeScript implementation      | `/root/t0003_implementer`       | `gpt-5.6-terra` | medium             | Own example schemas/source/tests and CI scripts                        | Complete and closed |
+| Documentation correction       | `/root/t0003_docs_implementer`  | `gpt-5.6-terra` | medium             | Own maintained docs, checker/tests, and permanent baseline corrections | Complete and closed |
+| Final correction batch         | `/root/t0003_final_corrections` | `gpt-5.6-terra` | medium             | Resolve accepted whole-task findings F-001 through F-016               | Complete and closed |
+| Style/maintainability review   | `/root/t0003_style`             | `gpt-5.6-terra` | high               | Whole-task maintainability and test quality                            | Clean and closed    |
+| Documentation/reader review    | `/root/t0003_docs`              | `gpt-5.6-terra` | medium             | Accuracy, navigation, agent usability, and reader questions            | Clean and closed    |
+| TypeScript/API review          | `/root/t0003_api`               | `gpt-5.6-terra` | high               | Public imports, generated-schema use, package/API claims               | Clean and closed    |
+| Performance/reliability review | `/root/t0003_reliability`       | `gpt-5.6-terra` | high               | CI determinism, scripts, docs gate, and example execution              | Clean and closed    |
 
 ## Scope And Ownership
 
@@ -109,3 +110,14 @@ Approved plan: Human approval in the Codex task on 2026-07-25
 - Documentation distinguishes current supported behavior from the unresolved
   Java `Pattern` compatibility question.
 - No additional human decision is required by the approved plan.
+
+## Verification
+
+| Evidence                   | Result                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Example behavior           | 1 Jest suite / 7 exact generated-schema tests passed                                                         |
+| Validation coverage        | 293 tests; 94.72% statements, 91.53% branches, 99.03% functions, 95.87% lines                                |
+| Documentation gate         | Local links, semantic Markdown/TSDoc snippets, public imports, stale syntax, and negative regressions passed |
+| Compiled example           | Built ESM console adapter executed successfully                                                              |
+| Specialist review          | Style, documentation/fresh-reader, TypeScript/API, and reliability clean through `117d1a5`                   |
+| Independent canonical gate | Fresh `npm run verify` passed on reviewed task head `117d1a5`                                                |
