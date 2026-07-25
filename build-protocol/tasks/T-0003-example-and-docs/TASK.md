@@ -62,13 +62,14 @@ Approved plan: Human approval in the Codex task on 2026-07-25
 
 ## Agent Dispatch
 
-| Role/function                  | Agent ID                  | Expected model  | Expected reasoning | Scope                                                                           | Status  |
-| ------------------------------ | ------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------- | ------- |
-| TypeScript implementation      | `/root/t0003_implementer` | `gpt-5.6-terra` | medium             | Own example schemas/source/tests, CI scripts, maintained docs, and docs checker | Pending |
-| Style/maintainability review   | `/root/t0003_style`       | `gpt-5.6-terra` | high               | Whole-task maintainability and test quality                                     | Pending |
-| Documentation/reader review    | `/root/t0003_docs`        | `gpt-5.6-terra` | medium             | Accuracy, navigation, agent usability, and reader questions                     | Pending |
-| TypeScript/API review          | `/root/t0003_api`         | `gpt-5.6-terra` | high               | Public imports, generated-schema use, package/API claims                        | Pending |
-| Performance/reliability review | `/root/t0003_reliability` | `gpt-5.6-terra` | high               | CI determinism, scripts, docs gate, and example execution                       | Pending |
+| Role/function                  | Agent ID                       | Expected model  | Expected reasoning | Scope                                                                  | Status              |
+| ------------------------------ | ------------------------------ | --------------- | ------------------ | ---------------------------------------------------------------------- | ------------------- |
+| TypeScript implementation      | `/root/t0003_implementer`      | `gpt-5.6-terra` | medium             | Own example schemas/source/tests and CI scripts                        | Complete and closed |
+| Documentation correction       | `/root/t0003_docs_implementer` | `gpt-5.6-terra` | medium             | Own maintained docs, checker/tests, and permanent baseline corrections | Complete and closed |
+| Style/maintainability review   | `/root/t0003_style`            | `gpt-5.6-terra` | high               | Whole-task maintainability and test quality                            | In progress         |
+| Documentation/reader review    | `/root/t0003_docs`             | `gpt-5.6-terra` | medium             | Accuracy, navigation, agent usability, and reader questions            | In progress         |
+| TypeScript/API review          | `/root/t0003_api`              | `gpt-5.6-terra` | high               | Public imports, generated-schema use, package/API claims               | In progress         |
+| Performance/reliability review | `/root/t0003_reliability`      | `gpt-5.6-terra` | high               | CI determinism, scripts, docs gate, and example execution              | Queued              |
 
 ## Scope And Ownership
 

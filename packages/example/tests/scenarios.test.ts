@@ -40,6 +40,13 @@ describe("runnable validation scenarios", () => {
     );
   });
 
+  it("formats the invalid User pattern with its exact root and field path", () => {
+    const value = scenario("invalid user email pattern");
+    expect(value.typeName).toBe("example.User");
+    expect(value.fieldPaths).toEqual(["email"]);
+    expect(value.violations.map(Violations.formatMessage)).toEqual(["Email must be valid."]);
+  });
+
   it("accepts the Product exact minimum price", () => {
     expect(scenario("product at its exact minimum price").violations).toEqual([]);
   });

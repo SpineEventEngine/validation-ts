@@ -1,5 +1,13 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, extname, resolve } from "node:path";
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
@@ -59,27 +67,48 @@ function namedPublicImports(markdown) {
   return names;
 }
 
-function transpileSnippet(snippet, file) {
-  const result = ts.transpileModule(snippet, {
-    compilerOptions: { module: ts.ModuleKind.NodeNext, target: ts.ScriptTarget.ES2024 },
-    reportDiagnostics: true,
-  });
-  const diagnostic = result.diagnostics?.find(
-    (entry) => entry.category === ts.DiagnosticCategory.Error,
-  );
-  if (diagnostic) {
-    throw new Error(
-      `Non-compilable TypeScript snippet in ${file}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, " ")}`,
+function typecheckSnippet(snippet, file, root, index) {
+  const temporaryRoot = mkdtempSync(join(root, ".documentation-snippets-"));
+  try {
+    const snippetPath = join(temporaryRoot, "snippet.ts");
+    writeFileSync(snippetPath, snippet);
+
+    // Maintained examples may import this documented generated module. It is the
+    // sole virtual relative module; all other relative imports must resolve.
+    mkdirSync(join(temporaryRoot, "generated"));
+    writeFileSync(
+      join(temporaryRoot, "generated", "user_pb.ts"),
+      "export declare const UserSchema: any;\n",
     );
+
+    const program = ts.createProgram([snippetPath], {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      target: ts.ScriptTarget.ES2024,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      baseUrl: root,
+      paths: { [publicPackage]: [index] },
+    });
+    const diagnostic = ts
+      .getPreEmitDiagnostics(program)
+      .find((entry) => entry.category === ts.DiagnosticCategory.Error);
+    if (diagnostic) {
+      throw new Error(
+        `Non-compilable TypeScript snippet in ${file}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, " ")}`,
+      );
+    }
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
   }
 }
 
 /** Runs all project-owned documentation checks and returns checked Markdown paths. */
 export function checkDocumentation({ root }) {
   const markdown = findMaintainedMarkdown(root);
-  const publicExports = discoverPublicExports(
-    readFileSync(resolve(root, "packages/validation/src/index.ts"), "utf8"),
-  );
+  const index = resolve(root, "packages/validation/src/index.ts");
+  const publicExports = discoverPublicExports(readFileSync(index, "utf8"));
   let publicImportCount = 0;
 
   for (const file of markdown) {
@@ -87,12 +116,12 @@ export function checkDocumentation({ root }) {
     if (stalePlaceholder.test(content))
       throw new Error(`Stale unnamespaced placeholder in ${file}`);
     for (const fence of content.matchAll(typeScriptFence)) {
-      transpileSnippet(fence[1], file);
       for (const imported of namedPublicImports(fence[1])) {
         publicImportCount++;
         if (!publicExports.has(imported))
           throw new Error(`Non-public import ${imported} in ${file}`);
       }
+      typecheckSnippet(fence[1], file, root, index);
     }
     for (const match of content.matchAll(localLink)) {
       const target = match[1];
@@ -101,6 +130,10 @@ export function checkDocumentation({ root }) {
         throw new Error(`Broken local link ${target} in ${file}`);
     }
   }
+
+  const publicTsDoc = resolve(root, "packages/validation/src/validation.ts");
+  if (stalePlaceholder.test(readFileSync(publicTsDoc, "utf8")))
+    throw new Error(`Stale unnamespaced placeholder in ${publicTsDoc}`);
 
   for (const proto of [
     "packages/example/proto/user.proto",

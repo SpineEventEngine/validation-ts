@@ -56,3 +56,6 @@ jobs:
 
       - name: Run example tests
         run: npm run test:example
+
+      - name: Run compiled example console adapter
+        run: npm run example:run

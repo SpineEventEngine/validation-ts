@@ -39,11 +39,14 @@ is not a public ordering compatibility promise.
 
 ## Public and internal seams
 
-The public seam is only the package entry point: `validate`,
-`formatViolations`, `Violations`, `ValidationConfigurationError`, and the
-exported generated diagnostic types. Option modules, orchestration adapters,
-descriptor registry, and template envelope are internal implementation seams.
-Do not document or import them as supported extension points.
+The complete supported public seam is the package entry point: `validate`,
+`formatViolations`, `Violations`, `ValidationConfigurationError`,
+`ValidationConfigurationErrorCode`, `ValidationConfigurationErrorInit`, and
+the exported diagnostic types `ConstraintViolation`, `ValidationError`,
+`TemplateString`, and `FieldPath`. `formatTemplateString` is physically
+exported for compatibility but marked internal; consumers must not use it as a
+supported direct API. Option modules, orchestration adapters, descriptor
+registry, and template envelope are internal implementation seams.
 
 The example has a separate seam by design: `runExampleScenarios()` returns
 inspectable records and `src/index.ts` only prints them. Tests exercise the
@@ -67,11 +70,14 @@ boundary is Java `Pattern` compatibility: this runtime uses ECMAScript
 ## Change recipes
 
 - **Option behavior:** update the approved contract source/test interpretation,
-  add a failing generated-schema behavior test, make the smallest option-module
+  add a failing generated-schema behavior test in
+  `packages/validation/tests/`, make the smallest option-module
   change, then update [the contract](validation-contract.md).
 - **Example:** change only project-owned example Proto/source, regenerate,
-  cover the scenario interface, and keep intentionally invalid declarations in
-  test fixtures rather than runnable schemas.
+  cover the scenario interface in `packages/example/tests/scenarios.test.ts`,
+  and keep intentionally invalid declarations in
+  `packages/example/proto/testing/invalid_configuration.proto` rather than
+  runnable schemas.
 - **Documentation:** update the affected package README, curated guide, and
   TypeDoc comments. Run `npm run docs:check`; it validates maintained local
   links, TS snippets, named public imports, placeholders, and active example

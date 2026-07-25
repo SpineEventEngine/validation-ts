@@ -198,8 +198,8 @@ function dependencyClosure(root: DescFile): DescFile[] {
  * @example
  * ```typescript
  * const template = {
- *     withPlaceholders: 'Field ${field} has invalid value: ${value}',
- *     placeholderValue: { field: 'email', value: 'invalid@' }
+ *     withPlaceholders: 'Field ${field.path} has invalid value: ${field.value}',
+ *     placeholderValue: { 'field.path': 'email', 'field.value': 'invalid@' }
  * };
  * const result = formatTemplateString(template);
  * // Result: "Field email has invalid value: invalid@"

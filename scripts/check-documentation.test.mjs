@@ -14,6 +14,18 @@ function createFixture() {
     join(root, "packages", "validation", "src", "index.ts"),
     "export { publicValue as aliasedValue } from './value';\nexport type { PublicType } from './types';\n",
   );
+  writeFileSync(
+    join(root, "packages", "validation", "src", "value.ts"),
+    "export const publicValue = 1;\n",
+  );
+  writeFileSync(
+    join(root, "packages", "validation", "src", "types.ts"),
+    "export interface PublicType {}\n",
+  );
+  writeFileSync(
+    join(root, "packages", "validation", "src", "validation.ts"),
+    "/** Current ${field.path}. */\n",
+  );
   writeFileSync(join(root, "docs", "target.md"), "# Target\n");
   writeFileSync(join(root, "packages", "example", "proto", "user.proto"), 'syntax = "proto3";\n');
   writeFileSync(
@@ -47,7 +59,44 @@ function expectFailure(root, expression) {
     );
     assert.equal(checkDocumentation({ root }).length, 2);
 
+    writeFileSync(
+      join(root, "packages", "validation", "src", "validation.ts"),
+      "/** Stale {value}. */\n",
+    );
+    expectFailure(root, /Stale unnamespaced placeholder/);
+    writeFileSync(
+      join(root, "packages", "validation", "src", "validation.ts"),
+      "/** Current ${field.path}. */\n",
+    );
+
     writeReadme(root, "```typescript\nconst = ;\n```");
+    expectFailure(root, /Non-compilable TypeScript snippet/);
+
+    writeReadme(root, "```typescript\nconst value: string = 1;\n```");
+    expectFailure(root, /Non-compilable TypeScript snippet/);
+
+    writeReadme(
+      root,
+      '```typescript\nimport validation from "@spine-event-engine/validation";\nconsole.log(validation);\n```',
+    );
+    expectFailure(root, /Non-compilable TypeScript snippet/);
+
+    writeReadme(
+      root,
+      '```typescript\nimport * as validation from "@spine-event-engine/validation";\nvalidation.notExported();\n```',
+    );
+    expectFailure(root, /Non-compilable TypeScript snippet/);
+
+    writeReadme(
+      root,
+      '```typescript\nimport { aliasedValue, type PublicType as PublicAlias } from "@spine-event-engine/validation";\nconst valid: PublicAlias = {} as PublicAlias;\nconsole.log(aliasedValue, valid);\n```',
+    );
+    assert.equal(checkDocumentation({ root }).length, 2);
+
+    writeReadme(
+      root,
+      '```typescript\nimport { value } from "./missing";\nconsole.log(value);\n```',
+    );
     expectFailure(root, /Non-compilable TypeScript snippet/);
 
     writeReadme(

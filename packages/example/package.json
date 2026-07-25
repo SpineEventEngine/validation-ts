@@ -10,7 +10,8 @@
   "scripts": {
     "generate": "buf generate && node scripts/patch-generated.cjs",
     "build": "npm run generate && tsc",
-    "start": "npm run build --workspace=@spine-event-engine/validation && npm run build && node dist/index.js",
+    "start": "npm run build --workspace=@spine-event-engine/validation && npm run build && npm run start:built",
+    "start:built": "node dist/index.js",
     "test": "npm run build --workspace=@spine-event-engine/validation && npm run generate && jest --config jest.config.cjs",
     "clean": "rm -rf dist src/generated",
     "proto:lint": "buf lint"

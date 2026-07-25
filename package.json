@@ -30,7 +30,8 @@
     "package:check": "node scripts/check-package.mjs",
     "git:check": "node scripts/check-git-diff.mjs",
     "example": "npm start --workspace=@spine-event-engine/example-smoke",
-    "verify": "npm run check:node && npm run proto:verify && npm run generate && npm run typecheck:generated && npm run lint && npm run format:check && npm run test:coverage && npm run test:example && npm run docs:check && npm run proto:lint && npm run proto:check-generated && npm run build && npm run package:check && npm run git:check"
+    "example:run": "npm run start:built --workspace=@spine-event-engine/example-smoke",
+    "verify": "npm run check:node && npm run proto:verify && npm run generate && npm run typecheck:generated && npm run lint && npm run format:check && npm run test:coverage && npm run test:example && npm run docs:check && npm run proto:lint && npm run proto:check-generated && npm run build && npm run example:run && npm run package:check && npm run git:check"
   },
   "keywords": [],
   "author": "",

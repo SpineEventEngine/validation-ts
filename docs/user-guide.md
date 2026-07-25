@@ -1,8 +1,9 @@
 # User guide
 
 `@spine-event-engine/validation` validates a Protobuf-ES message using the
-Spine options attached to its generated descriptor. It is experimental: pin a
-snapshot version deliberately and test the declarations your application uses.
+Spine options attached to its generated descriptor. It is experimental: use
+the moving `snapshot` tag for previews, or pin a version deliberately and test
+the declarations your application uses.
 
 ## Prerequisites and installation
 
@@ -12,6 +13,7 @@ dependency together:
 
 ```sh
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
 npm install --save-dev @bufbuild/protoc-gen-es
 ```
 
@@ -39,7 +41,7 @@ message User {
   string email = 1 [
     (required) = true,
     (pattern).regex = "^[^@]+@[^@]+\\.[^@]+$",
-    (pattern).error_msg = "`${field.path}` is not an email: `${field.value}`."
+    (pattern).error_msg = "Email must be valid."
   ];
 }
 ```
@@ -123,7 +125,11 @@ is for people, not a stable parser input. The supported codes are documented in
 the [validation contract](validation-contract.md#configuration-errors).
 
 ```ts
+import { create } from "@bufbuild/protobuf";
 import { ValidationConfigurationError, validate } from "@spine-event-engine/validation";
+import { UserSchema } from "./generated/user_pb";
+
+const user = create(UserSchema, { email: "not-an-email" });
 
 try {
   validate(UserSchema, user);

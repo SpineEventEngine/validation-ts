@@ -32,6 +32,16 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
       }),
     ),
     result(
+      "invalid user email pattern",
+      UserSchema,
+      create(UserSchema, {
+        id: 1,
+        name: "Ada Lovelace",
+        email: "not-an-email",
+        role: Role.USER,
+      }),
+    ),
+    result(
       "product at its exact minimum price",
       ProductSchema,
       create(ProductSchema, { id: "prod-1", name: "Keyboard", price: 0.01 }),
@@ -51,7 +61,6 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
       ProductEnvelopeSchema,
       create(ProductEnvelopeSchema, {
         payload: anyPack(UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
-        knownPayloadType: create(UserSchema),
       }),
     ),
   ];

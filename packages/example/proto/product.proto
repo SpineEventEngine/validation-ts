@@ -35,7 +35,7 @@ import "user.proto";
 message Product {
     string id = 1 [(required) = true,
                    (pattern).regex = "^prod-[0-9]+$",
-                   (pattern).error_msg = "Product ID must follow format 'prod-XXX'. Provided: `${field.value}`."];
+                   (pattern).error_msg = "Product ID must follow format 'prod-XXX'."];
 
     string name = 2 [(required) = true,
                      (if_missing).error_msg = "Product name is required."];
@@ -115,5 +115,4 @@ message ListProductsResponse {
 // A runnable `(validate)` example for a resolvable `google.protobuf.Any` payload.
 message ProductEnvelope {
     google.protobuf.Any payload = 1 [(validate) = true];
-    User known_payload_type = 2;
 }

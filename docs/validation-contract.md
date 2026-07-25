@@ -40,14 +40,18 @@ the namespaced form.
 | `(range)`    | Field: singular or repeated numeric scalar.                                                   | Requires the parsed lower/upper range, honoring `[`/`]` inclusivity and `(`/`)` exclusivity; `NaN` is invalid.                                                               | Path is the field; packed failing value; custom/default range template; `${range.value}` plus common field keys.                                                                         |
 | `(distinct)` | Field: repeated or map field.                                                                 | When enabled, emits one failure per duplicate Buf-equality class among list elements or map values.                                                                          | Path is the collection field; field value is the class representative; `${field.value}` is the whole collection and `${field.duplicates}` is that duplicate class.                       |
 | `(validate)` | Field: singular message, repeated message, map with message values, or `google.protobuf.Any`. | Recurses into present known values and returns descendant leaves only; it never creates a parent summary.                                                                    | Descendant failures retain the original root type and leaf path. Collection indices/map keys are omitted. Singular default messages, empty `Any`, and unknown `Any` type URLs are valid. |
-| `(goes)`     | Field with a presence-supported value; its companion must also be a presence-supported field. | A present target is invalid when its named `with` companion is absent.                                                                                                       | Path is the target field; packed target value; custom/default goes template with common field keys and `${goes.with}`.                                                                   |
-| `(require)`  | Message option. Expression references presence-supported fields or any oneof name.            | At least one `                                                                                                                                                               | `alternative must have every`&` token present.                                                                                                                                           | Empty path and no field value; custom/default require template with `${message.type}` and `${require.fields}`. |
+| `(goes)`     | Field with a presence-supported value; its companion must also be a presence-supported field. | A present target is invalid when its named `with` companion is absent.                                                                                                       | Path is the target field; packed target value; custom/default goes template with common field keys and `${goes.companion}`.                                                              |
+| `(require)`  | Message option. Expression references presence-supported fields or any oneof name.            | At least one alternative must have every conjunction token present.                                                                                                          | Empty path and no field value; custom/default require template with `${message.type}` and `${require.fields}`.                                                                           |
 | `(choice)`   | Oneof option.                                                                                 | When `required = true`, rejects a group with no selected member.                                                                                                             | Empty path and no field value; custom/default choice template with `${parent.type}` and `${group.path}`.                                                                                 |
 
 The `pattern` implementation is retained through a legacy adapter and therefore
 does not yet share all path/value/template normalization used by the other
 families. Do not rely on its index-bearing list paths as a general nested-path
 format.
+
+The exact `(require)` grammar is `alternative ("|" alternative)*`, where an
+`alternative` is `token ("&" token)*`. Thus `email | phone & country_code`
+accepts either `email` alone or both `phone` and `country_code`.
 
 ## Exact numeric and reference grammar
 
@@ -97,7 +101,9 @@ does not have Proto parentheses.
 
 Errors are part of the public API; their human-readable `message` is not a
 stable parsing surface. The current `(pattern)` implementation is the notable
-exception: unsupported targets are ignored rather than producing this error.
+exception: unsupported targets are ignored rather than producing this error,
+and a malformed regular expression follows the legacy adapter path by emitting
+an ordinary violation rather than a `ValidationConfigurationError`.
 
 ## Deprecated, unsupported, and regex compatibility
 
