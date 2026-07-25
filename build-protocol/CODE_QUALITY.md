@@ -48,8 +48,8 @@
 - Every bug fix receives a regression test.
 - Public package changes receive a package-contents and consumer-install test.
 - Keep test compilation strict; do not weaken TypeScript only for Jest.
-- Initial coverage thresholds are 80% statements/lines, 70% branches, and 90%
-  functions. Reach 90% everywhere before substantial behavior expansion.
+- The enforced coverage gate is at least 90% statements, branches, functions,
+  and lines.
 
 ## Protobuf
 

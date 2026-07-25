@@ -1,8 +1,18 @@
 # Validation TS documentation
 
-Start here by audience: application users should read the [user guide](user-guide.md) and executable [example](../packages/example/README.md); library users should read the [package guide](../packages/validation/README.md) and [validation contract](validation-contract.md); contributors and agents should read [architecture](architecture.md), [contributing](contributing.md), and `AGENTS.md`.
+Choose the shortest route for your job:
 
-- [User guide](user-guide.md) — install, Buf generation, validation, troubleshooting.
-- [Validation contract](validation-contract.md) — supported option behavior and diagnostics.
-- [Architecture](architecture.md) — runtime seams, ownership, and change recipes.
-- [Contributing](contributing.md) — governed delivery workflow and gates.
+| Audience             | Start here                                         | Then use                                                                                                   |
+| -------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Application user     | [User guide](user-guide.md)                        | [Validation contract](validation-contract.md) and the [executable example](../packages/example/README.md). |
+| Package consumer     | [Package README](../packages/validation/README.md) | [User guide](user-guide.md) for Buf and diagnostic details.                                                |
+| Contributor or agent | [Contributing](contributing.md)                    | [Architecture](architecture.md), `AGENTS.md`, and the active `build-protocol/tasks/` record.               |
+
+- [User guide](user-guide.md) — installation, immutable Proto intake, Buf,
+  messages, diagnostics, nested values, and troubleshooting.
+- [Validation contract](validation-contract.md) — exact current option targets,
+  data/configuration outcomes, diagnostics, grammar, and limitations.
+- [Architecture](architecture.md) — runtime flow, internal seams, ownership,
+  source precedence, and change recipes.
+- [Contributing](contributing.md) — approval, worktrees, TDD, review, gates,
+  generated inputs, and integration.
