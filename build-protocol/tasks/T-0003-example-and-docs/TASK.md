@@ -1,6 +1,6 @@
 # T-0003: Modernize The Example And Documentation
 
-Status: Ready for integration
+Status: Complete
 Classification: Standard
 Baseline: `d7cfbf74882801373ea171e47453777729edb572`
 Branch: `task/t-0003-example-and-docs`
@@ -121,3 +121,18 @@ Approved plan: Human approval in the Codex task on 2026-07-25
 | Compiled example           | Built ESM console adapter executed successfully                                                              |
 | Specialist review          | Style, documentation/fresh-reader, TypeScript/API, and reliability clean through `117d1a5`                   |
 | Independent canonical gate | Fresh `npm run verify` passed on reviewed task head `117d1a5`                                                |
+
+## Integration
+
+- Reviewed task closure: `0bf86c68c169923e9885d46e3322f650d03177ed`.
+- First `dev` merge: `38ce635427cb4e24ccc6f7361957a518b541ab4c`.
+- Post-merge `npm run verify`: Passed all canonical gates, 293 validation
+  tests, 7 example tests, compiled console execution, and 94.72% / 91.53% /
+  99.03% / 95.87% coverage.
+- Verified remote refs after the first integration push:
+  `origin/dev@38ce635427cb4e24ccc6f7361957a518b541ab4c`,
+  `origin/task/t-0003-example-and-docs@0bf86c68c169923e9885d46e3322f650d03177ed`,
+  and unchanged
+  `origin/master@24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- The final closure commit is merged to `dev` after this record is committed
+  and pushed.

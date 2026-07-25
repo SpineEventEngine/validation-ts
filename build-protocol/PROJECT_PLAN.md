@@ -6,7 +6,7 @@
 | ------ | --------------------------------------------------------------------------------- | -------- |
 | T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | Complete |
 | T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | Complete |
-| T-0003 | Modernize the example, execute it in CI, and build agent-ready documentation.     | Active   |
+| T-0003 | Modernize the example, execute it in CI, and build agent-ready documentation.     | Complete |
 
 ## Accepted Follow-Up Boundaries
 
