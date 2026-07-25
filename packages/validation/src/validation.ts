@@ -101,10 +101,11 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb";
  * Traversal follows declaration order and the internal validator order, but
  * callers must not treat that order as a public compatibility guarantee.
  *
- * Each field violation retains the root entry type, a complete path of Proto
- * field names, and a descriptor-packed offending value when one exists. Its
- * diagnostic is always present; an option without a custom or default message
- * produces an empty template string.
+ * Shared-envelope validators retain the root entry type, a complete path of
+ * Proto field names, and a descriptor-packed offending value when one exists.
+ * Their diagnostic is always present; an option without a custom or default
+ * message produces an empty template string. `(pattern)` is the documented
+ * legacy exception; see [the pattern section](../../../docs/validation-contract.md#implemented-options).
  *
  * Currently supported validation options:
  * - `(required)` — validates supported presence targets
