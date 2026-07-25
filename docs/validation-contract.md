@@ -23,11 +23,9 @@ empty string when neither custom nor default diagnostic text exists.
 
 `Violations.failurePath()` joins the path and returns `"unknown"` for an empty
 path; `Violations.formatMessage()` applies the template map. A custom
-`error_msg` overrides a default message. The established namespaced keys are
-`${field.path}`, `${field.type}`, `${field.value}`, `${parent.type}`, and
-option-specific keys below. Some legacy option adapters also retain old
-unnamespaced keys for already-generated declarations; new declarations must use
-the namespaced form.
+`error_msg` overrides a default message. Strict Proto authoring uses the
+namespaced keys `${field.path}`, `${field.type}`, `${field.value}`,
+`${parent.type}`, and option-specific keys below for shared-envelope validators.
 
 ## Implemented options
 
@@ -46,8 +44,13 @@ the namespaced form.
 
 The `pattern` implementation is retained through a legacy adapter and therefore
 does not yet share all path/value/template normalization used by the other
-families. Do not rely on its index-bearing list paths as a general nested-path
-format.
+families. The adapter cannot substitute the documented namespaced keys, so use
+a static `(pattern).error_msg` until pattern normalization is implemented. For
+nested pattern failures it currently reports the nested schema type and an
+unprefixed local or indexed path, rather than the root type and prefixed leaf
+path used by shared-envelope nested validators. These are current implementation
+gaps under the postponed pattern work; do not rely on the legacy paths as a
+general nested-path format.
 
 The exact `(require)` grammar is `alternative ("|" alternative)*`, where an
 `alternative` is `token ("&" token)*`. Thus `email | phone & country_code`

@@ -69,6 +69,38 @@ function expectFailure(root, expression) {
       "/** Current ${field.path}. */\n",
     );
 
+    writeReadme(
+      root,
+      '```typescript\nimport { aliasedValue } from "@spine-event-engine/validation";\nconsole.log(aliasedValue);\n```',
+    );
+    writeFileSync(
+      join(root, "packages", "validation", "src", "validation.ts"),
+      "/** Stale ${value}. */\n",
+    );
+    expectFailure(root, /Stale unnamespaced placeholder/);
+    writeFileSync(
+      join(root, "packages", "validation", "src", "validation.ts"),
+      "/** Current ${field.path}. */\n",
+    );
+
+    writeReadme(root, "Legacy ${field} placeholder.");
+    expectFailure(root, /Stale unnamespaced placeholder/);
+    writeReadme(
+      root,
+      '```typescript\nimport { aliasedValue } from "@spine-event-engine/validation";\nconsole.log(aliasedValue);\n```',
+    );
+    assert.equal(checkDocumentation({ root }).length, 2);
+
+    writeFileSync(
+      join(root, "packages", "validation", "src", "validation.ts"),
+      "/** @example\n * ```typescript\n * const value: string = 1;\n * ```\n */\n",
+    );
+    expectFailure(root, /Non-compilable TypeScript snippet/);
+    writeFileSync(
+      join(root, "packages", "validation", "src", "validation.ts"),
+      "/** Current ${field.path}. */\n",
+    );
+
     writeReadme(root, "```typescript\nconst = ;\n```");
     expectFailure(root, /Non-compilable TypeScript snippet/);
 

@@ -123,7 +123,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb";
  *
  * @example
  * ```typescript
- * import { validate } from '@spine-event-engine/validation';
+ * import { formatViolations, validate } from '@spine-event-engine/validation';
  * import { UserSchema } from './generated/user_pb';
  * import { create } from '@bufbuild/protobuf';
  *
@@ -195,15 +195,6 @@ function dependencyClosure(root: DescFile): DescFile[] {
  * @param template The template string with placeholders.
  * @returns Formatted string with placeholders replaced.
  *
- * @example
- * ```typescript
- * const template = {
- *     withPlaceholders: 'Field ${field.path} has invalid value: ${field.value}',
- *     placeholderValue: { 'field.path': 'email', 'field.value': 'invalid@' }
- * };
- * const result = formatTemplateString(template);
- * // Result: "Field email has invalid value: invalid@"
- * ```
  */
 export function formatTemplateString(template: TemplateString): string {
   let result = template.withPlaceholders;
@@ -223,6 +214,10 @@ export function formatTemplateString(template: TemplateString): string {
  *
  * @example
  * ```typescript
+ * import { create } from '@bufbuild/protobuf';
+ * import { formatViolations, validate } from '@spine-event-engine/validation';
+ * import { UserSchema } from './generated/user_pb';
+ *
  * const user = create(UserSchema, { name: '', email: '' });
  * const violations = validate(UserSchema, user);
  * console.log(formatViolations(violations));
@@ -252,6 +247,11 @@ export function formatViolations(violations: ConstraintViolation[]): string {
  *
  * @example
  * ```typescript
+ * import { create } from '@bufbuild/protobuf';
+ * import { validate, Violations } from '@spine-event-engine/validation';
+ * import { UserSchema } from './generated/user_pb';
+ *
+ * const user = create(UserSchema, { name: '', email: '' });
  * const violations = validate(UserSchema, user);
  * violations.forEach(v => {
  *     const path = Violations.failurePath(v);
@@ -264,14 +264,17 @@ export const Violations = {
   /**
    * Returns the formatted error message from a violation with all placeholders replaced.
    *
-   * Placeholders in the error message (e.g., `${field}`, `${value}`) are substituted
-   * with their corresponding values from the violation context.
+   * Namespaced placeholders such as `${field.path}` and `${field.value}` are
+   * substituted with their corresponding values from the violation context.
    *
    * @param violation The constraint violation to format.
    * @returns The formatted error message, or 'Validation failed' if no message is present.
    *
    * @example
    * ```typescript
+   * import { type ConstraintViolation, Violations } from '@spine-event-engine/validation';
+   *
+   * declare const violation: ConstraintViolation;
    * const message = Violations.formatMessage(violation);
    * // Returns: "Email must be valid. Provided: `invalid@`."
    * ```
@@ -291,6 +294,9 @@ export const Violations = {
    *
    * @example
    * ```typescript
+   * import { type ConstraintViolation, Violations } from '@spine-event-engine/validation';
+   *
+   * declare const violation: ConstraintViolation;
    * const path = Violations.failurePath(violation);
    * // Returns: "user.email"
    * ```

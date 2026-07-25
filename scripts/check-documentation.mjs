@@ -11,7 +11,8 @@ import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-const stalePlaceholder = /(?<!\$)\{(?:value|other|field|regex)\}/;
+const stalePlaceholder =
+  /(?:\$\{(?:value|other|field|regex)\}|(?<!\$)\{(?:value|other|field|regex)\})/;
 const localLink = /\[[^\]]*\]\(([^)#]+)(?:#[^)]+)?\)/g;
 const typeScriptFence = /```(?:ts|typescript)\s*\r?\n([\s\S]*?)```/gi;
 const publicPackage = "@spine-event-engine/validation";
@@ -104,6 +105,27 @@ function typecheckSnippet(snippet, file, root, index) {
   }
 }
 
+function tsDocTypeScriptFences(source) {
+  const fences = [];
+  for (const comment of source.matchAll(/\/\*\*([\s\S]*?)\*\//g)) {
+    const text = comment[1].replace(/^\s*\*\s?/gm, "");
+    for (const fence of text.matchAll(typeScriptFence)) fences.push(fence[1]);
+  }
+  return fences;
+}
+
+function checkTypeScriptFences(content, file, root, index, publicExports) {
+  let publicImportCount = 0;
+  for (const fence of content) {
+    for (const imported of namedPublicImports(fence)) {
+      publicImportCount++;
+      if (!publicExports.has(imported)) throw new Error(`Non-public import ${imported} in ${file}`);
+    }
+    typecheckSnippet(fence, file, root, index);
+  }
+  return publicImportCount;
+}
+
 /** Runs all project-owned documentation checks and returns checked Markdown paths. */
 export function checkDocumentation({ root }) {
   const markdown = findMaintainedMarkdown(root);
@@ -115,14 +137,13 @@ export function checkDocumentation({ root }) {
     const content = readFileSync(file, "utf8");
     if (stalePlaceholder.test(content))
       throw new Error(`Stale unnamespaced placeholder in ${file}`);
-    for (const fence of content.matchAll(typeScriptFence)) {
-      for (const imported of namedPublicImports(fence[1])) {
-        publicImportCount++;
-        if (!publicExports.has(imported))
-          throw new Error(`Non-public import ${imported} in ${file}`);
-      }
-      typecheckSnippet(fence[1], file, root, index);
-    }
+    publicImportCount += checkTypeScriptFences(
+      [...content.matchAll(typeScriptFence)].map((fence) => fence[1]),
+      file,
+      root,
+      index,
+      publicExports,
+    );
     for (const match of content.matchAll(localLink)) {
       const target = match[1];
       if (/^[a-z]+:/i.test(target)) continue;
@@ -132,8 +153,16 @@ export function checkDocumentation({ root }) {
   }
 
   const publicTsDoc = resolve(root, "packages/validation/src/validation.ts");
-  if (stalePlaceholder.test(readFileSync(publicTsDoc, "utf8")))
+  const publicTsDocSource = readFileSync(publicTsDoc, "utf8");
+  if (stalePlaceholder.test(publicTsDocSource))
     throw new Error(`Stale unnamespaced placeholder in ${publicTsDoc}`);
+  publicImportCount += checkTypeScriptFences(
+    tsDocTypeScriptFences(publicTsDocSource),
+    publicTsDoc,
+    root,
+    index,
+    publicExports,
+  );
 
   for (const proto of [
     "packages/example/proto/user.proto",
