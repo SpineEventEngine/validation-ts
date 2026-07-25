@@ -51,21 +51,18 @@ Known implementation debt is not silently fixed by the protocol bootstrap:
 - recursion and regular-expression resource limits need explicit future
   analysis.
 
-Java regular-expression compatibility is an explicit open question. The
+Java regular-expression compatibility remains an explicit open question. The
 frozen `(pattern)` documentation defines Java `Pattern.compile()` semantics,
 while the current runtime delegates to ECMAScript `RegExp` and does not
-implement equivalent full-match, dialect, or modifier behavior. T-0002 must
-not add a regex dependency, create a project-owned Java-pattern engine, or
-claim full pattern parity. See Q-0001 in `questions/UNRESOLVED.md`.
-
-Each item requires a separately approved task unless correction is necessary
-to make the T-0001 verification baseline truthful.
+implement equivalent full-match, dialect, or modifier behavior. Do not claim
+full Java-pattern parity without a separately approved compatibility change.
+See Q-0001 in `questions/UNRESOLVED.md`.
 
 ## Compatibility
 
-- npm remains the package manager for T-0001.
-- Jest remains the test runner for T-0001.
-- The published package remains CommonJS for T-0001.
+- npm remains the package manager.
+- Jest remains the test runner.
+- The published package remains CommonJS.
 - The package name is `@spine-event-engine/validation`.
 - Snapshot versions use `2.0.0-snapshot.<increment>`.
 - `master` pushes publish automatically; `dev` is the integration branch.

@@ -27,30 +27,30 @@ syntax = "proto3";
 
 package example;
 
+import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "spine/options.proto";
+import "user.proto";
 
 message Product {
     string id = 1 [(required) = true,
                    (pattern).regex = "^prod-[0-9]+$",
-                   (pattern).error_msg = "Product ID must follow format 'prod-XXX'. Provided: `{value}`."];
+                   (pattern).error_msg = "Product ID must follow format 'prod-XXX'."];
 
     string name = 2 [(required) = true,
                      (if_missing).error_msg = "Product name is required."];
 
     string description = 3;
 
-    double price = 4 [(required) = true,
-                      (min).value = "0.01",
-                      (min).error_msg = "Price must be at least {other}. Provided: {value}."];
+    double price = 4 [(min).value = "0.01",
+                      (min).error_msg = "Price must be at least `${min.value}`. Provided: `${field.value}`."];
 
     int32 stock = 5 [(min).value = "0",
                      (range).value = "[0..1000000)"];
 
-    google.protobuf.Timestamp created_at = 6 [(required) = true];
+    google.protobuf.Timestamp created_at = 6;
 
-    Category category = 7 [(required) = true,
-                           (validate) = true];
+    Category category = 7 [(validate) = true];
 
     // Display settings, demonstrates "goes" option.
     // Text color can only be set when highlight color is set, and vice versa.
@@ -65,15 +65,15 @@ message Color {
 }
 
 message Category {
-    int32 id = 1 [(required) = true,
-                  (min).value = "1"];
+    int32 id = 1 [(min).value = "1"];
 
     string name = 2 [(required) = true];
+    string context = 3;
 }
 
 message PaymentMethod {
     oneof method {
-        option (is_required) = true;
+        option (choice).required = true;
 
         PaymentCardNumber payment_card = 1 [(validate) = true];
 
@@ -85,10 +85,8 @@ message PaymentCardNumber {
     string number = 1 [(required) = true,
                        (pattern).regex = "^[0-9]{13,19}$",
                        (pattern).error_msg = "Card number must be 13-19 digits."];
-    int32 expiry_month = 2 [(required) = true,
-                            (range).value = "[1..12]"];
-    int32 expiry_year = 3 [(required) = true,
-                           (min).value = "2024"];
+    int32 expiry_month = 2 [(range).value = "[1..12]"];
+    int32 expiry_year = 3 [(min).value = "2024"];
 }
 
 message BankAccount {
@@ -99,13 +97,9 @@ message BankAccount {
 }
 
 message ListProductsRequest {
-    int32 page = 1 [(required) = true,
-                    (min).value = "1",
-                    (if_missing).error_msg = "Page number is required."];
+    int32 page = 1 [(min).value = "1"];
 
-    int32 page_size = 2 [(required) = true,
-                         (range).value = "[1..100]",
-                         (if_missing).error_msg = "Page size is required."];
+    int32 page_size = 2 [(range).value = "[1..100]"];
 
     // Optional search query.
     string search_query = 3;
@@ -116,4 +110,9 @@ message ListProductsResponse {
     repeated Product products = 1 [(validate) = true];
 
     int32 total_count = 2 [(min).value = "0"];
+}
+
+// A runnable `(validate)` example for a resolvable `google.protobuf.Any` payload.
+message ProductEnvelope {
+    google.protobuf.Any payload = 1 [(validate) = true];
 }

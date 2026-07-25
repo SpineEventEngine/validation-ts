@@ -23,41 +23,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+// TEST-ONLY: deliberately invalid option target; never import from runnable example code.
 syntax = "proto3";
 
-package example;
+package example.testing;
 
 import "spine/options.proto";
 
-message User {
-    int32 id = 1 [(min).value = "1"];
-
-    string name = 2 [(required) = true,
-                     (pattern).regex = "^[A-Za-z][A-Za-z0-9 ]{1,49}$",
-                     (pattern).error_msg = "Name must start with a letter and be 2-50 characters."];
-
-    string email = 3 [(required) = true,
-                      (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-                      (pattern).error_msg = "Email must be valid."];
-
-    Role role = 4;
-
-    repeated string tags = 5 [(distinct) = true,
-                              (if_has_duplicates).error_msg = "Tags must be unique; duplicates: `${field.duplicates}`."];
-}
-
-enum Role {
-    ROLE_UNSPECIFIED = 0;
-    ROLE_USER = 1;
-    ROLE_ADMIN = 2;
-    ROLE_MODERATOR = 3;
-}
-
-message GetUserRequest {
-    int32 user_id = 1 [(min).value = "1"];
-}
-
-message GetUserResponse {
-    User user = 1 [(validate) = true];
-    bool found = 2;
+message InvalidRequiredTarget {
+    int32 quantity = 1 [(required) = true];
 }

@@ -58,13 +58,17 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 
 ## 🚀 Getting Started
 
-See the [package-level README](packages/validation/README.md) for complete installation instructions and usage guide.
+See the [documentation hub](docs/README.md), [package guide](packages/validation/README.md), and [executable example](packages/example/README.md).
 
 **Quick install:**
 
 ```bash
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
 ```
+
+The `snapshot` dist-tag moves as preview releases are published; use the exact
+version command for a reproducible install.
 
 ---
 
@@ -121,7 +125,7 @@ npm run verify
 | ----------------- | ------------------------------------------------------------------------------------- |
 | `npm run verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
 | `npm run build`   | Build the package and example                                                         |
-| `npm test`        | Run validation tests                                                                  |
+| `npm test`        | Run validation-package and executable-example Jest tests                              |
 | `npm run example` | Run the example project                                                               |
 
 ---

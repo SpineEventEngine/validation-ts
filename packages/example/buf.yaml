@@ -10,6 +10,11 @@ lint:
     PACKAGE_VERSION_SUFFIX:
       - proto/product.proto
       - proto/user.proto
+      - proto/testing/invalid_configuration.proto
+    IMPORT_USED:
+      # Keep User in ProductEnvelope's file dependency closure so a packed User
+      # Any is resolvable without a synthetic schema field.
+      - proto/product.proto
     FIELD_LOWER_SNAKE_CASE:
       - proto/spine/options.proto
     ENUM_NO_ALLOW_ALIAS:
@@ -21,6 +26,7 @@ lint:
     PACKAGE_DIRECTORY_MATCH:
       - proto/product.proto
       - proto/user.proto
+      - proto/testing/invalid_configuration.proto
 breaking:
   use:
     - FILE
