@@ -30,21 +30,20 @@ package example;
 import "spine/options.proto";
 
 message User {
-    option (required_field) = "id | email";
-
     int32 id = 1 [(min).value = "1"];
 
     string name = 2 [(required) = true,
                      (pattern).regex = "^[A-Za-z][A-Za-z0-9 ]{1,49}$",
-                     (pattern).error_msg = "Name must start with a letter and be 2-50 characters. Provided: `{value}`."];
+                     (pattern).error_msg = "Name must start with a letter and be 2-50 characters. Provided: `${field.value}`."];
 
     string email = 3 [(required) = true,
                       (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-                      (pattern).error_msg = "Email must be valid. Provided: `{value}`."];
+                      (pattern).error_msg = "Email must be valid. Provided: `${field.value}`."];
 
-    Role role = 4 [(required) = true];
+    Role role = 4;
 
-    repeated string tags = 5 [(distinct) = true];
+    repeated string tags = 5 [(distinct) = true,
+                              (if_has_duplicates).error_msg = "Tags must be unique; duplicates: `${field.duplicates}`."];
 }
 
 enum Role {
@@ -55,9 +54,7 @@ enum Role {
 }
 
 message GetUserRequest {
-    int32 user_id = 1 [(required) = true,
-                       (min).value = "1",
-                       (if_missing).error_msg = "User ID is required."];
+    int32 user_id = 1 [(min).value = "1"];
 }
 
 message GetUserResponse {
