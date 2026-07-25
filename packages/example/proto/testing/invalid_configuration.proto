@@ -1,0 +1,10 @@
+// TEST-ONLY: deliberately invalid option target; never import from runnable example code.
+syntax = "proto3";
+
+package example.testing;
+
+import "spine/options.proto";
+
+message InvalidRequiredTarget {
+    int32 quantity = 1 [(required) = true];
+}

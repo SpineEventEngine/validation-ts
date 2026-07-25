@@ -1,38 +1,74 @@
+import { create } from "@bufbuild/protobuf";
+import { anyUnpack, StringValueSchema } from "@bufbuild/protobuf/wkt";
+import { ValidationConfigurationError, Violations, validate } from "@spine-event-engine/validation";
+
 import { runExampleScenarios } from "../src/scenarios.js";
+import { InvalidRequiredTargetSchema } from "../src/generated/testing/invalid_configuration_pb.js";
+
+function scenario(name: string) {
+  const value = runExampleScenarios().find((item) => item.name === name);
+  if (!value) throw new Error(`Missing example scenario: ${name}`);
+  return value;
+}
 
 describe("runnable validation scenarios", () => {
-  it("uses real generated User and Product schemas to expose current validation behavior", () => {
-    const scenarios = runExampleScenarios();
+  it("reports missing User values with an exact root, paths, and diagnostics", () => {
+    const value = scenario("missing user values");
+    expect(value.typeName).toBe("example.User");
+    expect(value.fieldPaths).toEqual(["name", "email"]);
+    expect(value.violations.map(Violations.formatMessage)).toEqual([
+      "The field `example.User.name` of the type `string` must have a non-default value.",
+      "The field `example.User.email` of the type `string` must have a non-default value.",
+    ]);
+  });
 
-    expect(scenarios).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: "missing user values",
-          typeName: "example.User",
-          fieldPaths: ["name", "email"],
-        }),
-        expect.objectContaining({
-          name: "duplicate user tags",
-          typeName: "example.User",
-          fieldPaths: ["tags"],
-          violationCount: 1,
-        }),
-        expect.objectContaining({
-          name: "product at its exact minimum price",
-          typeName: "example.Product",
-          violationCount: 0,
-        }),
-        expect.objectContaining({
-          name: "nested product category leaf violations",
-          typeName: "example.Product",
-          fieldPaths: ["category.id", "category.name"],
-        }),
-        expect.objectContaining({
-          name: "known Any payload leaf violations",
-          typeName: "example.ProductEnvelope",
-          fieldPaths: ["payload.name", "payload.email"],
-        }),
-      ]),
+  it("reports one duplicate equality class with its packed representative and diagnostics", () => {
+    const value = scenario("duplicate user tags");
+    expect(value.violations).toHaveLength(1);
+    const [violation] = value.violations;
+    expect(violation.typeName).toBe("example.User");
+    expect(violation.fieldPath?.fieldName).toEqual(["tags"]);
+    expect(anyUnpack(violation.fieldValue!, StringValueSchema)).toMatchObject({
+      value: "typescript",
+    });
+    expect(violation.message?.placeholderValue).toMatchObject({
+      "field.value": "[typescript, typescript]",
+      "field.duplicates": "[typescript]",
+    });
+    expect(Violations.formatMessage(violation)).toBe(
+      "Tags must be unique; duplicates: `[typescript]`.",
     );
+  });
+
+  it("accepts the Product exact minimum price", () => {
+    expect(scenario("product at its exact minimum price").violations).toEqual([]);
+  });
+
+  it("keeps nested Category reports leaf-only under the Product root", () => {
+    const value = scenario("nested product category leaf violations");
+    expect(value.typeName).toBe("example.Product");
+    expect(value.fieldPaths).toEqual(["category.id", "category.name"]);
+    expect(value.fieldPaths).not.toContain("category");
+  });
+
+  it("keeps known Any payload reports as prefixed leaves under the envelope root", () => {
+    const value = scenario("known Any payload leaf violations");
+    expect(value.typeName).toBe("example.ProductEnvelope");
+    expect(value.fieldPaths).toEqual(["payload.name", "payload.email"]);
+  });
+
+  it("exposes the public configuration-error shape for a test-only invalid target", () => {
+    try {
+      validate(InvalidRequiredTargetSchema, create(InvalidRequiredTargetSchema));
+      throw new Error("Expected configuration error");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationConfigurationError);
+      expect(error).toMatchObject({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "required",
+        typeName: "example.testing.InvalidRequiredTarget",
+        fieldPath: ["quantity"],
+      });
+    }
   });
 });

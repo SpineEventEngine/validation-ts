@@ -10,6 +10,7 @@ lint:
     PACKAGE_VERSION_SUFFIX:
       - proto/product.proto
       - proto/user.proto
+      - proto/testing/invalid_configuration.proto
     FIELD_LOWER_SNAKE_CASE:
       - proto/spine/options.proto
     ENUM_NO_ALLOW_ALIAS:
@@ -21,6 +22,7 @@ lint:
     PACKAGE_DIRECTORY_MATCH:
       - proto/product.proto
       - proto/user.proto
+      - proto/testing/invalid_configuration.proto
 breaking:
   use:
     - FILE
