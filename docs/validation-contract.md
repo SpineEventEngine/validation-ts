@@ -122,3 +122,14 @@ This runtime constructs ECMAScript `RegExp`, does not provide a Java-pattern
 engine, and does not promise Java dialect, flags, or full-match equivalence.
 Use portable expressions and explicit anchors where appropriate; Java parity is
 an unresolved project decision.
+
+# Spine Time `(when)`
+
+The frozen Spine Time intake supports `(when)` on `Timestamp`, `YearMonth`,
+`LocalDate`, `LocalDateTime`, deprecated `OffsetDateTime`, and `ZonedDateTime`.
+Singular descriptor-default messages are skipped; repeated and map elements,
+including defaults, are evaluated independently. Diagnostics use `error_msg`
+before the frozen default and expose `when.in`. Zoned conversion follows
+Temporal compatible gap/overlap resolution and the runtime tzdb. Years outside
+Temporal's direct range use a Gregorian 400-year-equivalent projection (a
+pre-transition past band and a post-rule future band) to obtain the zone offset.

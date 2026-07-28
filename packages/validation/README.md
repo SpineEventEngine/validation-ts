@@ -15,7 +15,7 @@ Install the package and its required peer dependency together:
 
 ```sh
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 ```
 
 `snapshot` is a moving dist-tag for previews. Use the exact version command

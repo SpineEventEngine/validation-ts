@@ -1,11 +1,12 @@
-import { getOption, hasOption } from "@bufbuild/protobuf";
+import { create, equals, getOption, hasOption } from "@bufbuild/protobuf";
 import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 import { Temporal } from "temporal-polyfill";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message } from "../generated/spine/options_pb.js";
-import { Time, TimeOptionSchema, when } from "../generated/spine/time_options_pb.js";
+import { Time, TimeOptionSchema } from "../generated/spine/time_options_pb.js";
 import { readValidationNow } from "../clock.js";
+import { getRegisteredOption } from "../options-registry.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 import {
   createConstraintViolation,
@@ -14,6 +15,11 @@ import {
 } from "../validation-contract.js";
 
 const NANOSECONDS_PER_SECOND = 1_000_000_000n;
+const MIN_YEAR = -999_999_999;
+const MAX_YEAR = 999_999_999;
+const TEMPORAL_MIN_YEAR = -270_000;
+const TEMPORAL_MAX_YEAR = 275_000;
+const ZONE_IDENTIFIER = /^(?:UTC|[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)*)$/;
 const allowedPlaceholders = new Set([
   "field.path",
   "field.value",
@@ -38,8 +44,9 @@ export function validateWhenField(
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
-  if (!hasOption(field, when)) return;
-  const option = getOption(field, when);
+  const extension = getRegisteredOption("when");
+  if (!hasOption(field, extension)) return;
+  const option = getOption(field, extension);
   if (option.in === Time.TIME_UNDEFINED) return;
   const typeName = temporalType(field);
   if (!supportedTypes.has(typeName))
@@ -47,8 +54,8 @@ export function validateWhenField(
   assertPlaceholders(option.errorMsg, schema, field);
   const value = readField(message, field);
   if (
-    (field.fieldKind === "message" || field.fieldKind === "list" || field.fieldKind === "map") &&
-    value === undefined
+    field.fieldKind === "message" &&
+    (!value || equals(field.message, value as never, create(field.message)))
   )
     return;
   const values = collectionValues(field, value);
@@ -99,10 +106,9 @@ function toEpochNanoseconds(value: unknown, typeName?: string): bigint {
     case "spine.time.OffsetDateTime": {
       const dateTime = object(temporal.dateTime);
       const offset = object(temporal.offset);
-      return (
-        localDateTimeEpoch(dateTime) -
-        BigInt(integer(offset.amountSeconds)) * NANOSECONDS_PER_SECOND
-      );
+      const seconds = integer(offset.amountSeconds);
+      if (seconds < -64_800 || seconds > 64_800) throw new RangeError("Invalid offset");
+      return localDateTimeEpoch(dateTime) - BigInt(seconds) * NANOSECONDS_PER_SECOND;
     }
     case "spine.time.ZonedDateTime":
       return zonedDateTimeEpoch(temporal);
@@ -151,6 +157,8 @@ function localDateEpoch(
   const second = integer(secondValue);
   const nano = integer(nanoValue);
   if (
+    year < MIN_YEAR ||
+    year > MAX_YEAR ||
     month < 1 ||
     month > 12 ||
     day < 1 ||
@@ -176,11 +184,24 @@ function zonedDateTimeEpoch(value: Record<string, unknown>): bigint {
   const date = object(object(value.dateTime).date);
   const time = object(object(value.dateTime).time);
   const zone = String(object(value.zone).value ?? "");
+  if (zone.length === 0 || zone.length > 255 || !ZONE_IDENTIFIER.test(zone))
+    throw new RangeError("Invalid zoned date-time");
+  const originalLocal = localDateTimeEpoch({ date, time });
+  const projectedYear = projectYear(integer(date.year));
+  const projectedLocal = localDateEpoch(
+    projectedYear,
+    integer(date.month),
+    integer(date.day),
+    integer(time.hour),
+    integer(time.minute),
+    integer(time.second),
+    integer(time.nano),
+  );
   try {
-    return Temporal.ZonedDateTime.from(
+    const resolved = Temporal.ZonedDateTime.from(
       {
         timeZone: zone,
-        year: integer(date.year),
+        year: projectedYear,
         month: integer(date.month),
         day: integer(date.day),
         hour: integer(time.hour),
@@ -192,14 +213,21 @@ function zonedDateTimeEpoch(value: Record<string, unknown>): bigint {
       },
       { disambiguation: "compatible" },
     ).epochNanoseconds;
-  } catch (cause) {
-    throw new RangeError("Invalid zoned date-time", { cause });
+    return originalLocal + (resolved - projectedLocal);
+  } catch {
+    throw new RangeError("Invalid zoned date-time");
   }
+}
+
+function projectYear(year: number): number {
+  if (year >= TEMPORAL_MIN_YEAR && year <= TEMPORAL_MAX_YEAR) return year;
+  const remainder = ((year % 400) + 400) % 400;
+  return year < TEMPORAL_MIN_YEAR ? 1200 + remainder : 2400 + remainder;
 }
 
 function daysFromCivil(year: number, month: number, day: number): bigint {
   const adjustedYear = year - (month <= 2 ? 1 : 0);
-  const era = Math.floor(adjustedYear >= 0 ? adjustedYear / 400 : (adjustedYear - 399) / 400);
+  const era = Math.floor(adjustedYear / 400);
   const yoe = adjustedYear - era * 400;
   const mp = month + (month > 2 ? -3 : 9);
   const doy = Math.floor((153 * mp + 2) / 5) + day - 1;

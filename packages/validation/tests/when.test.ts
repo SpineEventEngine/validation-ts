@@ -43,7 +43,7 @@ describe("(when) time validation", () => {
   it("converts all supported temporal values using UTC or explicit-offset semantics", () => {
     const message = temporalMessage({
       pastTimestamp: { seconds: 0n },
-      futureTimestamp: { seconds: 0n },
+      futureTimestamp: { seconds: 1n },
       pastYearMonth: { year: 2025, month: 1 },
       futureDate: { year: 2020, month: 1, day: 1 },
       pastDateTime: { date: { year: 2025, month: 1, day: 1 } },
@@ -61,7 +61,6 @@ describe("(when) time validation", () => {
   });
 
   it("resolves New York 2024 compatible gap and overlap like Java", () => {
-    setValidationClockForTesting(() => ({ seconds: 1_735_689_600n, nanos: 0 })); // 2025-01-01T00:00:00Z
     const gap = temporalMessage({
       pastZonedDateTime: {
         dateTime: { date: { year: 2024, month: 3, day: 10 }, time: { hour: 2, minute: 30 } },
@@ -74,7 +73,9 @@ describe("(when) time validation", () => {
         zone: { value: "America/New_York" },
       },
     });
+    setValidationClockForTesting(() => ({ seconds: 1_710_055_800n, nanos: 0 })); // 07:30Z
     expect(validate(TimeValidationSchema, gap)).toEqual([]);
+    setValidationClockForTesting(() => ({ seconds: 1_730_611_800n, nanos: 0 })); // 05:30Z
     expect(validate(TimeValidationSchema, overlap)).toEqual([]);
   });
 

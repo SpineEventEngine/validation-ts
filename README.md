@@ -66,7 +66,7 @@ See the [documentation hub](docs/README.md), [package guide](packages/validation
 
 ```bash
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 ```
 
 The `snapshot` dist-tag moves as preview releases are published; use the exact

@@ -72,7 +72,12 @@ Exact historical IANA offsets depend on the runtime tzdb and must be documented.
 | ---------------------------- | -------------------------- | --------------- | ------------------ | ----------------------------------------------------------------------------- | -------------------------------------------- |
 | Requirements split (initial) | `/root/t0006_requirements` | `gpt-5.6-sol`   | high               | Split Proto intake, JVM parity, temporal conversion, tests, example, and docs | Interrupted and closed after bounded timeout |
 | Requirements split (final)   | `/root/t0006_split_final`  | `gpt-5.6-sol`   | high               | Final implementation/test/gate audit of the approved contract                 | Complete and closed                          |
-| Implementation               | `/root/t0006_implementer`  | `gpt-5.6-terra` | medium             | Own T-0006 Proto, runtime, tests, dependency, example, version, and docs      | Running                                      |
+| Implementation               | `/root/t0006_implementer`  | `gpt-5.6-terra` | medium             | Own T-0006 Proto, runtime, tests, dependency, example, version, and docs      | First batch complete; correction assigned    |
+| TypeScript/API review        | `/root/t0006_api`          | `gpt-5.6-terra` | high               | Public API, descriptors, declarations, and Proto compatibility                | Complete and closed                          |
+| Reliability review           | `/root/t0006_reliability`  | `gpt-5.6-terra` | high               | Temporal arithmetic, clocks, malformed values, zones, and bounded execution   | Complete and closed                          |
+| Security review              | `/root/t0006_security`     | `gpt-5.6-terra` | high               | Dependency, untrusted temporal/zone inputs, provenance                        | Complete and closed                          |
+| Documentation review         | `/root/t0006_docs`         | `gpt-5.6-terra` | medium             | Maintained user/agent/protocol/package/example documentation                  | Complete and closed                          |
+| Style/maintainability review | `/root/t0006_style`        | `gpt-5.6-terra` | high               | Correctness, contract fixtures, ordering, and module ownership                | Complete and closed                          |
 
 ## Skills
 

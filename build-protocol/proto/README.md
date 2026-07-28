@@ -26,3 +26,9 @@ Never edit a frozen Proto to satisfy local Buf style. Every module uses the
 inputs and pre-existing fixture names or package layouts. New project-owned
 Proto files receive the full ruleset. Compilation, generation, and checksum
 verification remain mandatory.
+
+# Spine Time intake
+
+T-0006 freezes `time_options.proto` and `spine/time/time.proto` at the recorded
+Spine Time commit. Each validation, test, and example copy is a regular file
+with a SHA-256 entry in `UPSTREAM_SOURCES.json`.

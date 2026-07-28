@@ -15,7 +15,7 @@ dependency together:
 
 ```sh
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 npm install --save-dev @bufbuild/protoc-gen-es
 ```
 

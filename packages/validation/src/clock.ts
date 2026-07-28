@@ -14,5 +14,6 @@ export function setValidationClockForTesting(
 
 function systemClock(): { seconds: bigint; nanos: number } {
   const milliseconds = BigInt(Date.now());
-  return { seconds: milliseconds / 1000n, nanos: Number((milliseconds % 1000n) * 1_000_000n) };
+  const seconds = milliseconds >= 0n ? milliseconds / 1000n : (milliseconds - 999n) / 1000n;
+  return { seconds, nanos: Number((milliseconds - seconds * 1000n) * 1_000_000n) };
 }

@@ -105,3 +105,10 @@ generated files.
 Start every task with `AGENTS.md`, then the active task in
 `build-protocol/tasks/`, its work log, and the current technical specification.
 Use [the documentation index](README.md) for reader-facing orientation.
+
+# Time conversion seam
+
+`options/when.ts` is an internal fixed validator. It uses bigint epoch
+nanoseconds for UTC and offsets, and `temporal-polyfill` only to resolve IANA
+ZonedDateTime rules. The effective zone offset is projected across the full
+Spine year domain; installed runtime tzdb data remains authoritative.
