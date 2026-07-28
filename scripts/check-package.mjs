@@ -29,10 +29,11 @@ function run(command, args, cwd, capture = false) {
 
 try {
   const output = run(
-    "npm",
+    "pnpm",
     [
+      "--filter",
+      "@spine-event-engine/validation",
       "pack",
-      "--workspace=@spine-event-engine/validation",
       `--pack-destination=${temporaryRoot}`,
       "--json",
     ],
@@ -70,29 +71,21 @@ try {
   await writeFile(join(temporaryRoot, "package.json"), JSON.stringify({ private: true }, null, 2));
   const archive = join(temporaryRoot, archives[0]);
   const protobufRuntime = resolve(repositoryRoot, "node_modules/@bufbuild/protobuf");
-  run(
-    "npm",
-    [
-      "install",
-      "--ignore-scripts",
-      "--no-audit",
-      "--no-fund",
-      `--prefix=${consumerRoot}`,
-      archive,
-      protobufRuntime,
-    ],
-    temporaryRoot,
+  await writeFile(
+    join(consumerRoot, "package.json"),
+    JSON.stringify({ private: true, type: "module" }, null, 2),
   );
+  run("pnpm", ["add", "--ignore-scripts", archive, protobufRuntime], consumerRoot);
 
-  const smokePath = join(consumerRoot, "smoke.cjs");
+  const smokePath = join(consumerRoot, "smoke.mjs");
   await writeFile(
     smokePath,
     [
-      'const validation = require("@spine-event-engine/validation");',
+      'import * as validation from "@spine-event-engine/validation";',
       'for (const name of ["validate", "formatViolations", "Violations"]) {',
       "    if (!(name in validation)) throw new Error(`Missing export: ${name}`);",
       "}",
-      'console.log("Consumer loaded the packed CommonJS API.");',
+      'console.log("Consumer loaded the packed ESM API.");',
       "",
     ].join("\n"),
   );

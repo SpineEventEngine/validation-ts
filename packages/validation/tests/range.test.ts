@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import { validate } from "../src.js";
 
 import {
   ClosedRangeSchema,
@@ -45,7 +45,7 @@ import {
   PaginationRequestSchema,
   OptionalRangeSchema,
   EdgeCaseRangesSchema,
-} from "./generated/test-range_pb";
+} from "./generated/test-range_pb.js";
 
 describe("Range Validation", () => {
   describe("Closed (Inclusive) Ranges", () => {

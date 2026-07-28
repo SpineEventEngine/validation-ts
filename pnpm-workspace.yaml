@@ -1,0 +1,8 @@
+packages:
+  - "packages/*"
+engineStrict: true
+verifyDepsBeforeRun: error
+onlyBuiltDependencies:
+  - "@bufbuild/buf"
+allowBuilds:
+  "@bufbuild/buf": true

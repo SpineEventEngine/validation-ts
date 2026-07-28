@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import { validate } from "../src.js";
 
 import {
   MinValueSchema,
@@ -43,7 +43,7 @@ import {
   RepeatedMinMaxSchema,
   CombinedConstraintsSchema,
   OptionalMinMaxSchema,
-} from "./generated/test-min-max_pb";
+} from "./generated/test-min-max_pb.js";
 
 describe("Min/Max Validation", () => {
   describe("Basic Min Constraint", () => {

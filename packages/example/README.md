@@ -17,13 +17,13 @@ An executable Protobuf-ES consumer of
 ### Install dependencies
 
 ```bash
-npm ci
+corepack pnpm install --frozen-lockfile
 ```
 
 ### Run the example
 
 ```bash
-npm run example
+pnpm example
 ```
 
 This command builds the validation workspace package, generates schemas, and
@@ -36,7 +36,7 @@ then executes the example. It will:
 ## Test
 
 ```bash
-npm run test:example
+pnpm test:example
 ```
 
 The test asserts root type names, complete field paths, formatted diagnostics, duplicate representation, leaf-only nesting, exact-bound acceptance, and known `Any` unpacking. Invalid option targets belong only in test fixtures, never these runnable declarations.

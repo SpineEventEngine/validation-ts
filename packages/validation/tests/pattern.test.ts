@@ -31,14 +31,14 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import { validate } from "../src.js";
 
 import {
   PatternValidationSchema,
   RepeatedPatternValidationSchema,
   OptionalPatternSchema,
   CaseInsensitivePatternSchema,
-} from "./generated/test-pattern_pb";
+} from "./generated/test-pattern_pb.js";
 
 describe("Pattern Field Validation", () => {
   describe("Single Pattern Fields", () => {

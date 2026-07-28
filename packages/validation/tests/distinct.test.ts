@@ -37,7 +37,7 @@ import {
   Int64ValueSchema,
   StringValueSchema,
 } from "@bufbuild/protobuf/wkt";
-import { ValidationConfigurationError, validate } from "../src";
+import { ValidationConfigurationError, validate } from "../src.js";
 
 import {
   DistinctPrimitivesSchema,
@@ -55,7 +55,7 @@ import {
   DistinctDisabledSchema,
   DistinctUnsupportedTargetSchema,
   DistinctValueSchema,
-} from "./generated/test-distinct_pb";
+} from "./generated/test-distinct_pb.js";
 
 describe("Distinct Validation", () => {
   describe("Primitive Types with Distinct", () => {

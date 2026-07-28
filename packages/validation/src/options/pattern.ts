@@ -33,11 +33,11 @@
 import type { Message } from "@bufbuild/protobuf";
 import { hasOption, getOption, create, ScalarType } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
-import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
-import { ConstraintViolationSchema } from "../generated/spine/validate/validation_error_pb";
-import { FieldPathSchema } from "../generated/spine/base/field_path_pb";
-import { TemplateStringSchema } from "../generated/spine/validate/error_message_pb";
-import { getRegisteredOption } from "../options-registry";
+import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
+import { ConstraintViolationSchema } from "../generated/spine/validate/validation_error_pb.js";
+import { FieldPathSchema } from "../generated/spine/base/field_path_pb.js";
+import { TemplateStringSchema } from "../generated/spine/validate/error_message_pb.js";
+import { getRegisteredOption } from "../options-registry.js";
 
 /**
  * Creates a constraint violation object for `(pattern)` validation failures.

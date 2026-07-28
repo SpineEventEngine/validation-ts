@@ -26,11 +26,11 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        run: npm ci
+        run: corepack pnpm install --frozen-lockfile
 
       - name: Verify release candidate
-        run: npm run verify
+        run: pnpm verify
 
       - name: Perform publishing to NPM registry
         # The version is still a `snapshot`, so NPM requires it to be tagged accordingly.
-        run: npm publish --workspace=@spine-event-engine/validation --tag snapshot
+        run: pnpm --filter @spine-event-engine/validation publish --tag snapshot --no-git-checks

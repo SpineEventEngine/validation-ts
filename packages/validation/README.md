@@ -57,6 +57,6 @@ regex compatibility is unresolved.
 
 ## Development
 
-Run focused package tests with `npm run test:validation`, documentation checks
-with `npm run docs:check`, and the repository gate with `npm run verify` from
+Run focused package tests with `pnpm test:validation`, documentation checks
+with `pnpm docs:check`, and the repository gate with `pnpm verify` from
 the workspace root. Contributors should start with [the contributing guide](../../docs/contributing.md).

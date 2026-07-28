@@ -19,11 +19,11 @@
 import { getOption, hasOption } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
-import { ChoiceOptionSchema, default_message } from "../generated/spine/options_pb";
-import { getRegisteredOption } from "../options-registry";
-import { isOneofPresent } from "../presence";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract";
+import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
+import { ChoiceOptionSchema, default_message } from "../generated/spine/options_pb.js";
+import { getRegisteredOption } from "../options-registry.js";
+import { isOneofPresent } from "../presence.js";
+import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
 
 function defaultMessage(): string | undefined {
   return getOption(ChoiceOptionSchema, default_message);

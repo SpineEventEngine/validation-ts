@@ -21,12 +21,12 @@ import {
   Int32ValueSchema,
   StringValueSchema,
 } from "@bufbuild/protobuf/wkt";
-import { formatTemplateString, ValidationConfigurationError } from "../src";
-import { createConstraintViolation, createValidationContext } from "../src/validation-contract";
-import { appendMessageViolation, legacyFieldValidator } from "../src/orchestration";
-import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb";
-import { TemplateStringSchema } from "../src/generated/spine/validate/error_message_pb";
-import { AddressSchema, RequiredFieldsSchema, Status } from "./generated/test-required_pb";
+import { formatTemplateString, ValidationConfigurationError } from "../src.js";
+import { createConstraintViolation, createValidationContext } from "../src/validation-contract.js";
+import { appendMessageViolation, legacyFieldValidator } from "../src/orchestration.js";
+import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb.js";
+import { TemplateStringSchema } from "../src/generated/spine/validate/error_message_pb.js";
+import { AddressSchema, RequiredFieldsSchema, Status } from "./generated/test-required_pb.js";
 
 describe("ValidationConfigurationError", () => {
   it("exposes stable public diagnostic properties", () => {

@@ -64,7 +64,7 @@ for (const root of generatedRoots) {
   await rm(root, { recursive: true, force: true });
 }
 
-const generation = spawnSync("npm", ["run", "generate"], {
+const generation = spawnSync("pnpm", ["generate"], {
   cwd: repositoryRoot,
   encoding: "utf8",
   stdio: "inherit",

@@ -35,20 +35,20 @@ import { createRegistry } from "@bufbuild/protobuf";
 import type { DescFile, Message, Registry } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb";
-import type { TemplateString } from "./generated/spine/validate/error_message_pb";
+import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb.js";
+import type { TemplateString } from "./generated/spine/validate/error_message_pb.js";
 
-import { validateRequiredField } from "./options/required";
-import { validatePatternFields } from "./options/pattern";
-import { validateRequireOption } from "./options/required-field";
-import { validateMinMaxField } from "./options/min-max";
-import { validateRangeField } from "./options/range";
-import { validateDistinctField } from "./options/distinct";
-import { validateNestedField } from "./options/validate";
-import { validateGoesField } from "./options/goes";
-import { validateChoiceOptions } from "./options/choice";
-import { legacyFieldValidator, type FieldValidator } from "./orchestration";
-import { createValidationContext } from "./validation-contract";
+import { validateRequiredField } from "./options/required.js";
+import { validatePatternFields } from "./options/pattern.js";
+import { validateRequireOption } from "./options/required-field.js";
+import { validateMinMaxField } from "./options/min-max.js";
+import { validateRangeField } from "./options/range.js";
+import { validateDistinctField } from "./options/distinct.js";
+import { validateNestedField } from "./options/validate.js";
+import { validateGoesField } from "./options/goes.js";
+import { validateChoiceOptions } from "./options/choice.js";
+import { legacyFieldValidator, type FieldValidator } from "./orchestration.js";
+import { createValidationContext } from "./validation-contract.js";
 
 const fieldValidators: readonly FieldValidator[] = [
   {
@@ -87,9 +87,9 @@ const fieldValidators: readonly FieldValidator[] = [
 export type {
   ConstraintViolation,
   ValidationError,
-} from "./generated/spine/validate/validation_error_pb";
-export type { TemplateString } from "./generated/spine/validate/error_message_pb";
-export type { FieldPath } from "./generated/spine/base/field_path_pb";
+} from "./generated/spine/validate/validation_error_pb.js";
+export type { TemplateString } from "./generated/spine/validate/error_message_pb.js";
+export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
 
 /**
  * Validates a message against its Spine validation constraints.
@@ -125,7 +125,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb";
  * @example
  * ```typescript
  * import { formatViolations, validate } from '@spine-event-engine/validation';
- * import { UserSchema } from './generated/user_pb';
+ * import { UserSchema } from './generated/user_pb.js';
  * import { create } from '@bufbuild/protobuf';
  *
  * const user = create(UserSchema, { name: '', email: '' });
@@ -217,7 +217,7 @@ export function formatTemplateString(template: TemplateString): string {
  * ```typescript
  * import { create } from '@bufbuild/protobuf';
  * import { formatViolations, validate } from '@spine-event-engine/validation';
- * import { UserSchema } from './generated/user_pb';
+ * import { UserSchema } from './generated/user_pb.js';
  *
  * const user = create(UserSchema, { name: '', email: '' });
  * const violations = validate(UserSchema, user);
@@ -250,7 +250,7 @@ export function formatViolations(violations: ConstraintViolation[]): string {
  * ```typescript
  * import { create } from '@bufbuild/protobuf';
  * import { validate, Violations } from '@spine-event-engine/validation';
- * import { UserSchema } from './generated/user_pb';
+ * import { UserSchema } from './generated/user_pb.js';
  *
  * const user = create(UserSchema, { name: '', email: '' });
  * const violations = validate(UserSchema, user);

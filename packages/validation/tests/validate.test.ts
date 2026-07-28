@@ -32,7 +32,7 @@
 
 import { create } from "@bufbuild/protobuf";
 import { anyPack, AnySchema } from "@bufbuild/protobuf/wkt";
-import { ValidationConfigurationError, validate } from "../src";
+import { ValidationConfigurationError, validate } from "../src.js";
 
 import {
   PersonWithAddressSchema,
@@ -62,8 +62,8 @@ import {
   NestedMessageOptionContainersSchema,
   RequireLeafSchema,
   ChoiceLeafSchema,
-} from "./generated/test-validate_pb";
-import { UserIdentifierSchema } from "./generated/test-required-field_pb";
+} from "./generated/test-validate_pb.js";
+import { UserIdentifierSchema } from "./generated/test-required-field_pb.js";
 
 describe("Nested Message Validation (validate)", () => {
   describe("Basic Nested Validation", () => {

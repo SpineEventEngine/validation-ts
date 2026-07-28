@@ -79,15 +79,15 @@ boundary is Java `Pattern` compatibility: this runtime uses ECMAScript
   `packages/example/proto/testing/invalid_configuration.proto` rather than
   runnable schemas.
 - **Documentation:** update the affected package README, curated guide, and
-  TypeDoc comments. Run `npm run docs:check`; it validates maintained local
+  TypeDoc comments. Run `pnpm docs:check`; it validates maintained local
   links, TS snippets, named public imports, placeholders, and active example
   syntax.
 
 ## Testing and delivery
 
-Focused inner-loop commands are `npm run test:validation`,
-`npm run test:example`, and `npm run docs:check`. The canonical gate is
-`npm run verify`; it regenerates code, typechecks, lints, formats, tests with
+Focused inner-loop commands are `pnpm test:validation`,
+`pnpm test:example`, and `pnpm docs:check`. The canonical gate is
+`pnpm verify`; it regenerates code, typechecks, lints, formats, tests with
 coverage, checks docs and Proto provenance/lint, verifies generation, builds,
 checks package contents, and checks the diff. The contribution workflow is in
 [contributing.md](contributing.md).

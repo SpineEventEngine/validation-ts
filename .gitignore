@@ -50,6 +50,5 @@ pnpm-debug.log*
 .env.*.local
 .claude/settings.local.json
 
-# npm lock state is committed at the workspace root for reproducible builds.
+# Lock state is committed at the workspace root for reproducible builds.
 yarn.lock
-pnpm-lock.yaml

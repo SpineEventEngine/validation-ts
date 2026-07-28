@@ -52,10 +52,10 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 
 ## Agent Dispatch
 
-| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                 | Status  |
-| ------------------ | -------------------------- | --------------- | ------------------ | --------------------------------------------------------------------- | ------- |
-| Requirements split | `/root/t0004_requirements` | `gpt-5.6-sol`   | high               | Audit the migration sequence and acceptance coverage                  | Running |
-| Implementation     | Pending                    | `gpt-5.6-terra` | medium             | Own all T-0004 production, test, build, CI, and documentation changes | Pending |
+| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                 | Status              |
+| ------------------ | -------------------------- | --------------- | ------------------ | --------------------------------------------------------------------- | ------------------- |
+| Requirements split | `/root/t0004_requirements` | `gpt-5.6-sol`   | high               | Audit the migration sequence and acceptance coverage                  | Complete and closed |
+| Implementation     | `/root/t0004_implementer`  | `gpt-5.6-terra` | medium             | Own all T-0004 production, test, build, CI, and documentation changes | Running             |
 
 ## Scope And Ownership
 
@@ -71,14 +71,18 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 ## Implementation Plan
 
 1. Audit the exact pinned Spine TS tool versions and migration sequence.
-2. Add pnpm and TypeScript project configuration, convert scripts and workflows,
-   and establish a deterministic lockfile.
-3. Convert validation and example tests from Jest to Vitest while preserving
-   the exact behavioral corpus and 90% universal coverage gate.
-4. Convert package output and installed-consumer verification to ESM with
-   NodeNext-compatible explicit import paths and public export maps.
-5. Update maintained toolchain documentation with minimal root README changes.
-6. Run focused checks, a complete specialist review wave, one deduplicated
+2. Establish pnpm and its deterministic lockfile before changing the compiler
+   or tests; prove frozen installation.
+3. Build the strict ES2024/NodeNext project-reference graph and make handwritten
+   and generated runtime imports NodeNext-safe while retaining compatibility
+   patching for removal in T-0005.
+4. Define the ESM-only package export map, then convert the unchanged validation
+   and example corpus from Jest to Vitest with universal 90% coverage.
+5. Convert every executable path—scripts, generation checks, package consumer,
+   CI, and publication—to pnpm. The installed consumer must import the packed
+   package only through its public ESM export map.
+6. Update maintained toolchain documentation with minimal root README changes.
+7. Run focused checks, a complete specialist review wave, one deduplicated
    correction batch, the canonical full gate, task push, `dev` integration,
    post-merge verification, and remote-ref confirmation.
 
@@ -88,6 +92,8 @@ Approved plan: Human approval in the Codex task on 2026-07-28
   `f8a59883e71db0d9f9f0854039c313dbbce61801`.
 - Retain current Buf versions unless the toolchain migration proves them
   incompatible.
+- T-0004 converts generated compatibility patch scripts to ESM only; T-0005
+  owns removing them.
 - No material question remains open for T-0004.
 
 ## Verification
@@ -125,7 +131,8 @@ Coverage: baseline 94.72% statements, 91.53% branches, 99.03% functions, and
 
 ## Open Risks And Follow-Up
 
-| Risk                                                    | Owner  | Route                                       | Disposition | Review point       |
-| ------------------------------------------------------- | ------ | ------------------------------------------- | ----------- | ------------------ |
-| ESM or TS6 exposes latent package-boundary assumptions. | T-0004 | Focused package consumer and API review     | Open        | Before integration |
-| Toolchain changes mask test-behavior loss.              | T-0004 | Assertion inventory and coverage comparison | Open        | Before review      |
+| Risk                                                                                                          | Owner  | Route                                       | Disposition | Review point       |
+| ------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------- | ----------- | ------------------ |
+| ESM or TS6 exposes latent package-boundary assumptions.                                                       | T-0004 | Focused package consumer and API review     | Open        | Before integration |
+| Toolchain changes mask test-behavior loss.                                                                    | T-0004 | Assertion inventory and coverage comparison | Open        | Before review      |
+| TS6 strictness, generated import extensions, V8 coverage, or `workspace:*` packing exposes migration defects. | T-0004 | Dependency-ordered focused gates            | Open        | Before review      |

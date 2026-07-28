@@ -74,7 +74,7 @@ version command for a reproducible install.
 
 ## 📦 What's Included
 
-This repository is structured as an npm workspace:
+This repository is structured as a pnpm workspace:
 
 ```
 validation-ts/
@@ -109,24 +109,24 @@ git clone <repository-url>
 cd validation-ts
 
 # Install the committed dependency graph
-npm ci
+corepack pnpm install --frozen-lockfile
 ```
 
 ### Build & Test
 
 ```bash
 # Run the complete local and CI quality gate
-npm run verify
+pnpm verify
 ```
 
 ### Workspace Scripts
 
 | Command           | Description                                                                           |
 | ----------------- | ------------------------------------------------------------------------------------- |
-| `npm run verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
-| `npm run build`   | Build the package and example                                                         |
-| `npm test`        | Run validation-package and executable-example Jest tests                              |
-| `npm run example` | Run the example project                                                               |
+| `pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
+| `pnpm build`   | Build the package and example                                                         |
+| `pnpm test`    | Run validation-package and executable-example Vitest tests                            |
+| `pnpm example` | Run the example project                                                               |
 
 ---
 

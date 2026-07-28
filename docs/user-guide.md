@@ -69,8 +69,8 @@ plugins:
 
 Run `buf generate`. The generated `UserSchema` preserves the custom options;
 regenerate whenever a `.proto` declaration changes. The workspace commands are
-`npm run generate`, `npm run build`, `npm run test:validation`,
-`npm run test:example`, `npm run example`, and `npm run verify`.
+`pnpm generate`, `pnpm build`, `pnpm test:validation`,
+`pnpm test:example`, `pnpm example`, and `pnpm verify`.
 
 ## Create, validate, and present a message
 
@@ -145,7 +145,7 @@ try {
 ## Troubleshooting
 
 - **Missing generated imports:** confirm `spine/options.proto` is on Buf's
-  input path, then run `buf generate` (or the workspace `npm run generate`).
+  input path, then run `buf generate` (or the workspace `pnpm generate`).
 - **No option behavior:** use the generated `*Schema`, not only the TypeScript
   message type; descriptor options are runtime metadata.
 - **Pattern differs from Java:** this runtime passes the source to ECMAScript

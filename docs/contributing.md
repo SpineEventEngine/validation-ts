@@ -34,18 +34,18 @@ exist, and stale unnamespaced diagnostic placeholders are rejected.
 ## Commands
 
 ```sh
-npm ci
-npm run generate
-npm run test:validation
-npm run test:example
-npm run docs:check
-npm run typecheck:generated
-npm run lint
-npm run format:check
-npm run verify
+corepack pnpm install --frozen-lockfile
+pnpm generate
+pnpm test:validation
+pnpm test:example
+pnpm docs:check
+pnpm typecheck:generated
+pnpm lint
+pnpm format:check
+pnpm verify
 ```
 
-Use the narrowest relevant command during implementation. `npm run verify` is
+Use the narrowest relevant command during implementation. `pnpm verify` is
 the final evidence gate; do not claim completion from an earlier or partial
 run. It includes generation/provenance, strict typechecking, lint and format,
 coverage, docs, Proto checks, build/package checks, and diff hygiene.
