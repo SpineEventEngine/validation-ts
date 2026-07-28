@@ -15,25 +15,28 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import type { DescField, Registry } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescField, DescMessage, Message, MessageShape, Registry } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb.js";
 import { FieldPathSchema } from "./generated/spine/base/field_path_pb.js";
-import { createConstraintViolation, type ValidationContext } from "./validation-contract.js";
+import {
+  createConstraintViolation,
+  readField,
+  type ValidationContext,
+} from "./validation-contract.js";
 
-type LegacyFieldValidator = (
-  schema: GenMessage<any>,
-  message: any,
+type LegacyFieldValidator = <S extends DescMessage>(
+  schema: S,
+  message: MessageShape<S>,
   violations: ConstraintViolation[],
 ) => void;
 
 /** The common internal contract for field-level validation adapters. */
 export interface FieldValidator {
-  validate(
+  validate<S extends DescMessage>(
     context: ValidationContext,
-    schema: GenMessage<any>,
-    message: any,
+    schema: S,
+    message: MessageShape<S>,
     field: DescField,
     violations: ConstraintViolation[],
     registry: Registry,
@@ -46,11 +49,17 @@ export interface FieldValidator {
  */
 export function legacyFieldValidator(legacy: LegacyFieldValidator): FieldValidator {
   return {
-    validate(context, schema, message, field, violations) {
+    validate<S extends DescMessage>(
+      context: ValidationContext,
+      schema: S,
+      message: MessageShape<S>,
+      field: DescField,
+      violations: ConstraintViolation[],
+    ) {
       const legacyViolations: ConstraintViolation[] = [];
       const fields = [field] as typeof schema.fields;
       fields.find = schema.fields.find.bind(schema.fields);
-      const fieldSchema = { ...schema, fields } as GenMessage<any>;
+      const fieldSchema = { ...schema, fields } as S;
       legacy(fieldSchema, message, legacyViolations);
 
       for (const legacyViolation of legacyViolations) {
@@ -90,8 +99,12 @@ export function appendMessageViolation(
   violations.push(normalized);
 }
 
-function offendingValue(message: any, field: DescField, violation: ConstraintViolation): unknown {
-  const value = message[field.localName];
+function offendingValue(
+  message: Message,
+  field: DescField,
+  violation: ConstraintViolation,
+): unknown {
+  const value = readField(message, field);
   const path = violation.fieldPath?.fieldName ?? [];
 
   if (field.fieldKind === "list") {
@@ -101,7 +114,8 @@ function offendingValue(message: any, field: DescField, violation: ConstraintVio
     if (path.length >= 2) return value[Number(path[1])];
     return undefined;
   }
-  if (field.fieldKind === "map" && value && typeof value === "object") return value[path[1]];
+  if (field.fieldKind === "map" && value && typeof value === "object")
+    return Object.entries(value).find(([key]) => key === path[1])?.[1];
   return value;
 }
 

@@ -17,14 +17,17 @@
 /** Validation of the descriptor-defined `(goes)` option. */
 
 import { getOption, hasOption } from "@bufbuild/protobuf";
-import type { DescField } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, GoesOptionSchema } from "../generated/spine/options_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
 import { isPresent, supportsPresence } from "../presence.js";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import {
+  createConstraintViolation,
+  readField,
+  type ValidationContext,
+} from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 function defaultMessage(): string | undefined {
@@ -34,8 +37,8 @@ function defaultMessage(): string | undefined {
 /** Validates one `(goes)` field, including declaration errors before value checks. */
 export function validateGoesField(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
@@ -51,7 +54,7 @@ export function validateGoesField(
     });
   }
 
-  const option = getOption(field, goesOption) as { with: string; errorMsg: string };
+  const option = getOption(field, goesOption);
   if (!option.with) {
     throw new ValidationConfigurationError({
       code: "INVALID_OPTION_VALUE",
@@ -79,8 +82,8 @@ export function validateGoesField(
     });
   }
 
-  const value = message[field.localName];
-  if (!isPresent(field, value) || isPresent(companion, message[companion.localName])) return;
+  const value = readField(message, field);
+  if (!isPresent(field, value) || isPresent(companion, readField(message, companion))) return;
 
   violations.push(
     createConstraintViolation(context.atField(field), field, value, {

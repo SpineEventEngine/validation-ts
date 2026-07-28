@@ -8,7 +8,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "generate": "buf generate && node scripts/patch-generated.mjs",
+    "generate": "buf generate",
     "build": "pnpm generate && tsc -b",
     "start": "pnpm --filter @spine-event-engine/validation build && pnpm build && pnpm start:built",
     "start:built": "node dist/index.js",

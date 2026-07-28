@@ -6,7 +6,8 @@ handwritten bindings or other TypeScript Protobuf generators.
 
 The package is ESM-only. Use an ESM `import`; CommonJS `require()` is not
 supported. Use Node.js 24 or later; this workspace pins and tests Node.js
-24.18.0.
+24.18.0. TypeScript consumers need TypeScript 5.4 or later because the public
+declarations use the built-in `NoInfer` utility type.
 
 ## Install
 
@@ -44,6 +45,10 @@ for (const violation of violations) {
 when a supported option is declared with an invalid target, value, or field
 reference. Its public fields are `code`, `option`, `typeName`, optional
 `fieldPath`, and optional `cause`.
+
+The generated schema and message must be a matching pair. This relationship is
+checked by TypeScript, so `validate(UserSchema, messageFromAnotherSchema)` is
+rejected before runtime.
 
 ## Supported surface
 

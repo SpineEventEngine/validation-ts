@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { create, ScalarType } from "@bufbuild/protobuf";
-import type { DescField, DescMessage } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { create, isMessage, ScalarType } from "@bufbuild/protobuf";
+import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
+import { readField } from "../validation-contract.js";
 
 export type NumericValue = number | bigint;
 
@@ -48,7 +48,7 @@ export function numericScalar(field: DescField): ScalarType | undefined {
 
 export function assertNumericTarget(
   option: string,
-  schema: GenMessage<any>,
+  schema: DescMessage,
   field: DescField,
 ): ScalarType {
   const scalar = numericScalar(field);
@@ -89,8 +89,8 @@ export function resolveBound(
   declaration: string,
   scalar: ScalarType,
   option: string,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   target: DescField,
 ): ResolvedBound {
   if (!looksLikeReference(declaration)) {
@@ -101,7 +101,7 @@ export function resolveBound(
   }
   const segments = declaration.split(".");
   let descriptor: DescMessage = schema;
-  let current: Record<string, unknown> = message;
+  let current: Message = message;
   for (let index = 0; index < segments.length; index++) {
     const name = segments[index];
     const field = descriptor.fields.find((candidate) => candidate.name === name);
@@ -112,17 +112,14 @@ export function resolveBound(
       const referencedScalar = numericScalar(field);
       if (referencedScalar === undefined || field.fieldKind !== "scalar")
         throw configurationError("INVALID_FIELD_REFERENCE", option, schema.typeName, [target.name]);
-      const raw = current[field.localName];
+      const raw = readField(current, field);
       const value = runtimeNumeric(raw ?? field.getDefaultValue(), referencedScalar);
       return { value, display: `${declaration} (${String(value)})` };
     }
     if (field.fieldKind !== "message")
       throw configurationError("INVALID_FIELD_REFERENCE", option, schema.typeName, [target.name]);
-    const nested = current[field.localName];
-    current = (nested && typeof nested === "object" ? nested : create(field.message)) as Record<
-      string,
-      unknown
-    >;
+    const nested = readField(current, field);
+    current = isMessage(nested, field.message) ? nested : create(field.message);
     descriptor = field.message;
   }
   throw configurationError("UNKNOWN_FIELD_REFERENCE", option, schema.typeName, [target.name]);

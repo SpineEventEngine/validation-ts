@@ -15,19 +15,20 @@
  */
 
 import { getOption, hasOption } from "@bufbuild/protobuf";
-import type { DescField } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import {
   default_message,
   MaxOptionSchema,
   MinOptionSchema,
-  type MaxOption,
-  type MinOption,
 } from "../generated/spine/options_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import {
+  createConstraintViolation,
+  readField,
+  type ValidationContext,
+} from "../validation-contract.js";
 import {
   assertNumericTarget,
   compareNumeric,
@@ -39,8 +40,8 @@ import {
 /** Validates `(min)` and `(max)` for a single field in orchestration order. */
 export function validateMinMaxField(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
@@ -51,19 +52,20 @@ export function validateMinMaxField(
 function validateBound(
   name: "min" | "max",
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
   const extension = getRegisteredOption(name);
   if (!extension || !hasOption(field, extension)) return;
-  const option = getOption(field, extension) as MinOption | MaxOption;
+  const option = getOption(field, extension);
   const scalar = assertNumericTarget(name, schema, field);
   const declaration = option.value;
   const bound = resolveBound(declaration, scalar, name, schema, message, field);
   const exclusive = "exclusive" in option && option.exclusive;
-  const values = field.fieldKind === "list" ? message[field.localName] : [message[field.localName]];
+  const fieldValue = readField(message, field);
+  const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
   if (!Array.isArray(values)) return;
   for (const raw of values) {
     const value = runtimeNumeric(raw, scalar);

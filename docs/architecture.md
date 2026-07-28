@@ -2,19 +2,19 @@
 
 ## Map
 
-| Area                               | Responsibility                                                                     |
-| ---------------------------------- | ---------------------------------------------------------------------------------- |
-| `packages/validation/src/index.ts` | Deliberately small public API and type exports.                                    |
-| `validation.ts`                    | Entry point, root descriptor registry, formatting helpers, fixed orchestration.    |
-| `validation-contract.ts`           | Shared root type, field-path, packed value, and template envelope.                 |
-| `options/`                         | One option family per module; each adds data violations or configuration errors.   |
-| `presence.ts`                      | Shared descriptor-aware presence rules.                                            |
-| `options-registry.ts`              | Maps canonical option names to generated extensions.                               |
-| `packages/validation/proto/`       | Immutable upstream contract inputs plus project-owned supporting Proto files.      |
-| `packages/example/`                | Consumer-facing generated schemas, scenario interface, console adapter, and tests. |
-| `docs/`                            | Curated human and agent documentation.                                             |
-| `build-protocol/`                  | Durable task, review, decision, provenance, and work records.                      |
-| `scripts/`                         | Deterministic repository checks, including documentation validation.               |
+| Area                               | Responsibility                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------- |
+| `packages/validation/src/index.ts` | Deliberately small public API and type exports.                                       |
+| `validation.ts`                    | Entry point, root descriptor registry, formatting helpers, fixed orchestration.       |
+| `validation-contract.ts`           | Shared root type, field-path, packed value, template envelope, and reflective reader. |
+| `options/`                         | One option family per module; each adds data violations or configuration errors.      |
+| `presence.ts`                      | Shared descriptor-aware presence rules.                                               |
+| `options-registry.ts`              | Maps canonical option names to generated extensions.                                  |
+| `packages/validation/proto/`       | Immutable upstream contract inputs plus project-owned supporting Proto files.         |
+| `packages/example/`                | Consumer-facing generated schemas, scenario interface, console adapter, and tests.    |
+| `docs/`                            | Curated human and agent documentation.                                                |
+| `build-protocol/`                  | Durable task, review, decision, provenance, and work records.                         |
+| `scripts/`                         | Deterministic repository checks, including documentation validation.                  |
 
 Generated TypeScript under `src/generated` is disposable and ignored. The
 vendored `spine/options.proto` is immutable: it is a source input, not a local
@@ -24,8 +24,10 @@ style or design canvas.
 
 1. Buf generates Protobuf-ES schemas containing descriptors and option
    extensions.
-2. `validate(schema, message)` creates a root context with the entry schema's
-   type name and builds a registry from its file dependency closure.
+2. `validate(schema, message)` keeps each generated descriptor paired with its
+   matching message shape at compile time, creates a root context with the
+   entry schema's type name, and builds a registry from its file dependency
+   closure.
 3. The runtime evaluates message-level `(require)`, then each field in
    descriptor order through its fixed validator sequence, then oneof `(choice)`.
 4. Option modules construct `ConstraintViolation` envelopes through the shared
@@ -94,8 +96,12 @@ checks package contents, and checks the diff. The contribution workflow is in
 
 ## Limitations and agent navigation
 
-The validator has a fixed module sequence, uses generated-output patching tied
-to generator output, and has no documented recursion or regex resource limit.
+The validator has a fixed internal module sequence. It imposes no depth, cycle,
+or violation budget because the approved JVM comparison defines none; cyclic ad
+hoc JavaScript objects are outside the valid Protobuf message model. Generated
+output uses Buf's `import_extension=js` option directly; project code locally
+aliases the generated `require` extension as `requireFields` without patching
+generated files.
 Start every task with `AGENTS.md`, then the active task in
 `build-protocol/tasks/`, its work log, and the current technical specification.
 Use [the documentation index](README.md) for reader-facing orientation.

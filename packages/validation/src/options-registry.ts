@@ -42,7 +42,7 @@ import {
   goes,
   if_has_duplicates,
   choice,
-  requireFields,
+  require as requireFields,
 } from "./generated/spine/options_pb.js";
 
 /**
@@ -75,15 +75,16 @@ const optionRegistry = {
 /**
  * Type representing the names of all registered options.
  */
-type OptionName = keyof typeof optionRegistry;
+export type OptionName = keyof typeof optionRegistry;
+type OptionRegistry = typeof optionRegistry;
 
 /**
  * Gets a registered option extension by name.
  *
  * @param name The name of the option to retrieve.
- * @returns The option extension, or `undefined` if not found.
+ * @returns The registered option extension.
  * @internal
  */
-export function getRegisteredOption(name: OptionName): any | undefined {
+export function getRegisteredOption<N extends OptionName>(name: N): OptionRegistry[N] {
   return optionRegistry[name];
 }

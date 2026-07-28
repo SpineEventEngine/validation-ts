@@ -14,8 +14,8 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "generate": "buf generate && node scripts/patch-generated.mjs source",
-    "generate:tests": "cd tests && buf generate && cd .. && node scripts/patch-generated.mjs test",
+    "generate": "buf generate",
+    "generate:tests": "cd tests && buf generate",
     "build": "pnpm generate && tsc -b",
     "test": "pnpm generate && vitest run",
     "test:watch": "pnpm generate && vitest",

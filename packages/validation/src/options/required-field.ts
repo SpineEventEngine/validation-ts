@@ -17,15 +17,17 @@
 /** Validation of the message-level `(require)` option. */
 
 import { getExtension, getOption, hasExtension } from "@bufbuild/protobuf";
-import type { DescField, DescOneof } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescField, DescMessage, DescOneof, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, RequireOptionSchema } from "../generated/spine/options_pb.js";
-import type { RequireOption } from "../generated/spine/options_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
 import { isOneofPresent, isPresent, supportsPresence } from "../presence.js";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import {
+  createConstraintViolation,
+  readField,
+  type ValidationContext,
+} from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 type Requirement = { readonly field?: DescField; readonly oneof?: DescOneof };
@@ -34,7 +36,7 @@ function requireDefaultMessage(): string | undefined {
   return getOption(RequireOptionSchema, default_message);
 }
 
-function invalidOption(schema: GenMessage<any>): never {
+function invalidOption(schema: DescMessage): never {
   throw new ValidationConfigurationError({
     code: "INVALID_OPTION_VALUE",
     option: "require",
@@ -45,7 +47,7 @@ function invalidOption(schema: GenMessage<any>): never {
 /** Parses the documented OR-of-AND grammar, resolving every token eagerly. */
 function parseRequirements(
   expression: string,
-  schema: GenMessage<any>,
+  schema: DescMessage,
 ): readonly (readonly Requirement[])[] {
   if (!expression.trim() || /[()]/.test(expression)) invalidOption(schema);
 
@@ -59,7 +61,7 @@ function parseRequirements(
   });
 }
 
-function resolveRequirement(token: string, schema: GenMessage<any>): Requirement {
+function resolveRequirement(token: string, schema: DescMessage): Requirement {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) invalidOption(schema);
 
   const field = schema.fields.find((candidate) => candidate.name === token);
@@ -86,9 +88,9 @@ function resolveRequirement(token: string, schema: GenMessage<any>): Requirement
   });
 }
 
-function requirementIsPresent(requirement: Requirement, message: Record<string, unknown>): boolean {
+function requirementIsPresent(requirement: Requirement, message: Message): boolean {
   if (requirement.field !== undefined) {
-    return isPresent(requirement.field, message[requirement.field.localName]);
+    return isPresent(requirement.field, readField(message, requirement.field));
   }
   return isOneofPresent(requirement.oneof as DescOneof, message);
 }
@@ -96,15 +98,15 @@ function requirementIsPresent(requirement: Requirement, message: Record<string, 
 /** Validates a `(require)` option once for the message validation entry. */
 export function validateRequireOption(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   violations: ConstraintViolation[],
 ): void {
   const requireOption = getRegisteredOption("requireFields");
   const options = schema.proto.options;
-  if (!requireOption || !options || !hasExtension(options, requireOption)) return;
+  if (!options || !hasExtension(options, requireOption)) return;
 
-  const require = getExtension(options, requireOption) as RequireOption;
+  const require = getExtension(options, requireOption);
   const expression = require.fields;
   const groups = parseRequirements(expression, schema);
   if (

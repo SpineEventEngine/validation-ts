@@ -17,7 +17,7 @@
 /** Validation of the descriptor-defined oneof `(choice)` option. */
 
 import { getOption, hasOption } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { ChoiceOptionSchema, default_message } from "../generated/spine/options_pb.js";
@@ -32,8 +32,8 @@ function defaultMessage(): string | undefined {
 /** Validates required oneof groups in descriptor order. */
 export function validateChoiceOptions(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   violations: ConstraintViolation[],
 ): void {
   const choiceOption = getRegisteredOption("choice");
@@ -41,7 +41,7 @@ export function validateChoiceOptions(
 
   for (const oneof of schema.oneofs) {
     if (!hasOption(oneof, choiceOption)) continue;
-    const option = getOption(oneof, choiceOption) as { required: boolean; errorMsg: string };
+    const option = getOption(oneof, choiceOption);
     if (!option.required || isOneofPresent(oneof, message)) continue;
 
     violations.push(

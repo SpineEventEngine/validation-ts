@@ -15,8 +15,7 @@
  */
 
 import { create, ScalarType } from "@bufbuild/protobuf";
-import type { DescField, DescMessage } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 import {
   anyPack,
   BoolValueSchema,
@@ -54,8 +53,13 @@ export class ValidationContext {
 }
 
 /** Creates a root validation context for one validation entry point. */
-export function createValidationContext(schema: GenMessage<any>): ValidationContext {
+export function createValidationContext(schema: DescMessage): ValidationContext {
   return new ValidationContext(schema.typeName);
+}
+
+/** Reads one descriptor-named field from a generated message at the reflective seam. */
+export function readField(message: Message, field: Pick<DescField, "localName">): unknown {
+  return (message as unknown as Record<string, unknown>)[field.localName];
 }
 
 /** Inputs for a violation's present `TemplateString`. */
@@ -148,7 +152,7 @@ function packScalar(scalar: ScalarType, value: unknown) {
   }
 }
 
-function packWrapper(schema: GenMessage<any>, value: unknown) {
+function packWrapper(schema: DescMessage, value: unknown) {
   return anyPack(schema, create(schema, { value }));
 }
 

@@ -5,7 +5,8 @@ surface. The frozen [upstream options source](../packages/validation/proto/spine
 defines option intent; runtime code and generated-schema tests define the
 implemented TypeScript behavior where the two differ.
 
-`validate(schema, message)` returns ordered `ConstraintViolation` records for
+`validate(schema, message)` accepts a generated schema and its matching
+generated message shape, and returns ordered `ConstraintViolation` records for
 invalid data and throws `ValidationConfigurationError` for invalid supported
 declarations. It starts with message `(require)`, evaluates fields in descriptor
 order through a fixed internal sequence, and finishes with oneof `(choice)`.

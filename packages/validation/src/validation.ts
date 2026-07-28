@@ -32,8 +32,7 @@
  */
 
 import { createRegistry } from "@bufbuild/protobuf";
-import type { DescFile, Message, Registry } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescFile, DescMessage, MessageShape, Registry } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb.js";
 import type { TemplateString } from "./generated/spine/validate/error_message_pb.js";
@@ -136,9 +135,9 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * }
  * ```
  */
-export function validate<T extends Message>(
-  schema: GenMessage<T>,
-  message: any,
+export function validate<S extends DescMessage>(
+  schema: S,
+  message: NoInfer<MessageShape<S>>,
 ): ConstraintViolation[] {
   return validateInternal(
     schema,
@@ -149,9 +148,9 @@ export function validate<T extends Message>(
 }
 
 /** Validates a nested message while preserving its original entry context and registry. */
-function validateInternal<T extends Message>(
-  schema: GenMessage<T>,
-  message: any,
+function validateInternal<S extends DescMessage>(
+  schema: S,
+  message: MessageShape<S>,
   context: ReturnType<typeof createValidationContext>,
   registry: Registry,
 ): ConstraintViolation[] {
@@ -170,7 +169,7 @@ function validateInternal<T extends Message>(
   return violations;
 }
 
-function createRootRegistry(schema: GenMessage<any>): Registry {
+function createRootRegistry(schema: DescMessage): Registry {
   return createRegistry(...dependencyClosure(schema.file));
 }
 

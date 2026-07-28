@@ -38,18 +38,21 @@ explicitly approved.
 
 ## Present Architecture
 
-The package generates Protobuf-ES descriptors, then applies a fixed sequence of
-modular option validators. Generated sources are build artifacts and remain
-untracked. A post-generation compatibility patch currently renames the
-generated `require` extension to `requireFields`.
+The package generates Protobuf-ES descriptors with ESM `.js` relative imports,
+then applies a fixed sequence of modular option validators. Generated sources
+are build artifacts and remain untracked. The generated `require` extension is
+imported under the project-local alias `requireFields`; generator output is not
+modified.
 
 Known implementation debt is not silently fixed by the protocol bootstrap:
 
-- `any` appears at descriptor and message boundaries;
-- the validator sequence is fixed despite older extensibility wording;
-- generated-code patching is coupled to generator output;
 - recursion and regular-expression resource limits need explicit future
   analysis.
+
+The public entry point keeps a generated descriptor and its matching message
+shape paired at compile time. Its validator sequence and option registry are
+internal fixed implementation details; public validator extensibility is not
+supported.
 
 Java regular-expression compatibility remains an explicit open question. The
 frozen `(pattern)` documentation defines Java `Pattern.compile()` semantics,
