@@ -1,6 +1,6 @@
 # T-0004: Adopt The Current Spine TS Toolchain
 
-Status: Ready for integration
+Status: Complete
 Classification: High-risk
 Baseline: `d60fa4a2c1e0050c4517b52ca49c8de43cdc7d02`
 Branch: `task/T-0004-spine-ts-toolchain`
@@ -135,11 +135,15 @@ Coverage: migrated Vitest/V8 result is 93.85% statements, 91.36% branches,
 
 ## Integration
 
-- Reviewed implementation head: `0d17e45fcc55fe1144482153d03c116da3a7a69c`
-- Task push: `origin/task/T-0004-spine-ts-toolchain@1bf3cb45bb9554946d50e5ecef08e9c4e0b819cc`
+- Reviewed task head and push:
+  `origin/task/T-0004-spine-ts-toolchain@82452226a0538930984bdfbdea13acf868dd85c0`.
 - `dev` merge:
-- Post-merge verification:
-- Remote refs:
+  `5e667ecee5e7177e260b52af728a5ed6979b016a`.
+- Post-merge verification: Fresh `pnpm verify` passed 15 Vitest files / 300
+  tests, four patcher contract tests, universal 90% coverage, immutable Proto,
+  strict TypeScript, lint/format, documentation, deterministic generation,
+  build, compiled example, packed ESM consumer, and Git hygiene.
+- Remote refs: Verified after pushing the integration closure.
 - Worktree cleanup:
 
 ## Open Risks And Follow-Up
