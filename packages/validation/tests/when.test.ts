@@ -3,7 +3,11 @@ import { anyUnpack } from "@bufbuild/protobuf/wkt";
 
 import { setValidationClockForTesting } from "../src/clock.js";
 import { validate } from "../src/index.js";
-import { TimeValidationSchema, UnsupportedWhenTargetSchema } from "./generated/test-when_pb.js";
+import {
+  InvalidWhenPlaceholderSchema,
+  TimeValidationSchema,
+  UnsupportedWhenTargetSchema,
+} from "./generated/test-when_pb.js";
 import { TimestampSchema } from "@bufbuild/protobuf/wkt";
 
 const now = { seconds: 1_704_067_200n, nanos: 0 }; // 2024-01-01T00:00:00Z
@@ -92,7 +96,35 @@ describe("(when) time validation", () => {
   it("rejects unsupported targets as a configuration error", () => {
     expect(() =>
       validate(UnsupportedWhenTargetSchema, create(UnsupportedWhenTargetSchema)),
-    ).toThrow("Invalid when validation configuration");
+    ).toThrow(
+      expect.objectContaining({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "when",
+        typeName: "tests.UnsupportedWhenTarget",
+        fieldPath: ["unsupported"],
+      }),
+    );
+  });
+
+  it("rejects unsupported placeholders and ignores deprecated msg_format", () => {
+    expect(() =>
+      validate(
+        InvalidWhenPlaceholderSchema,
+        create(InvalidWhenPlaceholderSchema, { value: { seconds: 1n } }),
+      ),
+    ).toThrow(
+      expect.objectContaining({
+        code: "INVALID_OPTION_VALUE",
+        option: "when",
+        typeName: "tests.InvalidWhenPlaceholder",
+        fieldPath: ["value"],
+      }),
+    );
+    const violations = validate(
+      TimeValidationSchema,
+      temporalMessage({ legacyMessage: { seconds: 1_800_000_000n } }),
+    );
+    expect(violations[0].message?.withPlaceholders).not.toBe("ignored");
   });
 
   it("throws for malformed timestamp and zoned temporal values", () => {

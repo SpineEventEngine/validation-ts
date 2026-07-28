@@ -18,10 +18,8 @@ message TimeValidation {
     map<string, google.protobuf.Timestamp> past_timestamp_by_name = 9 [(when).in = PAST];
     google.protobuf.Timestamp disabled = 10 [(when).in = TIME_UNDEFINED];
     google.protobuf.Timestamp custom_message = 11 [(when).in = PAST, (when).error_msg = "custom ${when.in} ${field.path}"];
+    google.protobuf.Timestamp legacy_message = 12 [(when).in = PAST, (when).msg_format = "ignored"];
 }
 
 message UnsupportedWhenTarget { string unsupported = 1 [(when).in = PAST]; }
-
-message MissingDefaultMessage {
-    google.protobuf.Timestamp value = 1 [(when).in = FUTURE];
-}
+message InvalidWhenPlaceholder { google.protobuf.Timestamp value = 1 [(when).in = PAST, (when).error_msg = "${bad}"]; }

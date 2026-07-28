@@ -51,6 +51,16 @@ describe("runnable validation scenarios", () => {
     expect(scenario("product at its exact minimum price").violations).toEqual([]);
   });
 
+  it("shows accepted and rejected deterministic time scenarios", () => {
+    expect(scenario("past and future time constraints").violations).toEqual([]);
+    const rejected = scenario("violated past and future time constraints");
+    expect(rejected.fieldPaths).toEqual(["issued_at", "expires_at"]);
+    expect(rejected.violations.map(Violations.formatMessage)).toEqual([
+      expect.stringContaining("past"),
+      expect.stringContaining("future"),
+    ]);
+  });
+
   it("keeps nested Category reports leaf-only under the Product root", () => {
     const value = scenario("nested product category leaf violations");
     expect(value.typeName).toBe("example.Product");

@@ -25,7 +25,7 @@ objects and bindings from other generators are outside this package boundary.
 The published package is ESM-only: use `import`, because CommonJS `require()`
 is unsupported.
 
-## Bring in `spine/options.proto` safely
+## Bring in frozen Spine options safely
 
 The options file is an immutable upstream contract input. Obtain an exact
 upstream revision, record the commit and SHA-256 in your own intake record,
@@ -49,6 +49,24 @@ message User {
   ];
 }
 ```
+
+For `(when)`, freeze and import both `spine/time_options.proto` and
+`spine/time/time.proto` at one Spine Time commit alongside `spine/options.proto`.
+They are immutable inputs, not project-owned style files:
+
+```protobuf
+import "google/protobuf/timestamp.proto";
+import "spine/time_options.proto";
+
+message Session {
+  google.protobuf.Timestamp expires_at = 1 [(when).in = FUTURE];
+}
+```
+
+`(when)` supports Timestamp and Spine temporal messages. Singular defaults are
+skipped; every repeated/map value is checked. Zoned values use compatible IANA
+gap/overlap resolution from the runtime tzdb, with a 400-year projection for
+the full Spine year range.
 
 ## Generate the schema
 

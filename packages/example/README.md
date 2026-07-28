@@ -10,7 +10,7 @@ An executable Protobuf-ES consumer of
 - Handling violations through inspectable scenario results.
 - Inspectable scenario results behind a console adapter, using real Buf-generated schemas.
 - User presence and duplicate-tag equality classes; Product exact numeric minimum and nested leaf-only paths.
-- Known `google.protobuf.Any` payload validation. The runnable schemas intentionally contain no invalid option targets.
+- Known `google.protobuf.Any` payload validation and accepted/rejected `(when)` timestamp scenarios. The runnable schemas intentionally contain no invalid option targets.
 
 ## Quick Start
 
@@ -31,7 +31,7 @@ then executes the example. It will:
 
 1. Generate TypeScript code from `.proto` files.
 2. Build the TypeScript code.
-3. Run the example showing five deterministic scenarios.
+3. Run the example showing eight deterministic scenarios, including past/future time validation.
 
 ## Test
 
@@ -48,8 +48,3 @@ rules, see [contributing](../../docs/contributing.md).
 ## License
 
 Apache License 2.0.
-
-# Time option scenarios
-
-The executable example includes deterministic past/future `Timestamp` cases.
-Run `pnpm example` to see both accepted and offending values.

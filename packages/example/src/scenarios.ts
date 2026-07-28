@@ -62,7 +62,7 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
         email: "ada@example.test",
         role: Role.USER,
         issuedAt: { seconds: 4_102_444_800n },
-        expiresAt: { seconds: 0n },
+        expiresAt: { seconds: 1n },
       }),
     ),
     result(

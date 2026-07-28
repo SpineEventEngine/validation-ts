@@ -42,6 +42,7 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 - **`(goes)`** — Field dependency constraints.
 - **`(require)`** — Complex required field combinations with boolean logic.
 - **`(choice)`** — Require that a `oneof` group has at least one field set.
+- **`(when)`** — Validate frozen Spine Time values against past/future bounds; import [`spine/time_options.proto`](packages/validation/proto/spine/time_options.proto) with its [`spine/time/time.proto`](packages/validation/proto/spine/time/time.proto) dependency.
 
 **Developer Experience**
 
