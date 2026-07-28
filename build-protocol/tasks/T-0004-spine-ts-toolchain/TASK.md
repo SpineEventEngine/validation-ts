@@ -52,10 +52,14 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 
 ## Agent Dispatch
 
-| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                 | Status              |
-| ------------------ | -------------------------- | --------------- | ------------------ | --------------------------------------------------------------------- | ------------------- |
-| Requirements split | `/root/t0004_requirements` | `gpt-5.6-sol`   | high               | Audit the migration sequence and acceptance coverage                  | Complete and closed |
-| Implementation     | `/root/t0004_implementer`  | `gpt-5.6-terra` | medium             | Own all T-0004 production, test, build, CI, and documentation changes | Running             |
+| Role/function         | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                 | Status              |
+| --------------------- | -------------------------- | --------------- | ------------------ | --------------------------------------------------------------------- | ------------------- |
+| Requirements split    | `/root/t0004_requirements` | `gpt-5.6-sol`   | high               | Audit the migration sequence and acceptance coverage                  | Complete and closed |
+| Implementation        | `/root/t0004_implementer`  | `gpt-5.6-terra` | medium             | Own all T-0004 production, test, build, CI, and documentation changes | Complete and closed |
+| Style review          | `/root/t0004_style`        | `gpt-5.6-terra` | high               | Whole-task maintainability, test parity, and configuration clarity    | Complete and closed |
+| TypeScript/API review | `/root/t0004_api`          | `gpt-5.6-terra` | high               | ESM exports, declarations, NodeNext, and package compatibility        | Complete and closed |
+| Reliability review    | `/root/t0004_reliability`  | `gpt-5.6-terra` | high               | Lock policy, CI, deterministic gates, packaging, and publication      | Complete and closed |
+| Documentation review  | `/root/t0004_docs`         | `gpt-5.6-terra` | medium             | Maintained docs, commands, navigation, and root README restraint      | Complete and closed |
 
 ## Scope And Ownership
 
@@ -98,32 +102,41 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 
 ## Verification
 
-| Command                   | Result                                                                        |
-| ------------------------- | ----------------------------------------------------------------------------- |
-| Baseline `npm run verify` | Passed on 2026-07-28: 293 library tests, 7 example tests, all canonical gates |
+| Command                          | Result                                                                             |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| Baseline `npm run verify`        | Passed on 2026-07-28: 293 library tests, 7 example tests, all canonical gates      |
+| `pnpm install --frozen-lockfile` | Passed: 225 lock entries accepted by policy; 189 packages installed with integrity |
+| Implementation `pnpm verify`     | Passed: 15 files and 300 tests; all canonical pnpm/ESM gates                       |
 
-Coverage: baseline 94.72% statements, 91.53% branches, 99.03% functions, and
-95.87% lines.
+Coverage: migrated Vitest/V8 result is 93.85% statements, 91.36% branches,
+99.01% functions, and 95.15% lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer | Disposition                                          | Evidence |
-| ----------------------- | -------- | ---------------------------------------------------- | -------- |
-| Style/maintainability   | Pending  | Pending                                              |          |
-| Documentation           | Pending  | Pending                                              |          |
-| TypeScript/API          | Pending  | Pending                                              |          |
-| Performance/reliability | Pending  | Pending                                              |          |
-| Security                | N/A      | No new trust boundary or credential flow is planned. | D-0004   |
+| Concern                 | Reviewer                  | Disposition                                          | Evidence   |
+| ----------------------- | ------------------------- | ---------------------------------------------------- | ---------- |
+| Style/maintainability   | `/root/t0004_style`       | F-004 accepted for correction                        | Review log |
+| Documentation           | `/root/t0004_docs`        | F-006 and F-007 accepted for correction              | Review log |
+| TypeScript/API          | `/root/t0004_api`         | F-005 and F-006 accepted for correction              | Review log |
+| Performance/reliability | `/root/t0004_reliability` | F-001 through F-004 accepted for correction          | Review log |
+| Security                | N/A                       | No new trust boundary or credential flow is planned. | D-0004     |
 
 ## Findings
 
-| ID  | Severity | Accepted? | Resolution |
-| --- | -------- | --------- | ---------- |
+| ID    | Severity | Accepted? | Resolution         |
+| ----- | -------- | --------- | ------------------ |
+| F-001 | P1       | Yes       | Pending correction |
+| F-002 | P1       | Yes       | Pending correction |
+| F-003 | P2       | Yes       | Pending correction |
+| F-004 | P2       | Yes       | Pending correction |
+| F-005 | P1       | Yes       | Pending correction |
+| F-006 | P2       | Yes       | Pending correction |
+| F-007 | P2       | Yes       | Pending correction |
 
 ## Integration
 
 - Task commit:
-- Task push:
+- Task push: `origin/task/T-0004-spine-ts-toolchain@1bf3cb45bb9554946d50e5ecef08e9c4e0b819cc`
 - `dev` merge:
 - Post-merge verification:
 - Remote refs:
