@@ -1,7 +1,9 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 
-const generatedRoot = resolve(process.cwd(), "src/generated");
+const generatedRoot = process.env.EXAMPLE_GENERATED_ROOT
+  ? resolve(process.env.EXAMPLE_GENERATED_ROOT)
+  : resolve(process.cwd(), "src/generated");
 const expected = "export const require: GenExtension<MessageOptions, RequireOption>";
 const replacement = "export const requireFields: GenExtension<MessageOptions, RequireOption>";
 
