@@ -6,7 +6,8 @@ handwritten bindings or other TypeScript Protobuf generators.
 
 The package is ESM-only. Use an ESM `import`; CommonJS `require()` is not
 supported. Use Node.js 24 or later; this workspace pins and tests Node.js
-24.18.0.
+24.18.0. TypeScript consumers need TypeScript 5.4 or later because the public
+declarations use the built-in `NoInfer` utility type.
 
 ## Install
 

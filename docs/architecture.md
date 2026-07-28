@@ -96,10 +96,12 @@ checks package contents, and checks the diff. The contribution workflow is in
 
 ## Limitations and agent navigation
 
-The validator has a fixed internal module sequence and no documented recursion
-or regex resource limit. Generated output uses Buf's `import_extension=js`
-option directly; project code locally aliases the generated `require`
-extension as `requireFields` without patching generated files.
+The validator has a fixed internal module sequence. It imposes no depth, cycle,
+or violation budget because the approved JVM comparison defines none; cyclic ad
+hoc JavaScript objects are outside the valid Protobuf message model. Generated
+output uses Buf's `import_extension=js` option directly; project code locally
+aliases the generated `require` extension as `requireFields` without patching
+generated files.
 Start every task with `AGENTS.md`, then the active task in
 `build-protocol/tasks/`, its work log, and the current technical specification.
 Use [the documentation index](README.md) for reader-facing orientation.

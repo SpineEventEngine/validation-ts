@@ -30,9 +30,12 @@ import { AddressSchema, RequiredFieldsSchema, Status } from "./generated/test-re
 import { PaymentMethodSchema } from "./generated/test-choice_pb.js";
 
 // `validate()` must keep a generated descriptor paired with only its own message shape.
-const requiredFieldsMessage = create(RequiredFieldsSchema);
-// @ts-expect-error A PaymentMethod descriptor cannot validate a RequiredFields message.
-validate(PaymentMethodSchema, requiredFieldsMessage);
+function mismatchedSchemaMessagePairMustNotTypecheck(): void {
+  const requiredFieldsMessage = create(RequiredFieldsSchema);
+  // @ts-expect-error A PaymentMethod descriptor cannot validate a RequiredFields message.
+  validate(PaymentMethodSchema, requiredFieldsMessage);
+}
+void mismatchedSchemaMessagePairMustNotTypecheck;
 
 describe("ValidationConfigurationError", () => {
   it("exposes stable public diagnostic properties", () => {

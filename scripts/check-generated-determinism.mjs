@@ -11,6 +11,47 @@ const generatedRoots = [
   "packages/example/src/generated",
 ].map((path) => resolve(repositoryRoot, path));
 
+const directGenerationCommands = {
+  "package.json": {
+    generate:
+      "pnpm --filter @spine-event-engine/validation generate && pnpm --filter @spine-event-engine/validation generate:tests && pnpm --filter @spine-event-engine/example-smoke generate",
+  },
+  "packages/validation/package.json": {
+    generate: "buf generate",
+    "generate:tests": "cd tests && buf generate",
+  },
+  "packages/example/package.json": { generate: "buf generate" },
+};
+
+const generatorConfigurations = {
+  "packages/validation/buf.gen.yaml":
+    "version: v2\nplugins:\n  - local: protoc-gen-es\n    out: src/generated\n    opt:\n      - target=ts\n      - import_extension=js\n",
+  "packages/validation/tests/buf.gen.yaml":
+    "version: v2\nplugins:\n  - local: protoc-gen-es\n    out: generated\n    opt:\n      - target=ts\n      - import_extension=js\n",
+  "packages/example/buf.gen.yaml":
+    "version: v2\nplugins:\n  - local: protoc-gen-es\n    out: src/generated\n    opt:\n      - target=ts\n      - import_extension=js\n",
+};
+
+export function assertDirectGenerationCommands(manifests) {
+  for (const [path, expectedScripts] of Object.entries(directGenerationCommands)) {
+    const scripts = manifests[path]?.scripts;
+    for (const [name, expected] of Object.entries(expectedScripts)) {
+      if (scripts?.[name] !== expected) {
+        throw new Error(`${path} ${name} must be exactly ${JSON.stringify(expected)}.`);
+      }
+    }
+  }
+}
+
+export function assertGeneratorConfiguration(path, source) {
+  const expected = generatorConfigurations[path];
+  if (source !== expected) {
+    throw new Error(
+      `${path} must use the direct ESM Buf generator configuration with import_extension=js.`,
+    );
+  }
+}
+
 function assertSafeGeneratedPath(path) {
   const relativePath = relative(repositoryRoot, path);
   if (
@@ -58,17 +99,15 @@ async function treeDigest() {
   return digest.digest("hex");
 }
 
-async function assertGenerationNeedsNoPatcher() {
-  const packageFiles = [
-    "package.json",
-    "packages/validation/package.json",
-    "packages/example/package.json",
-  ];
-  for (const file of packageFiles) {
-    const contents = await readFile(resolve(repositoryRoot, file), "utf8");
-    if (contents.includes("patch-generated")) {
-      throw new Error(`Generation must not invoke a compatibility patcher: ${file}`);
-    }
+async function assertDirectGenerationConfiguration() {
+  const manifests = {};
+  for (const path of Object.keys(directGenerationCommands)) {
+    manifests[path] = JSON.parse(await readFile(resolve(repositoryRoot, path), "utf8"));
+  }
+  assertDirectGenerationCommands(manifests);
+
+  for (const path of Object.keys(generatorConfigurations)) {
+    assertGeneratorConfiguration(path, await readFile(resolve(repositoryRoot, path), "utf8"));
   }
 
   for (const root of generatedRoots) {
@@ -82,29 +121,33 @@ async function assertGenerationNeedsNoPatcher() {
   }
 }
 
-const firstDigest = await treeDigest();
-await assertGenerationNeedsNoPatcher();
-for (const root of generatedRoots) {
-  assertSafeGeneratedPath(root);
-  await rm(root, { recursive: true, force: true });
+async function main() {
+  const firstDigest = await treeDigest();
+  await assertDirectGenerationConfiguration();
+  for (const root of generatedRoots) {
+    assertSafeGeneratedPath(root);
+    await rm(root, { recursive: true, force: true });
+  }
+
+  const generation = spawnSync("pnpm", ["generate"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+    stdio: "inherit",
+  });
+  if (generation.status !== 0) {
+    process.exit(generation.status ?? 1);
+  }
+
+  const secondDigest = await treeDigest();
+  await assertDirectGenerationConfiguration();
+  if (firstDigest !== secondDigest) {
+    console.error(
+      `Generated output changed across identical runs: ${firstDigest} != ${secondDigest}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`Generated output is deterministic (${secondDigest}).`);
 }
 
-const generation = spawnSync("pnpm", ["generate"], {
-  cwd: repositoryRoot,
-  encoding: "utf8",
-  stdio: "inherit",
-});
-if (generation.status !== 0) {
-  process.exit(generation.status ?? 1);
-}
-
-const secondDigest = await treeDigest();
-await assertGenerationNeedsNoPatcher();
-if (firstDigest !== secondDigest) {
-  console.error(
-    `Generated output changed across identical runs: ${firstDigest} != ${secondDigest}`,
-  );
-  process.exit(1);
-}
-
-console.log(`Generated output is deterministic (${secondDigest}).`);
+if (process.argv[1] === fileURLToPath(import.meta.url)) await main();
