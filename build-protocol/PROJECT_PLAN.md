@@ -8,8 +8,8 @@
 | T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | Complete |
 | T-0003 | Modernize the example, execute it in CI, and build agent-ready documentation.     | Complete |
 | T-0004 | Adopt the current Spine TS pnpm, Vitest, TypeScript, and ESM build stack.         | Complete |
-| T-0005 | Remove generated-code patching and strengthen runtime type boundaries.            | Active   |
-| T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Approved |
+| T-0005 | Remove generated-code patching and strengthen runtime type boundaries.            | Complete |
+| T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Active   |
 
 ## Accepted Follow-Up Boundaries
 

@@ -1,6 +1,6 @@
 # T-0005: Strengthen Runtime Architecture Boundaries
 
-Status: Ready for integration
+Status: Complete
 Classification: High-risk
 Baseline: `df8cbb187488f4f9bc170dcc226f18eab27f9f8f`
 Branch: `task/T-0005-runtime-architecture`
@@ -133,9 +133,13 @@ Baseline coverage: 93.85% statements, 91.36% branches, 99.01% functions, and
 ## Integration
 
 - Task head and push:
-  Reviewed implementation head
-  `2e4b91c4707e724e7f6155dee7b038cd0fc86ad9`; closure commit and push follow.
+  `origin/task/T-0005-runtime-architecture@0de3940c93924b2af094f9a0908ab89a67888860`.
 - `dev` merge:
-- Post-merge verification:
-- Remote refs:
+  `b4b2f79d6857d034fd23c862269e0c5db46f18fb`.
+- Post-merge verification: Fresh `pnpm verify` passed four structural
+  generation-guard tests, 15 Vitest files / 300 tests, universal 90% coverage,
+  immutable Proto, direct deterministic generation, strict TypeScript,
+  lint/format, docs, build, compiled example, packed ESM consumer, and Git
+  hygiene.
+- Remote refs: Verified after pushing the integration closure.
 - Worktree cleanup:
