@@ -124,13 +124,13 @@ engine, and does not promise Java dialect, flags, or full-match equivalence.
 Use portable expressions and explicit anchors where appropriate; Java parity is
 an unresolved project decision.
 
-# Spine Time `(when)`
+## Spine Time `(when)`
 
 The frozen Spine Time intake supports `(when)` on `Timestamp`, `YearMonth`,
 `LocalDate`, `LocalDateTime`, deprecated `OffsetDateTime`, and `ZonedDateTime`.
 Singular descriptor-default messages are skipped; repeated and map elements,
 including defaults, are evaluated independently. Diagnostics use `error_msg`
 before the frozen default and expose `when.in`. Zoned conversion follows
-Temporal compatible gap/overlap resolution and the runtime tzdb. Years outside
-Every converted value must fit the JVM `Timestamp` instant range from year 1
-through year 9999; invalid or out-of-range conversions throw `RangeError`.
+Temporal compatible gap/overlap resolution and the runtime tzdb. Every
+converted value must fit the JVM `Timestamp` instant range from year 1 through
+year 9999; invalid or out-of-range conversions throw `RangeError`.

@@ -1,6 +1,6 @@
 # T-0006: Implement Spine Time `(when)` Validation
 
-Status: Active
+Status: Review complete; integration pending
 Classification: High-risk
 Baseline: `69a885f2f8f8708e93821e444be2d1c95eff38d6`
 Branch: `task/T-0006-time-options`
@@ -72,7 +72,7 @@ Exact historical IANA offsets depend on the runtime tzdb and must be documented.
 | ---------------------------- | -------------------------- | --------------- | ------------------ | ----------------------------------------------------------------------------- | -------------------------------------------- |
 | Requirements split (initial) | `/root/t0006_requirements` | `gpt-5.6-sol`   | high               | Split Proto intake, JVM parity, temporal conversion, tests, example, and docs | Interrupted and closed after bounded timeout |
 | Requirements split (final)   | `/root/t0006_split_final`  | `gpt-5.6-sol`   | high               | Final implementation/test/gate audit of the approved contract                 | Complete and closed                          |
-| Implementation               | `/root/t0006_implementer`  | `gpt-5.6-terra` | medium             | Own T-0006 Proto, runtime, tests, dependency, example, version, and docs      | First batch complete; correction assigned    |
+| Implementation               | `/root/t0006_implementer`  | `gpt-5.6-terra` | medium             | Own T-0006 Proto, runtime, tests, dependency, example, version, and docs      | Complete and closed                          |
 | TypeScript/API review        | `/root/t0006_api`          | `gpt-5.6-terra` | high               | Public API, descriptors, declarations, and Proto compatibility                | Complete and closed                          |
 | Reliability review           | `/root/t0006_reliability`  | `gpt-5.6-terra` | high               | Temporal arithmetic, clocks, malformed values, zones, and bounded execution   | Complete and closed                          |
 | Security review              | `/root/t0006_security`     | `gpt-5.6-terra` | high               | Dependency, untrusted temporal/zone inputs, provenance                        | Complete and closed                          |
@@ -147,31 +147,36 @@ compatible gap result `2024-03-10T02:30 -> 07:30Z` and overlap result
 
 ## Verification
 
-| Command                | Result                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| Baseline `pnpm verify` | Passed: four generation-guard tests, 15 files / 300 tests, all canonical gates |
+| Command                         | Result                                                                                                                                    |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Baseline `pnpm verify`          | Passed: four generation-guard tests, 15 files / 300 tests, all canonical gates                                                            |
+| Final focused `(when)` suites   | Passed: 18 tests                                                                                                                          |
+| Final independent `pnpm verify` | Passed: 17 files / 319 tests; 94.71% statements, 91.51% branches, 99.19% functions, 95.96% lines; all canonical gates and packed consumer |
+| Final documentation correction  | Prettier, `pnpm docs:check`, `git diff --check`, and documentation re-review passed                                                       |
 
 Coverage: 94.07% statements, 91.56% branches, 99.03% functions, and 95.40%
 lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer | Disposition                                                            | Evidence |
-| ----------------------- | -------- | ---------------------------------------------------------------------- | -------- |
-| Style/maintainability   | Pending  | Pending                                                                |          |
-| Documentation           | Pending  | Pending                                                                |          |
-| TypeScript/API          | Pending  | Pending                                                                |          |
-| Performance/reliability | Pending  | Pending                                                                |          |
-| Security                | Pending  | High-risk temporal parsing and dependency intake require final review. |          |
+| Concern                 | Reviewer                  | Disposition | Evidence                                                                                     |
+| ----------------------- | ------------------------- | ----------- | -------------------------------------------------------------------------------------------- |
+| Style/maintainability   | `/root/t0006_style`       | Clean       | Exact JVM Timestamp range, conversion, registry, ordering, and corrected tests reviewed.     |
+| Documentation           | `/root/t0006_docs`        | Clean       | Contract, imports, provenance, technical spec, package/example, and root README reviewed.    |
+| TypeScript/API          | `/root/t0006_api`         | Clean       | Descriptor/public error shape, unknown enum handling, package/API surface reviewed.          |
+| Performance/reliability | `/root/t0006_reliability` | Clean       | Defaults, clocks, BCE, ranges, DST gap/overlap, collections, and malformed values reviewed.  |
+| Security                | `/root/t0006_security`    | Clean       | Dependency, immutable provenance, bounded zone input, and stable cause-free errors reviewed. |
 
 ## Findings
 
-| ID  | Severity | Accepted? | Resolution |
-| --- | -------- | --------- | ---------- |
+See the canonical, deduplicated findings and dispositions in
+`build-protocol/reviews/T-0006.md`.
 
 ## Integration
 
-- Task head and push:
+- Task head and push: `913f6bbb11f84b142e856e8368b55d7a6a378460`
+  pushed to `origin/task/T-0006-time-options`; final documentation closure
+  commit pending.
 - `dev` merge:
 - Post-merge verification:
 - Remote refs:
