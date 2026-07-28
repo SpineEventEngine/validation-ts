@@ -23,6 +23,7 @@
     "test:example": "pnpm generate && vitest run packages/example/tests",
     "test": "pnpm test:validation && pnpm test:example",
     "test:coverage": "pnpm generate && vitest run --coverage",
+    "test:patchers": "node --test scripts/patch-generated.test.mjs",
     "docs:api": "typedoc --options typedoc.json",
     "docs:check": "node scripts/check-documentation.test.mjs && typedoc --options typedoc.json && node scripts/check-documentation.mjs",
     "proto:lint": "pnpm --filter @spine-event-engine/validation proto:lint && pnpm --filter @spine-event-engine/example-smoke proto:lint",
@@ -32,7 +33,7 @@
     "git:check": "node scripts/check-git-diff.mjs",
     "example": "pnpm --filter @spine-event-engine/example-smoke start",
     "example:run": "pnpm --filter @spine-event-engine/example-smoke start:built",
-    "verify": "pnpm check:node && pnpm proto:verify && pnpm generate && pnpm typecheck:generated && pnpm lint && pnpm format:check && pnpm test:coverage && pnpm docs:check && pnpm proto:lint && pnpm proto:check-generated && pnpm build && pnpm example:run && pnpm package:check && pnpm git:check"
+    "verify": "pnpm check:node && pnpm proto:verify && pnpm generate && pnpm typecheck:generated && pnpm lint && pnpm format:check && pnpm test:coverage && pnpm test:patchers && pnpm docs:check && pnpm proto:lint && pnpm proto:check-generated && pnpm build && pnpm example:run && pnpm package:check && pnpm git:check"
   },
   "keywords": [],
   "author": "",

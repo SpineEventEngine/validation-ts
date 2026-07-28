@@ -7,7 +7,9 @@ const generatedDeclaration = "export const require: GenExtension<MessageOptions,
 const patchedDeclaration =
   "export const requireFields: GenExtension<MessageOptions, RequireOption>";
 const targets = {
-  source: resolve(scriptDirectory, "../src/generated"),
+  source: process.env.VALIDATION_GENERATED_SOURCE_ROOT
+    ? resolve(process.env.VALIDATION_GENERATED_SOURCE_ROOT)
+    : resolve(scriptDirectory, "../src/generated"),
   test: resolve(scriptDirectory, "../tests/generated"),
 };
 
