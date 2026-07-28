@@ -48,6 +48,8 @@ export function validateWhenField(
   if (!hasOption(field, extension)) return;
   const option = getOption(field, extension);
   if (option.in === Time.TIME_UNDEFINED) return;
+  if (option.in !== Time.PAST && option.in !== Time.FUTURE)
+    throw configurationError("INVALID_OPTION_VALUE", schema, field);
   const typeName = temporalType(field);
   if (!supportedTypes.has(typeName))
     throw configurationError("UNSUPPORTED_OPTION_TARGET", schema, field);

@@ -53,8 +53,11 @@ rejected before runtime.
 ## Supported surface
 
 Implemented families are field `(required)`, `(pattern)`, `(min)`, `(max)`,
-`(range)`, `(distinct)`, `(validate)`, and `(goes)`; message `(require)`; and
-oneof `(choice)`. The exact target rules, violation envelope, placeholder keys,
+`(range)`, `(distinct)`, `(validate)`, `(goes)`, and Spine Time `(when)`;
+message `(require)`; and oneof `(choice)`. `(when)` supports `Timestamp`,
+`YearMonth`, `LocalDate`, `LocalDateTime`, deprecated `OffsetDateTime`, and
+`ZonedDateTime`; `TIME_UNDEFINED` disables it, singular defaults are skipped,
+and list/map elements are evaluated. The exact target rules, violation envelope, placeholder keys,
 numeric/reference grammar, nested/`Any` behavior, and configuration errors are
 normative in the [validation contract](../../docs/validation-contract.md).
 
@@ -69,8 +72,3 @@ regex compatibility is unresolved.
 Run focused package tests with `pnpm test:validation`, documentation checks
 with `pnpm docs:check`, and the repository gate with `pnpm verify` from
 the workspace root. Contributors should start with [the contributing guide](../../docs/contributing.md).
-Time validation is available through Spine Time's immutable `(when)` option for
-`Timestamp`, `YearMonth`, `LocalDate`, `LocalDateTime`, deprecated
-`OffsetDateTime`, and `ZonedDateTime`. `TIME_UNDEFINED` disables the option;
-equal instants satisfy either bound. Zoned conversion uses IANA data supplied by
-the JavaScript runtime, so historical offsets follow its tzdb.

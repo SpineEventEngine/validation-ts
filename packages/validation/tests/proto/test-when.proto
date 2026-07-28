@@ -25,6 +25,7 @@ message TimeValidation {
 
 message UnsupportedWhenTarget { string unsupported = 1 [(when).in = PAST]; }
 message InvalidWhenPlaceholder { google.protobuf.Timestamp value = 1 [(when).in = PAST, (when).error_msg = "${bad}"]; }
+message InvalidWhenValue { google.protobuf.Timestamp value = 1 [(when).in = 99]; }
 
 message NestedWhenValue {
     google.protobuf.Timestamp future = 1 [(when).in = FUTURE];

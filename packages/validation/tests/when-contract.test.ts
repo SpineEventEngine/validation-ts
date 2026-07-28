@@ -3,7 +3,11 @@ import { vi } from "vitest";
 
 import { setValidationClockForTesting } from "../src/clock.js";
 import { validate } from "../src/index.js";
-import { NestedWhenEnvelopeSchema, TimeValidationSchema } from "./generated/test-when_pb.js";
+import {
+  InvalidWhenValueSchema,
+  NestedWhenEnvelopeSchema,
+  TimeValidationSchema,
+} from "./generated/test-when_pb.js";
 
 describe("(when) collection and temporal contract", () => {
   afterEach(() => setValidationClockForTesting());
@@ -17,6 +21,10 @@ describe("(when) collection and temporal contract", () => {
     const defaults = create(TimeValidationSchema);
     expect(validate(TimeValidationSchema, defaults)).toEqual([]);
     expect(reads).toBe(0);
+    expect(
+      validate(TimeValidationSchema, create(TimeValidationSchema, { futureTimestamp: {} })),
+    ).toEqual([]);
+    expect(reads).toBe(0);
     const values = create(TimeValidationSchema, {
       pastTimestamp: { seconds: 1n },
       futureTimestamps: [{ seconds: 0n }],
@@ -24,6 +32,19 @@ describe("(when) collection and temporal contract", () => {
     });
     expect(validate(TimeValidationSchema, values)).toHaveLength(1);
     expect(reads).toBe(3);
+  });
+
+  it("rejects unknown Time enum numbers with the public configuration shape", () => {
+    expect(() =>
+      validate(InvalidWhenValueSchema, create(InvalidWhenValueSchema, { value: { seconds: 1n } })),
+    ).toThrow(
+      expect.objectContaining({
+        code: "INVALID_OPTION_VALUE",
+        option: "when",
+        typeName: "tests.InvalidWhenValue",
+        fieldPath: ["value"],
+      }),
+    );
   });
 
   it("reads the clock once per scalar and collection element", () => {
