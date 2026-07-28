@@ -1,6 +1,6 @@
 # T-0005: Strengthen Runtime Architecture Boundaries
 
-Status: Active
+Status: Ready for integration
 Classification: High-risk
 Baseline: `df8cbb187488f4f9bc170dcc226f18eab27f9f8f`
 Branch: `task/T-0005-runtime-architecture`
@@ -113,10 +113,10 @@ Baseline coverage: 93.85% statements, 91.36% branches, 99.01% functions, and
 
 | Concern                 | Reviewer                  | Disposition                                                                 | Evidence   |
 | ----------------------- | ------------------------- | --------------------------------------------------------------------------- | ---------- |
-| Style/maintainability   | `/root/t0005_style`       | F-002 and F-003 accepted for correction                                     | Review log |
-| Documentation           | `/root/t0005_docs`        | F-005 and F-006 accepted for correction                                     | Review log |
-| TypeScript/API          | `/root/t0005_api`         | F-004 accepted for correction                                               | Review log |
-| Performance/reliability | `/root/t0005_reliability` | F-001 accepted for correction                                               | Review log |
+| Style/maintainability   | `/root/t0005_style`       | Clean after F-002 and F-003 correction                                      | Review log |
+| Documentation           | `/root/t0005_docs`        | Clean after F-005 and F-006 correction                                      | Review log |
+| TypeScript/API          | `/root/t0005_api`         | Clean after F-004 correction                                                | Review log |
+| Performance/reliability | `/root/t0005_reliability` | Clean after F-001 correction                                                | Review log |
 | Security                | N/A                       | No new trust boundary, credential flow, or publication behavior is planned. | D-0004     |
 
 ## Findings
@@ -133,7 +133,8 @@ Baseline coverage: 93.85% statements, 91.36% branches, 99.01% functions, and
 ## Integration
 
 - Task head and push:
-  `origin/task/T-0005-runtime-architecture@cbdaa09338e5575e43facbd0e9e440d305ad142b`
+  Reviewed implementation head
+  `2e4b91c4707e724e7f6155dee7b038cd0fc86ad9`; closure commit and push follow.
 - `dev` merge:
 - Post-merge verification:
 - Remote refs:
