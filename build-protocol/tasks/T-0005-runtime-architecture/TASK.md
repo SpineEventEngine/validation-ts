@@ -120,14 +120,14 @@ Baseline coverage: 93.85% statements, 91.36% branches, 99.01% functions, and
 
 ## Findings
 
-| ID    | Severity | Accepted? | Resolution                                                       |
-| ----- | -------- | --------- | ---------------------------------------------------------------- |
-| F-001 | P2       | Yes       | Complete: exact direct-generation checks and regression coverage |
-| F-002 | P2       | Yes       | Complete: compile-time fixture is uncalled                       |
-| F-003 | P2       | Yes       | Complete: baseline coverage labeled explicitly                   |
-| F-004 | P2       | Yes       | Complete: TypeScript >=5.4 documented                            |
-| F-005 | P2       | Yes       | Complete: explicit recursion/cycle boundary documented           |
-| F-006 | P2       | Yes       | Complete: reviewer statuses corrected                            |
+| ID    | Severity | Accepted? | Resolution                                                          |
+| ----- | -------- | --------- | ------------------------------------------------------------------- |
+| F-001 | P1       | Yes       | Residual lifecycle-hook rejection and canonical test wiring pending |
+| F-002 | P2       | Yes       | Complete: compile-time fixture is uncalled                          |
+| F-003 | P2       | Yes       | Complete: baseline coverage labeled explicitly                      |
+| F-004 | P2       | Yes       | Complete: TypeScript >=5.4 documented                               |
+| F-005 | P2       | Yes       | Complete: explicit recursion/cycle boundary documented              |
+| F-006 | P2       | Yes       | Complete: reviewer statuses corrected                               |
 
 ## Integration
 
