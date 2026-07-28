@@ -45,6 +45,28 @@ test("rejects a renamed post-generation transform", () => {
   );
 });
 
+test("rejects lifecycle siblings for protected generation commands", () => {
+  const manifests = {
+    "package.json": {
+      scripts: {
+        generate:
+          "pnpm --filter @spine-event-engine/validation generate && pnpm --filter @spine-event-engine/validation generate:tests && pnpm --filter @spine-event-engine/example-smoke generate",
+        postgenerate: "node scripts/rewrite-output.mjs",
+      },
+    },
+    "packages/validation/package.json": {
+      scripts: {
+        generate: "buf generate",
+        "generate:tests": "cd tests && buf generate",
+        "postgenerate:tests": "node scripts/rewrite-test-output.mjs",
+      },
+    },
+    "packages/example/package.json": { scripts: { generate: "buf generate" } },
+  };
+
+  assert.throws(() => assertDirectGenerationCommands(manifests), /lifecycle sibling/);
+});
+
 test("requires the ESM import extension in each validation generator config", () => {
   assert.doesNotThrow(() =>
     assertGeneratorConfiguration(

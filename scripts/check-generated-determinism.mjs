@@ -39,6 +39,11 @@ export function assertDirectGenerationCommands(manifests) {
       if (scripts?.[name] !== expected) {
         throw new Error(`${path} ${name} must be exactly ${JSON.stringify(expected)}.`);
       }
+      for (const lifecycleName of [`pre${name}`, `post${name}`]) {
+        if (scripts?.[lifecycleName] !== undefined) {
+          throw new Error(`${path} must not define lifecycle sibling ${lifecycleName}.`);
+        }
+      }
     }
   }
 }

@@ -98,12 +98,13 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 
 ## Verification
 
-| Command                      | Result                                                                                           |
-| ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| Baseline `pnpm verify`       | Passed: 15 files / 300 tests, four patcher contract tests, all canonical gates                   |
-| Focused implementation       | Passed: typecheck, 14 files / 293 tests, lint, formatting, deterministic generation              |
-| Implementation `pnpm verify` | Passed: 15 files / 300 tests; 94.07% statements, 91.56% branches, 99.03% functions, 95.40% lines |
-| Correction `pnpm verify`     | Passed: 15 files / 300 tests; 94.07% statements, 91.56% branches, 99.03% functions, 95.40% lines |
+| Command                      | Result                                                                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Baseline `pnpm verify`       | Passed: 15 files / 300 tests, four patcher contract tests, all canonical gates                                                   |
+| Focused implementation       | Passed: typecheck, 14 files / 293 tests, lint, formatting, deterministic generation                                              |
+| Implementation `pnpm verify` | Passed: 15 files / 300 tests; 94.07% statements, 91.56% branches, 99.03% functions, 95.40% lines                                 |
+| Correction `pnpm verify`     | Passed: 15 files / 300 tests; 94.07% statements, 91.56% branches, 99.03% functions, 95.40% lines                                 |
+| Residual F-001 `pnpm verify` | Passed: four generation-guard tests and 15 files / 300 tests; 94.07% statements, 91.56% branches, 99.03% functions, 95.40% lines |
 
 Baseline coverage: 93.85% statements, 91.36% branches, 99.01% functions, and
 95.15% lines.
@@ -120,14 +121,14 @@ Baseline coverage: 93.85% statements, 91.36% branches, 99.01% functions, and
 
 ## Findings
 
-| ID    | Severity | Accepted? | Resolution                                                          |
-| ----- | -------- | --------- | ------------------------------------------------------------------- |
-| F-001 | P1       | Yes       | Residual lifecycle-hook rejection and canonical test wiring pending |
-| F-002 | P2       | Yes       | Complete: compile-time fixture is uncalled                          |
-| F-003 | P2       | Yes       | Complete: baseline coverage labeled explicitly                      |
-| F-004 | P2       | Yes       | Complete: TypeScript >=5.4 documented                               |
-| F-005 | P2       | Yes       | Complete: explicit recursion/cycle boundary documented              |
-| F-006 | P2       | Yes       | Complete: reviewer statuses corrected                               |
+| ID    | Severity | Accepted? | Resolution                                                               |
+| ----- | -------- | --------- | ------------------------------------------------------------------------ |
+| F-001 | P1       | Yes       | Corrected: lifecycle siblings rejected and guard tests wired into verify |
+| F-002 | P2       | Yes       | Complete: compile-time fixture is uncalled                               |
+| F-003 | P2       | Yes       | Complete: baseline coverage labeled explicitly                           |
+| F-004 | P2       | Yes       | Complete: TypeScript >=5.4 documented                                    |
+| F-005 | P2       | Yes       | Complete: explicit recursion/cycle boundary documented                   |
+| F-006 | P2       | Yes       | Complete: reviewer statuses corrected                                    |
 
 ## Integration
 
