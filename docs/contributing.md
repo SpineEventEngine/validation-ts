@@ -4,6 +4,9 @@ This repository has a governed delivery workflow. Read `AGENTS.md` first, then
 the current [project plan](../build-protocol/PROJECT_PLAN.md), active task
 record, technical specification, and relevant work/review logs.
 
+Use Node.js 24 or later. The committed `.node-version` pins the tested version,
+24.18.0. Install dependencies with pnpm 11.9.0 via Corepack.
+
 ## Intake, approval, and ownership
 
 Before implementation, reconcile Git state, inspect code and contract inputs,

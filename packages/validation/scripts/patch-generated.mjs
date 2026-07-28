@@ -21,7 +21,17 @@ function patchDirectory(directory) {
 
 function patchFile(path) {
   const source = readFileSync(path, "utf8");
-  const renamed = source.replace(generatedDeclaration, patchedDeclaration);
+  const isOptionsDeclaration = path.endsWith("/spine/options_pb.ts");
+  if (
+    isOptionsDeclaration &&
+    !source.includes(generatedDeclaration) &&
+    !source.includes(patchedDeclaration)
+  ) {
+    throw new Error(`Expected generated declaration was not found in ${path}`);
+  }
+  const renamed = source.includes(patchedDeclaration)
+    ? source
+    : source.replace(generatedDeclaration, patchedDeclaration);
   const patched = renamed.replaceAll(
     /(from\s+["'])(\.{1,2}\/[^"']*?)(?<!\.js)(["'])/g,
     "$1$2.js$3",

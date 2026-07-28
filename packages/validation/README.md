@@ -4,6 +4,10 @@ Experimental runtime validation for Protobuf-ES v2 messages carrying Spine
 validation options. It validates generated descriptors; it does not support
 handwritten bindings or other TypeScript Protobuf generators.
 
+The package is ESM-only. Use an ESM `import`; CommonJS `require()` is not
+supported. Use Node.js 24 or later; this workspace pins and tests Node.js
+24.18.0.
+
 ## Install
 
 Install the package and its required peer dependency together:

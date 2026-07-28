@@ -1,6 +1,8 @@
 packages:
   - "packages/*"
 engineStrict: true
+confirmModulesPurge: false
+minimumReleaseAge: 1440
 overrides:
   acorn: 8.17.0
   minimatch: 10.2.5
