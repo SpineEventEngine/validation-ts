@@ -1,5 +1,5 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 
 const generatedRoot = resolve(process.cwd(), "src/generated");
 const expected = "export const require: GenExtension<MessageOptions, RequireOption>";
@@ -15,7 +15,8 @@ function patchDirectory(directory) {
 
 function patchFile(path) {
   const source = readFileSync(path, "utf8");
-  const isOptionsDeclaration = path.endsWith("/spine/options_pb.ts");
+  const isOptionsDeclaration =
+    basename(path) === "options_pb.ts" && basename(dirname(path)) === "spine";
   if (isOptionsDeclaration && !source.includes(expected) && !source.includes(replacement)) {
     throw new Error(`Expected generated declaration was not found in ${path}`);
   }
@@ -27,4 +28,7 @@ function patchFile(path) {
   writeFileSync(path, patched, "utf8");
 }
 
+const optionsPath = resolve(generatedRoot, "spine", "options_pb.ts");
+if (!existsSync(optionsPath))
+  throw new Error(`Expected generated target was not found: ${optionsPath}`);
 patchDirectory(generatedRoot);

@@ -21,6 +21,8 @@ npm install --save-dev @bufbuild/protoc-gen-es
 `@bufbuild/protobuf` is a peer dependency, not an optional convenience. The
 validator consumes Protobuf-ES descriptors and message instances; handwritten
 objects and bindings from other generators are outside this package boundary.
+The published package is ESM-only: use `import`, because CommonJS `require()`
+is unsupported.
 
 ## Bring in `spine/options.proto` safely
 
