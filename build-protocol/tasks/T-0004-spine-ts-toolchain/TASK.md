@@ -1,6 +1,6 @@
 # T-0004: Adopt The Current Spine TS Toolchain
 
-Status: Active
+Status: Ready for integration
 Classification: High-risk
 Baseline: `d60fa4a2c1e0050c4517b52ca49c8de43cdc7d02`
 Branch: `task/T-0004-spine-ts-toolchain`
@@ -115,27 +115,27 @@ Coverage: migrated Vitest/V8 result is 93.85% statements, 91.36% branches,
 
 | Concern                 | Reviewer                  | Disposition                                          | Evidence   |
 | ----------------------- | ------------------------- | ---------------------------------------------------- | ---------- |
-| Style/maintainability   | `/root/t0004_style`       | F-004 accepted for correction                        | Review log |
-| Documentation           | `/root/t0004_docs`        | F-006 and F-007 accepted for correction              | Review log |
-| TypeScript/API          | `/root/t0004_api`         | F-005 and F-006 accepted for correction              | Review log |
-| Performance/reliability | `/root/t0004_reliability` | F-001 through F-004 accepted for correction          | Review log |
+| Style/maintainability   | `/root/t0004_style`       | Clean after F-004 correction                         | Review log |
+| Documentation           | `/root/t0004_docs`        | Clean after F-006 and F-007 correction               | Review log |
+| TypeScript/API          | `/root/t0004_api`         | Clean after F-005 and F-006 correction               | Review log |
+| Performance/reliability | `/root/t0004_reliability` | Clean after F-001 through F-004 correction           | Review log |
 | Security                | N/A                       | No new trust boundary or credential flow is planned. | D-0004     |
 
 ## Findings
 
-| ID    | Severity | Accepted? | Resolution                                                 |
-| ----- | -------- | --------- | ---------------------------------------------------------- |
-| F-001 | P1       | Yes       | Confirmed by narrow re-review                              |
-| F-002 | P1       | Yes       | Confirmed by narrow re-review                              |
-| F-003 | P2       | Yes       | Confirmed by narrow re-review                              |
-| F-004 | P2       | Yes       | Residual cross-platform required-target correction pending |
-| F-005 | P1       | Yes       | Confirmed by narrow re-review                              |
-| F-006 | P2       | Yes       | Residual user-guide compatibility statement pending        |
-| F-007 | P2       | Yes       | Confirmed by narrow re-review                              |
+| ID    | Severity | Accepted? | Resolution                                                                              |
+| ----- | -------- | --------- | --------------------------------------------------------------------------------------- |
+| F-001 | P1       | Yes       | Confirmed by narrow re-review                                                           |
+| F-002 | P1       | Yes       | Confirmed by narrow re-review                                                           |
+| F-003 | P2       | Yes       | Confirmed by narrow re-review                                                           |
+| F-004 | P2       | Yes       | Complete: both patchers have cross-platform guards and canonical negative/success tests |
+| F-005 | P1       | Yes       | Confirmed by narrow re-review                                                           |
+| F-006 | P2       | Yes       | Complete: technical, package, and user docs state ESM-only compatibility                |
+| F-007 | P2       | Yes       | Confirmed by narrow re-review                                                           |
 
 ## Integration
 
-- Task commit:
+- Reviewed implementation head: `0d17e45fcc55fe1144482153d03c116da3a7a69c`
 - Task push: `origin/task/T-0004-spine-ts-toolchain@1bf3cb45bb9554946d50e5ecef08e9c4e0b819cc`
 - `dev` merge:
 - Post-merge verification:
