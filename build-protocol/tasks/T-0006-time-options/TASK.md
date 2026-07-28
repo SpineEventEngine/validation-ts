@@ -68,10 +68,11 @@ Exact historical IANA offsets depend on the runtime tzdb and must be documented.
 
 ## Agent Dispatch
 
-| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                         | Status  |
-| ------------------ | -------------------------- | --------------- | ------------------ | ----------------------------------------------------------------------------- | ------- |
-| Requirements split | `/root/t0006_requirements` | `gpt-5.6-sol`   | high               | Split Proto intake, JVM parity, temporal conversion, tests, example, and docs | Running |
-| Implementation     | Pending                    | `gpt-5.6-terra` | medium             | Own T-0006 Proto, runtime, tests, dependency, example, version, and docs      | Pending |
+| Role/function                | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                         | Status                                       |
+| ---------------------------- | -------------------------- | --------------- | ------------------ | ----------------------------------------------------------------------------- | -------------------------------------------- |
+| Requirements split (initial) | `/root/t0006_requirements` | `gpt-5.6-sol`   | high               | Split Proto intake, JVM parity, temporal conversion, tests, example, and docs | Interrupted and closed after bounded timeout |
+| Requirements split (final)   | `/root/t0006_split_final`  | `gpt-5.6-sol`   | high               | Final implementation/test/gate audit of the approved contract                 | Complete and closed                          |
+| Implementation               | `/root/t0006_implementer`  | `gpt-5.6-terra` | medium             | Own T-0006 Proto, runtime, tests, dependency, example, version, and docs      | Running                                      |
 
 ## Skills
 
@@ -121,6 +122,13 @@ Exact historical IANA offsets depend on the runtime tzdb and must be documented.
    review wave, one deduplicated correction batch, independent `pnpm verify`,
    task push, `dev` integration, post-merge verification, and remote-ref
    confirmation.
+
+Test groups must separately cover control flow/clock reads/default handling,
+collection violation shape and order, every temporal conversion and invalid
+value, diagnostics/configuration errors, nested leaf-only behavior and
+validator order, and example execution. New York fixtures pin the Java
+compatible gap result `2024-03-10T02:30 -> 07:30Z` and overlap result
+`2024-11-03T01:30 -> 05:30Z`.
 
 ## Decisions And Questions
 

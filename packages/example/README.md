@@ -48,3 +48,8 @@ rules, see [contributing](../../docs/contributing.md).
 ## License
 
 Apache License 2.0.
+
+# Time option scenarios
+
+The executable example includes deterministic past/future `Timestamp` cases.
+Run `pnpm example` to see both accepted and offending values.

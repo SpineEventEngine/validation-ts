@@ -69,3 +69,8 @@ regex compatibility is unresolved.
 Run focused package tests with `pnpm test:validation`, documentation checks
 with `pnpm docs:check`, and the repository gate with `pnpm verify` from
 the workspace root. Contributors should start with [the contributing guide](../../docs/contributing.md).
+Time validation is available through Spine Time's immutable `(when)` option for
+`Timestamp`, `YearMonth`, `LocalDate`, `LocalDateTime`, deprecated
+`OffsetDateTime`, and `ZonedDateTime`. `TIME_UNDEFINED` disables the option;
+equal instants satisfy either bound. Zoned conversion uses IANA data supplied by
+the JavaScript runtime, so historical offsets follow its tzdb.

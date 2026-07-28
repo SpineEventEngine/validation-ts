@@ -44,6 +44,7 @@ import {
   choice,
   require as requireFields,
 } from "./generated/spine/options_pb.js";
+import { when } from "./generated/spine/time_options_pb.js";
 
 /**
  * Registry storing option extension references.
@@ -70,6 +71,7 @@ const optionRegistry = {
   if_has_duplicates,
   choice,
   requireFields,
+  when,
 } as const;
 
 /**
