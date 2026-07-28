@@ -7,17 +7,21 @@
 | T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | Complete |
 | T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | Complete |
 | T-0003 | Modernize the example, execute it in CI, and build agent-ready documentation.     | Complete |
+| T-0004 | Adopt the current Spine TS pnpm, Vitest, TypeScript, and ESM build stack.         | Active   |
+| T-0005 | Remove generated-code patching and strengthen runtime type boundaries.            | Approved |
+| T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Approved |
 
 ## Accepted Follow-Up Boundaries
 
-- Keep npm, Jest, and CommonJS during T-0001.
-- Migrate to the package manager, test runner, and module format used by
-  `/Users/armiol/development/experiments/spine-ts` only through a later,
-  separately discussed and approved task.
+- T-0004 replaces npm, Jest, and CommonJS with the current stack used by the
+  pinned Spine TS reference.
 - Reach at least 90% statements, branches, functions, and lines before
   substantial behavioral expansion.
-- Add Validation TS extensions from immutable
-  `spine/time_options.proto` definitions in future approved milestones.
+- T-0005 is limited to type-boundary and generated-code integration debt; it
+  does not create a public validator-extension API or recursion budgets.
+- T-0006 adds Validation TS extensions from immutable
+  `spine/time_options.proto` and `spine/time.proto` definitions, matching the
+  approved JVM comparison points.
 - Keep Java `Pattern` compatibility unresolved during T-0002. Do not add a
   third-party or project-owned regex engine without a later approved decision.
 
