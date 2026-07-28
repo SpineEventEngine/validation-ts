@@ -32,10 +32,14 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 
 ## Agent Dispatch
 
-| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                      | Status              |
-| ------------------ | -------------------------- | --------------- | ------------------ | -------------------------------------------------------------------------- | ------------------- |
-| Requirements split | `/root/t0005_requirements` | `gpt-5.6-sol`   | high               | Resolve the Protobuf-ES generic type model and safe patch-removal sequence | Complete and closed |
-| Implementation     | `/root/t0005_implementer`  | `gpt-5.6-terra` | medium             | Own T-0005 runtime, generation, tests, scripts, and maintained docs        | Running             |
+| Role/function         | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                      | Status              |
+| --------------------- | -------------------------- | --------------- | ------------------ | -------------------------------------------------------------------------- | ------------------- |
+| Requirements split    | `/root/t0005_requirements` | `gpt-5.6-sol`   | high               | Resolve the Protobuf-ES generic type model and safe patch-removal sequence | Complete and closed |
+| Implementation        | `/root/t0005_implementer`  | `gpt-5.6-terra` | medium             | Own T-0005 runtime, generation, tests, scripts, and maintained docs        | Complete and closed |
+| Style review          | `/root/t0005_style`        | `gpt-5.6-terra` | high               | Internal seam, type propagation, tests, and patcher removal                | Complete and closed |
+| TypeScript/API review | `/root/t0005_api`          | `gpt-5.6-terra` | high               | Public generic inference, declarations, option types, and compatibility    | Complete and closed |
+| Reliability review    | `/root/t0005_reliability`  | `gpt-5.6-terra` | high               | Direct generation, determinism, ordering, recursion boundary, and gates    | Complete and closed |
+| Documentation review  | `/root/t0005_docs`         | `gpt-5.6-terra` | medium             | Architecture/contract/contributor/package accuracy and agent usability     | Complete and closed |
 
 ## Scope And Ownership
 
@@ -100,27 +104,34 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 | Focused implementation       | Passed: typecheck, 14 files / 293 tests, lint, formatting, deterministic generation              |
 | Implementation `pnpm verify` | Passed: 15 files / 300 tests; 94.07% statements, 91.56% branches, 99.03% functions, 95.40% lines |
 
-Coverage: 93.85% statements, 91.36% branches, 99.01% functions, and 95.15%
-lines.
+Baseline coverage: 93.85% statements, 91.36% branches, 99.01% functions, and
+95.15% lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer | Disposition                                                                 | Evidence |
-| ----------------------- | -------- | --------------------------------------------------------------------------- | -------- |
-| Style/maintainability   | Pending  | Pending                                                                     |          |
-| Documentation           | Pending  | Pending                                                                     |          |
-| TypeScript/API          | Pending  | Pending                                                                     |          |
-| Performance/reliability | Pending  | Pending                                                                     |          |
-| Security                | N/A      | No new trust boundary, credential flow, or publication behavior is planned. | D-0004   |
+| Concern                 | Reviewer                  | Disposition                                                                 | Evidence   |
+| ----------------------- | ------------------------- | --------------------------------------------------------------------------- | ---------- |
+| Style/maintainability   | `/root/t0005_style`       | F-002 and F-003 accepted for correction                                     | Review log |
+| Documentation           | `/root/t0005_docs`        | F-005 and F-006 accepted for correction                                     | Review log |
+| TypeScript/API          | `/root/t0005_api`         | F-004 accepted for correction                                               | Review log |
+| Performance/reliability | `/root/t0005_reliability` | F-001 accepted for correction                                               | Review log |
+| Security                | N/A                       | No new trust boundary, credential flow, or publication behavior is planned. | D-0004     |
 
 ## Findings
 
-| ID  | Severity | Accepted? | Resolution |
-| --- | -------- | --------- | ---------- |
+| ID    | Severity | Accepted? | Resolution                                     |
+| ----- | -------- | --------- | ---------------------------------------------- |
+| F-001 | P2       | Yes       | Pending correction                             |
+| F-002 | P2       | Yes       | Pending correction                             |
+| F-003 | P2       | Yes       | Complete: baseline coverage labeled explicitly |
+| F-004 | P2       | Yes       | Pending correction                             |
+| F-005 | P2       | Yes       | Pending correction                             |
+| F-006 | P2       | Yes       | Complete: reviewer statuses corrected          |
 
 ## Integration
 
 - Task head and push:
+  `origin/task/T-0005-runtime-architecture@cbdaa09338e5575e43facbd0e9e440d305ad142b`
 - `dev` merge:
 - Post-merge verification:
 - Remote refs:
