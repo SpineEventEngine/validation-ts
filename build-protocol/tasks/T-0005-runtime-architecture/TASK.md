@@ -32,10 +32,10 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 
 ## Agent Dispatch
 
-| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                      | Status  |
-| ------------------ | -------------------------- | --------------- | ------------------ | -------------------------------------------------------------------------- | ------- |
-| Requirements split | `/root/t0005_requirements` | `gpt-5.6-sol`   | high               | Resolve the Protobuf-ES generic type model and safe patch-removal sequence | Running |
-| Implementation     | Pending                    | `gpt-5.6-terra` | medium             | Own T-0005 runtime, generation, tests, scripts, and maintained docs        | Pending |
+| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                      | Status              |
+| ------------------ | -------------------------- | --------------- | ------------------ | -------------------------------------------------------------------------- | ------------------- |
+| Requirements split | `/root/t0005_requirements` | `gpt-5.6-sol`   | high               | Resolve the Protobuf-ES generic type model and safe patch-removal sequence | Complete and closed |
+| Implementation     | `/root/t0005_implementer`  | `gpt-5.6-terra` | medium             | Own T-0005 runtime, generation, tests, scripts, and maintained docs        | Running             |
 
 ## Scope And Ownership
 
@@ -59,17 +59,17 @@ Approved plan: Human approval in the Codex task on 2026-07-28
 
 ## Implementation Plan
 
-1. Resolve the narrowest reusable Protobuf-ES schema/message generic aliases
-   and type the public `validate()` relationship without changing runtime
-   behavior.
+1. Use `S extends DescMessage` with `NoInfer<MessageShape<S>>` for the public
+   `validate()` relationship. Use `DescMessage`, `Message`, and `Registry` at
+   erased descriptor/registry seams; add a compile-time mismatched-pair
+   regression.
 2. Propagate precise message/schema types through validation context,
    orchestration, nested validation, option validators, and the option registry;
    remove internal `any` while retaining only documented test casts for invalid
    schema fixtures.
 3. Remove both generated compatibility patchers and their canonical fixture
-   suite. Import the generator-owned `require` extension under the local alias
-   `requireFields`; retain only NodeNext import-extension handling through
-   supported Buf generation options.
+   suite. Add `import_extension=js` to validation source/test Buf generation
+   and import generator-owned `require` under the local alias `requireFields`.
 4. Keep the fixed validator sequence private behind the existing small adapter;
    do not expose registry or extension hooks.
 5. Update architecture, contract, contributor, package, TypeDoc, and protocol
@@ -85,13 +85,20 @@ Approved plan: Human approval in the Codex task on 2026-07-28
   JavaScript objects are outside the contract.
 - The validator sequence is internal and fixed; public extensibility remains
   explicitly excluded.
+- The closed option registry uses a keyed generic lookup returning
+  `OptionRegistry[N]`; it never returns `undefined` and must preserve each
+  extension's value type.
+- One localized descriptor-driven field reader may bridge `Message` to unknown
+  field values. Do not impose a string index signature on generated messages.
 - No material human question remains open.
 
 ## Verification
 
-| Command                | Result                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| Baseline `pnpm verify` | Passed: 15 files / 300 tests, four patcher contract tests, all canonical gates |
+| Command                      | Result                                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| Baseline `pnpm verify`       | Passed: 15 files / 300 tests, four patcher contract tests, all canonical gates                   |
+| Focused implementation       | Passed: typecheck, 14 files / 293 tests, lint, formatting, deterministic generation              |
+| Implementation `pnpm verify` | Passed: 15 files / 300 tests; 94.07% statements, 91.56% branches, 99.03% functions, 95.40% lines |
 
 Coverage: 93.85% statements, 91.36% branches, 99.01% functions, and 95.15%
 lines.

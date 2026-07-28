@@ -17,14 +17,17 @@
 /** Validation of the descriptor-defined `(required)` field option. */
 
 import { getOption, hasOption } from "@bufbuild/protobuf";
-import type { DescField } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, IfMissingOptionSchema } from "../generated/spine/options_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
 import { isPresent, supportsPresence } from "../presence.js";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import {
+  createConstraintViolation,
+  readField,
+  type ValidationContext,
+} from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 function defaultMessage(): string | undefined {
@@ -34,8 +37,8 @@ function defaultMessage(): string | undefined {
 /** Validates one field, allowing orchestration to preserve declaration order. */
 export function validateRequiredField(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
@@ -52,18 +55,14 @@ export function validateRequiredField(
     });
   }
 
-  const value = message[field.localName];
+  const value = readField(message, field);
   if (isPresent(field, value)) return;
 
   const ifMissingOption = getRegisteredOption("if_missing");
-  const ifMissing =
-    ifMissingOption && hasOption(field, ifMissingOption)
-      ? getOption(field, ifMissingOption)
-      : undefined;
-  const customMessage =
-    ifMissing && typeof ifMissing === "object" && "errorMsg" in ifMissing
-      ? (ifMissing.errorMsg as string)
-      : undefined;
+  const ifMissing = hasOption(field, ifMissingOption)
+    ? getOption(field, ifMissingOption)
+    : undefined;
+  const customMessage = ifMissing?.errorMsg || undefined;
 
   violations.push(
     createConstraintViolation(context.atField(field), field, undefined, {

@@ -75,5 +75,9 @@ files are linted; frozen upstream style must not be made to satisfy a local
 style rule. Source and behavior claims follow the precedence in
 [architecture.md](architecture.md#source-of-truth-precedence).
 
+Use Buf's `import_extension=js` option for ESM-generated relative imports. Do
+not edit generated output or add a generation patcher; if a generated symbol
+conflicts with project naming, alias it at the project import site.
+
 For navigation, see [the docs index](README.md), the
 [validation contract](validation-contract.md), and [the package guide](../packages/validation/README.md).

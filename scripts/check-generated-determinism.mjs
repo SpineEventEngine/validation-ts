@@ -58,7 +58,32 @@ async function treeDigest() {
   return digest.digest("hex");
 }
 
+async function assertGenerationNeedsNoPatcher() {
+  const packageFiles = [
+    "package.json",
+    "packages/validation/package.json",
+    "packages/example/package.json",
+  ];
+  for (const file of packageFiles) {
+    const contents = await readFile(resolve(repositoryRoot, file), "utf8");
+    if (contents.includes("patch-generated")) {
+      throw new Error(`Generation must not invoke a compatibility patcher: ${file}`);
+    }
+  }
+
+  for (const root of generatedRoots) {
+    for (const file of await listFiles(root)) {
+      if (!file.endsWith(".ts")) continue;
+      const contents = await readFile(file, "utf8");
+      if (/from ["']\.\.?\/[^"']+(?<!\.js)["']/.test(contents)) {
+        throw new Error(`Generated relative import is missing its .js extension: ${file}`);
+      }
+    }
+  }
+}
+
 const firstDigest = await treeDigest();
+await assertGenerationNeedsNoPatcher();
 for (const root of generatedRoots) {
   assertSafeGeneratedPath(root);
   await rm(root, { recursive: true, force: true });
@@ -74,6 +99,7 @@ if (generation.status !== 0) {
 }
 
 const secondDigest = await treeDigest();
+await assertGenerationNeedsNoPatcher();
 if (firstDigest !== secondDigest) {
   console.error(
     `Generated output changed across identical runs: ${firstDigest} != ${secondDigest}`,

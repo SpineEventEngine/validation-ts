@@ -30,14 +30,15 @@
  * The `(pattern)` option validates that a string field matches a given regular expression.
  */
 
-import type { Message } from "@bufbuild/protobuf";
+import type { DescMessage, Message } from "@bufbuild/protobuf";
 import { hasOption, getOption, create, ScalarType } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { ConstraintViolationSchema } from "../generated/spine/validate/validation_error_pb.js";
 import { FieldPathSchema } from "../generated/spine/base/field_path_pb.js";
 import { TemplateStringSchema } from "../generated/spine/validate/error_message_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
+import { readField } from "../validation-contract.js";
+import type { PatternOption } from "../generated/spine/options_pb.js";
 
 /**
  * Creates a constraint violation object for `(pattern)` validation failures.
@@ -51,7 +52,7 @@ import { getRegisteredOption } from "../options-registry.js";
 function createViolation(
   typeName: string,
   fieldName: string,
-  fieldValue: any,
+  fieldValue: unknown,
   violationMessage: string,
 ): ConstraintViolation {
   return create(ConstraintViolationSchema, {
@@ -81,7 +82,7 @@ function createViolation(
  * @param patternOption The pattern option object with optional modifiers.
  * @returns `true` if the value matches the pattern, `false` otherwise.
  */
-function validatePatternValue(value: string, regex: string, patternOption: any): boolean {
+function validatePatternValue(value: string, regex: string, patternOption: PatternOption): boolean {
   if (typeof value !== "string") {
     return false;
   }
@@ -129,9 +130,9 @@ function validatePatternValue(value: string, regex: string, patternOption: any):
  * @param message The message instance to validate.
  * @param violations Array to collect constraint violations.
  */
-export function validatePatternFields<T extends Message>(
-  schema: GenMessage<T>,
-  message: any,
+export function validatePatternFields<S extends DescMessage>(
+  schema: S,
+  message: Message,
   violations: ConstraintViolation[],
 ): void {
   const patternOption = getRegisteredOption("pattern");
@@ -146,16 +147,11 @@ export function validatePatternFields<T extends Message>(
     }
 
     const patternValue = getOption(field, patternOption);
-    if (!patternValue || typeof patternValue !== "object" || !("regex" in patternValue)) {
-      continue;
-    }
-
-    const regex = (patternValue as any).regex;
+    const regex = patternValue.regex;
     const errorMsg =
-      (patternValue as any).errorMsg ||
-      `The string must match the regular expression \`${regex}\`.`;
+      patternValue.errorMsg || `The string must match the regular expression \`${regex}\`.`;
 
-    const fieldValue = (message as any)[field.localName];
+    const fieldValue = readField(message, field);
 
     if (field.fieldKind === "list") {
       if (Array.isArray(fieldValue)) {
@@ -172,7 +168,7 @@ export function validatePatternFields<T extends Message>(
         }
       }
     } else if (field.fieldKind === "scalar" && field.scalar === ScalarType.STRING) {
-      if (fieldValue !== undefined && fieldValue !== null && fieldValue !== "") {
+      if (typeof fieldValue === "string" && fieldValue !== "") {
         if (!validatePatternValue(fieldValue, regex, patternValue)) {
           violations.push(createViolation(schema.typeName, field.name, fieldValue, errorMsg));
         }

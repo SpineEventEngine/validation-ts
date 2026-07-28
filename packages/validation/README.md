@@ -45,6 +45,10 @@ when a supported option is declared with an invalid target, value, or field
 reference. Its public fields are `code`, `option`, `typeName`, optional
 `fieldPath`, and optional `cause`.
 
+The generated schema and message must be a matching pair. This relationship is
+checked by TypeScript, so `validate(UserSchema, messageFromAnotherSchema)` is
+rejected before runtime.
+
 ## Supported surface
 
 Implemented families are field `(required)`, `(pattern)`, `(min)`, `(max)`,

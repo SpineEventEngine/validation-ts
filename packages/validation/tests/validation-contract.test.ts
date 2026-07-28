@@ -21,12 +21,18 @@ import {
   Int32ValueSchema,
   StringValueSchema,
 } from "@bufbuild/protobuf/wkt";
-import { formatTemplateString, ValidationConfigurationError } from "../src/index.js";
+import { formatTemplateString, validate, ValidationConfigurationError } from "../src/index.js";
 import { createConstraintViolation, createValidationContext } from "../src/validation-contract.js";
 import { appendMessageViolation, legacyFieldValidator } from "../src/orchestration.js";
 import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb.js";
 import { TemplateStringSchema } from "../src/generated/spine/validate/error_message_pb.js";
 import { AddressSchema, RequiredFieldsSchema, Status } from "./generated/test-required_pb.js";
+import { PaymentMethodSchema } from "./generated/test-choice_pb.js";
+
+// `validate()` must keep a generated descriptor paired with only its own message shape.
+const requiredFieldsMessage = create(RequiredFieldsSchema);
+// @ts-expect-error A PaymentMethod descriptor cannot validate a RequiredFields message.
+validate(PaymentMethodSchema, requiredFieldsMessage);
 
 describe("ValidationConfigurationError", () => {
   it("exposes stable public diagnostic properties", () => {

@@ -17,9 +17,8 @@
 /** Validation of the descriptor-defined `(distinct)` option. */
 
 import { equals, getOption, hasOption } from "@bufbuild/protobuf";
-import type { DescField } from "@bufbuild/protobuf";
+import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 import { scalarEquals } from "@bufbuild/protobuf/reflect";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import {
@@ -28,7 +27,7 @@ import {
   type IfHasDuplicatesOption,
 } from "../generated/spine/options_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
-import { createConstraintViolation, ValidationContext } from "../validation-contract.js";
+import { createConstraintViolation, readField, ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 interface EqualityClass {
@@ -39,8 +38,8 @@ interface EqualityClass {
 /** Validates `(distinct)` for one field in deterministic orchestration order. */
 export function validateDistinctField(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
@@ -56,7 +55,7 @@ export function validateDistinctField(
     });
   }
 
-  const collection = message[field.localName];
+  const collection = readField(message, field);
   const values = collectionValues(field, collection);
   if (values.length < 2) return;
 
@@ -90,8 +89,8 @@ export function validateDistinctField(
 
 /** Retained for internal callers that validate all fields outside orchestration. */
 export function validateDistinctFields(
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   violations: ConstraintViolation[],
 ): void {
   const context = new ValidationContext(schema.typeName);
@@ -122,9 +121,7 @@ function valuesAreEqual(field: DescField, left: unknown, right: unknown): boolea
 
 function distinctDiagnostic(field: DescField): IfHasDuplicatesOption | undefined {
   const extension = getRegisteredOption("if_has_duplicates");
-  return extension && hasOption(field, extension)
-    ? (getOption(field, extension) as IfHasDuplicatesOption)
-    : undefined;
+  return hasOption(field, extension) ? getOption(field, extension) : undefined;
 }
 
 function formatCollection(value: unknown): string {

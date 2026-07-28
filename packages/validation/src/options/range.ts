@@ -15,17 +15,16 @@
  */
 
 import { getOption, hasOption } from "@bufbuild/protobuf";
-import type { DescField } from "@bufbuild/protobuf";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
-import {
-  default_message,
-  RangeOptionSchema,
-  type RangeOption,
-} from "../generated/spine/options_pb.js";
+import { default_message, RangeOptionSchema } from "../generated/spine/options_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import {
+  createConstraintViolation,
+  readField,
+  type ValidationContext,
+} from "../validation-contract.js";
 import {
   assertNumericTarget,
   compareNumeric,
@@ -38,17 +37,18 @@ import {
 /** Validates `(range)` for one field in orchestration order. */
 export function validateRangeField(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
   const extension = getRegisteredOption("range");
   if (!extension || !hasOption(field, extension)) return;
-  const option = getOption(field, extension) as RangeOption;
+  const option = getOption(field, extension);
   const scalar = assertNumericTarget("range", schema, field);
   const parsed = parseRange(option.value, scalar, schema, message, field);
-  const values = field.fieldKind === "list" ? message[field.localName] : [message[field.localName]];
+  const fieldValue = readField(message, field);
+  const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
   if (!Array.isArray(values)) return;
   for (const raw of values) {
     const value = runtimeNumeric(raw, scalar);
@@ -74,8 +74,8 @@ export function validateRangeField(
 function parseRange(
   declaration: string,
   scalar: ReturnType<typeof assertNumericTarget>,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
 ) {
   const match = /^(\s*)(\[|\()([\s\S]*?)(\.\.)([\s\S]*?)(\]|\))(\s*)$/.exec(declaration);

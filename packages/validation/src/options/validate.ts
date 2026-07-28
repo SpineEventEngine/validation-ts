@@ -26,20 +26,19 @@
 
 /** Leaf-only recursion for the descriptor-defined `(validate)` option. */
 
-import { create, equals, getOption, hasOption } from "@bufbuild/protobuf";
-import type { DescField, DescMessage, Registry } from "@bufbuild/protobuf";
+import { create, equals, getOption, hasOption, isMessage } from "@bufbuild/protobuf";
+import type { DescField, DescMessage, Message, MessageShape, Registry } from "@bufbuild/protobuf";
 import { anyUnpack } from "@bufbuild/protobuf/wkt";
-import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { getRegisteredOption } from "../options-registry.js";
-import type { ValidationContext } from "../validation-contract.js";
+import { readField, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 /** Internal recursive validation seam, supplied by the validation orchestrator. */
-export type NestedValidator = (
-  schema: GenMessage<any>,
-  message: unknown,
+export type NestedValidator = <S extends DescMessage>(
+  schema: S,
+  message: MessageShape<S>,
   context: ValidationContext,
   registry: Registry,
 ) => ConstraintViolation[];
@@ -47,8 +46,8 @@ export type NestedValidator = (
 /** Validates one field in declaration order, preserving the root validation context. */
 export function validateNestedField(
   context: ValidationContext,
-  schema: GenMessage<any>,
-  message: Record<string, unknown>,
+  schema: DescMessage,
+  message: Message,
   field: DescField,
   violations: ConstraintViolation[],
   registry: Registry,
@@ -67,7 +66,7 @@ export function validateNestedField(
     });
   }
 
-  const value = message[field.localName];
+  const value = readField(message, field);
   const nestedContext = context.atField(field);
   if (field.fieldKind === "message") {
     if (value === undefined || value === null || isDefault(nestedSchema, value)) return;
@@ -111,8 +110,8 @@ function appendNested(
     appendPackedAny(value, context, registry, violations, validateNested);
     return;
   }
-  if (value === undefined || value === null) return;
-  violations.push(...validateNested(schema as GenMessage<any>, value, context, registry));
+  if (!isMessage(value, schema)) return;
+  violations.push(...validateNested(schema, value, context, registry));
 }
 
 function appendPackedAny(
@@ -132,6 +131,6 @@ function appendPackedAny(
   }
   if (!unpacked) return;
   const schema = registry.getMessage(unpacked.$typeName);
-  if (schema)
-    violations.push(...validateNested(schema as GenMessage<any>, unpacked, context, registry));
+  if (schema && isMessage(unpacked, schema))
+    violations.push(...validateNested(schema, unpacked, context, registry));
 }

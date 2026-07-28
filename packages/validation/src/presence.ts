@@ -15,7 +15,8 @@
  */
 
 import { create, equals, ScalarType } from "@bufbuild/protobuf";
-import type { DescField, DescOneof } from "@bufbuild/protobuf";
+import type { DescField, DescOneof, Message } from "@bufbuild/protobuf";
+import { readField } from "./validation-contract.js";
 
 export function supportsPresence(field: DescField): boolean {
   return (
@@ -44,6 +45,7 @@ export function isPresent(field: DescField, value: unknown): boolean {
   return value instanceof Uint8Array && value.length > 0;
 }
 
-export function isOneofPresent(oneof: DescOneof, message: Record<string, unknown>): boolean {
-  return (message[oneof.localName] as { case?: string } | undefined)?.case !== undefined;
+export function isOneofPresent(oneof: DescOneof, message: Message): boolean {
+  const value = readField(message, oneof);
+  return typeof value === "object" && value !== null && "case" in value && value.case !== undefined;
 }
