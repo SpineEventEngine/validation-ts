@@ -28,6 +28,8 @@ syntax = "proto3";
 package example;
 
 import "spine/options.proto";
+import "spine/time_options.proto";
+import "google/protobuf/timestamp.proto";
 
 message User {
     int32 id = 1 [(min).value = "1"];
@@ -44,6 +46,9 @@ message User {
 
     repeated string tags = 5 [(distinct) = true,
                               (if_has_duplicates).error_msg = "Tags must be unique; duplicates: `${field.duplicates}`."];
+
+    google.protobuf.Timestamp issued_at = 6 [(when).in = PAST];
+    google.protobuf.Timestamp expires_at = 7 [(when).in = FUTURE];
 }
 
 enum Role {

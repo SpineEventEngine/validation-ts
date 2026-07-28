@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package tests;
+
+import "google/protobuf/timestamp.proto";
+import "spine/options.proto";
+import "spine/time/time.proto";
+import "spine/time_options.proto";
+
+message TimeValidation {
+    google.protobuf.Timestamp past_timestamp = 1 [(when).in = PAST];
+    google.protobuf.Timestamp future_timestamp = 2 [(when).in = FUTURE];
+    spine.time.YearMonth past_year_month = 3 [(when).in = PAST];
+    spine.time.LocalDate future_date = 4 [(when).in = FUTURE];
+    spine.time.LocalDateTime past_date_time = 5 [(when).in = PAST];
+    spine.time.OffsetDateTime future_offset_date_time = 6 [(when).in = FUTURE];
+    spine.time.ZonedDateTime past_zoned_date_time = 7 [(when).in = PAST];
+    repeated google.protobuf.Timestamp future_timestamps = 8 [(when).in = FUTURE];
+    map<string, google.protobuf.Timestamp> past_timestamp_by_name = 9 [(when).in = PAST];
+    google.protobuf.Timestamp disabled = 10 [(when).in = TIME_UNDEFINED];
+    google.protobuf.Timestamp custom_message = 11 [(when).in = PAST, (when).error_msg = "custom ${when.in} ${field.path}"];
+    google.protobuf.Timestamp legacy_message = 12 [(when).in = PAST, (when).msg_format = "ignored"];
+    spine.time.OffsetDateTime past_offset_date_time = 13 [(when).in = PAST];
+}
+
+message UnsupportedWhenTarget { string unsupported = 1 [(when).in = PAST]; }
+message InvalidWhenPlaceholder { google.protobuf.Timestamp value = 1 [(when).in = PAST, (when).error_msg = "${bad}"]; }
+message InvalidWhenValue { google.protobuf.Timestamp value = 1 [(when).in = 99]; }
+
+message NestedWhenValue {
+    google.protobuf.Timestamp future = 1 [(when).in = FUTURE];
+    string label = 2 [(required) = true];
+}
+message NestedWhenEnvelope {
+    google.protobuf.Timestamp first_future = 1 [(when).in = FUTURE];
+    NestedWhenValue nested = 2 [(validate) = true];
+}

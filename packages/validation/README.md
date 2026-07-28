@@ -15,7 +15,7 @@ Install the package and its required peer dependency together:
 
 ```sh
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 ```
 
 `snapshot` is a moving dist-tag for previews. Use the exact version command
@@ -53,8 +53,11 @@ rejected before runtime.
 ## Supported surface
 
 Implemented families are field `(required)`, `(pattern)`, `(min)`, `(max)`,
-`(range)`, `(distinct)`, `(validate)`, and `(goes)`; message `(require)`; and
-oneof `(choice)`. The exact target rules, violation envelope, placeholder keys,
+`(range)`, `(distinct)`, `(validate)`, `(goes)`, and Spine Time `(when)`;
+message `(require)`; and oneof `(choice)`. `(when)` supports `Timestamp`,
+`YearMonth`, `LocalDate`, `LocalDateTime`, deprecated `OffsetDateTime`, and
+`ZonedDateTime`; `TIME_UNDEFINED` disables it, singular defaults are skipped,
+and list/map elements are evaluated. The exact target rules, violation envelope, placeholder keys,
 numeric/reference grammar, nested/`Any` behavior, and configuration errors are
 normative in the [validation contract](../../docs/validation-contract.md).
 

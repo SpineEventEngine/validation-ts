@@ -42,6 +42,30 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
       }),
     ),
     result(
+      "past and future time constraints",
+      UserSchema,
+      create(UserSchema, {
+        id: 1,
+        name: "Ada Lovelace",
+        email: "ada@example.test",
+        role: Role.USER,
+        issuedAt: { seconds: 0n },
+        expiresAt: { seconds: 4_102_444_800n },
+      }),
+    ),
+    result(
+      "violated past and future time constraints",
+      UserSchema,
+      create(UserSchema, {
+        id: 1,
+        name: "Ada Lovelace",
+        email: "ada@example.test",
+        role: Role.USER,
+        issuedAt: { seconds: 4_102_444_800n },
+        expiresAt: { seconds: 1n },
+      }),
+    ),
+    result(
       "product at its exact minimum price",
       ProductSchema,
       create(ProductSchema, { id: "prod-1", name: "Keyboard", price: 0.01 }),

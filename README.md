@@ -42,6 +42,7 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 - **`(goes)`** — Field dependency constraints.
 - **`(require)`** — Complex required field combinations with boolean logic.
 - **`(choice)`** — Require that a `oneof` group has at least one field set.
+- **`(when)`** — Validate frozen Spine Time values against past/future bounds; import [`spine/time_options.proto`](packages/validation/proto/spine/time_options.proto), plus [`spine/time/time.proto`](packages/validation/proto/spine/time/time.proto) for Spine temporal field types.
 
 **Developer Experience**
 
@@ -66,7 +67,7 @@ See the [documentation hub](docs/README.md), [package guide](packages/validation
 
 ```bash
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 ```
 
 The `snapshot` dist-tag moves as preview releases are published; use the exact

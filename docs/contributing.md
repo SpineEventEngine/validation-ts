@@ -81,3 +81,9 @@ conflicts with project naming, alias it at the project import site.
 
 For navigation, see [the docs index](README.md), the
 [validation contract](validation-contract.md), and [the package guide](../packages/validation/README.md).
+
+# Frozen Spine Time inputs
+
+Do not edit vendored `spine/time_options.proto` or `spine/time/time.proto`.
+Their exact provenance and checksums are enforced by `pnpm proto:verify`; Buf
+exceptions apply only to upstream style.

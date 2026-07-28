@@ -15,7 +15,7 @@ dependency together:
 
 ```sh
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-npm install @spine-event-engine/validation@2.0.0-snapshot.5 @bufbuild/protobuf
+npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 npm install --save-dev @bufbuild/protoc-gen-es
 ```
 
@@ -25,7 +25,7 @@ objects and bindings from other generators are outside this package boundary.
 The published package is ESM-only: use `import`, because CommonJS `require()`
 is unsupported.
 
-## Bring in `spine/options.proto` safely
+## Bring in frozen Spine options safely
 
 The options file is an immutable upstream contract input. Obtain an exact
 upstream revision, record the commit and SHA-256 in your own intake record,
@@ -49,6 +49,25 @@ message User {
   ];
 }
 ```
+
+For `(when)`, freeze and import `spine/time_options.proto` at one Spine Time
+commit alongside `spine/options.proto`. Import `spine/time/time.proto` only
+when a field uses a Spine temporal message rather than `Timestamp`.
+
+```protobuf
+import "google/protobuf/timestamp.proto";
+import "spine/time_options.proto";
+
+message Session {
+  google.protobuf.Timestamp expires_at = 1 [(when).in = FUTURE];
+}
+```
+
+`(when)` supports Timestamp and Spine temporal messages. Singular defaults are
+skipped; every repeated/map value is checked. Zoned values use compatible IANA
+gap/overlap resolution from the runtime tzdb. Every conversion must fit the
+JVM `Timestamp` instant range `0001-01-01T00:00:00Z` through
+`9999-12-31T23:59:59.999999999Z`; out-of-range conversions throw.
 
 ## Generate the schema
 

@@ -42,6 +42,7 @@ import { validatePatternFields } from "./options/pattern.js";
 import { validateRequireOption } from "./options/required-field.js";
 import { validateMinMaxField } from "./options/min-max.js";
 import { validateRangeField } from "./options/range.js";
+import { validateWhenField } from "./options/when.js";
 import { validateDistinctField } from "./options/distinct.js";
 import { validateNestedField } from "./options/validate.js";
 import { validateGoesField } from "./options/goes.js";
@@ -64,6 +65,11 @@ const fieldValidators: readonly FieldValidator[] = [
   {
     validate(context, schema, message, field, violations) {
       validateRangeField(context, schema, message, field, violations);
+    },
+  },
+  {
+    validate(context, schema, message, field, violations) {
+      validateWhenField(context, schema, message, field, violations);
     },
   },
   {
@@ -112,6 +118,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * - `(require)` — requires specific combinations of fields at message level
  * - `(min)` / `(max)` — numeric range validation with inclusive/exclusive bounds
  * - `(range)` — bounded numeric ranges using bracket notation for inclusive/exclusive bounds
+ * - `(when)` — verifies supported timestamps and Spine temporal values are in the past or future
  * - `(distinct)` — emits one violation for each duplicated Buf-equality class
  * - `(validate)` — returns only leaf violations from nested values and known `Any` payloads
  * - `(goes)` — enforces field dependency (field can only be set if another field is set)

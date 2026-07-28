@@ -16,16 +16,15 @@ It is an experimental TypeScript library; its public API is not stable.
   `TemplateString`, and `FieldPath`.
 
 The implemented option families are `required`, `pattern`, message-level
-`require`, `min`, `max`, `range`, `distinct`, nested `validate`, `goes`, and
-oneof `choice`.
+`require`, `min`, `max`, `range`, `distinct`, nested `validate`, `goes`, Spine
+Time `when`, and oneof `choice`.
 
 ## Contract Authority
 
 The primary semantic source is the documentation embedded in:
 
 - `https://github.com/SpineEventEngine/base-libraries/blob/master/base/src/main/proto/spine/options.proto`
-- future extensions:
-  `https://github.com/SpineEventEngine/time/blob/master/time/src/main/proto/spine/time_options.proto`
+- frozen Spine Time inputs `spine/time_options.proto` and `spine/time/time.proto`.
 
 An intake resolves the moving upstream branch to an immutable commit and
 records the raw URL, commit, retrieval date, local destination, and SHA-256.
