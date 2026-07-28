@@ -1,6 +1,6 @@
 # T-0006: Implement Spine Time `(when)` Validation
 
-Status: Review complete; integration pending
+Status: Complete
 Classification: High-risk
 Baseline: `69a885f2f8f8708e93821e444be2d1c95eff38d6`
 Branch: `task/T-0006-time-options`
@@ -174,10 +174,15 @@ See the canonical, deduplicated findings and dispositions in
 
 ## Integration
 
-- Task head and push: `913f6bbb11f84b142e856e8368b55d7a6a378460`
-  pushed to `origin/task/T-0006-time-options`; final documentation closure
-  commit pending.
-- `dev` merge:
-- Post-merge verification:
-- Remote refs:
-- Worktree cleanup:
+- Task head and push: review/documentation closure
+  `03f38f042a5f812fa0b6c873baf16f9892a803aa` pushed to
+  `origin/task/T-0006-time-options`.
+- `dev` merge: `7eaf7bfa58944ed72230a332f0bffc201475a4d6`
+  (`Merge T-0006 Spine Time validation`).
+- Post-merge verification: fresh frozen install and `pnpm verify` passed 17
+  files / 319 tests, 94.71% statements, 91.51% branches, 99.19% functions,
+  95.96% lines, and every canonical gate.
+- Remote refs: task branch and updated `dev` pushed and checked directly;
+  `master` remained `24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- Worktree cleanup: clean merged task worktree removed after remote
+  confirmation.
