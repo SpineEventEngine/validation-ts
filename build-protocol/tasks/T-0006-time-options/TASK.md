@@ -1,8 +1,8 @@
 # T-0006: Implement Spine Time `(when)` Validation
 
-Status: Approved
+Status: Active
 Classification: High-risk
-Baseline: Current `dev` after T-0005
+Baseline: `69a885f2f8f8708e93821e444be2d1c95eff38d6`
 Branch: `task/T-0006-time-options`
 Worktree: `.worktrees/T-0006-time-options`
 Approved plan: Human approval in the Codex task on 2026-07-28
@@ -68,8 +68,98 @@ Exact historical IANA offsets depend on the runtime tzdb and must be documented.
 
 ## Agent Dispatch
 
-Recorded when T-0006 becomes active.
+| Role/function      | Agent ID                   | Expected model  | Expected reasoning | Scope                                                                         | Status  |
+| ------------------ | -------------------------- | --------------- | ------------------ | ----------------------------------------------------------------------------- | ------- |
+| Requirements split | `/root/t0006_requirements` | `gpt-5.6-sol`   | high               | Split Proto intake, JVM parity, temporal conversion, tests, example, and docs | Running |
+| Implementation     | Pending                    | `gpt-5.6-terra` | medium             | Own T-0006 Proto, runtime, tests, dependency, example, version, and docs      | Pending |
+
+## Skills
+
+| Skill                            | Selected? | Reason                                                                        |
+| -------------------------------- | --------- | ----------------------------------------------------------------------------- |
+| `executing-plans`                | Yes       | Execute the approved behavior milestone with durable checkpoints.             |
+| `subagent-driven-development`    | Yes       | Keep one writer across immutable Proto, runtime, fixtures, example, and docs. |
+| `using-git-worktrees`            | Yes       | Isolate the high-risk serialized and runtime contract change.                 |
+| `test-driven-development`        | Yes       | Specify JVM-matching time semantics before implementation.                    |
+| `codebase-design`                | Yes       | Add a narrow temporal-conversion seam and keep validation orchestration deep. |
+| `javascript-testing-patterns`    | Yes       | Cover deterministic clocks, collections, errors, zones, and public examples.  |
+| `requesting-code-review`         | Yes       | Require correctness/API/reliability/documentation specialist review.          |
+| `verification-before-completion` | Yes       | Require focused, canonical, package, and post-merge evidence.                 |
+
+## Scope And Ownership
+
+- One implementation owner owns all overlapping frozen Proto intake,
+  generation configuration, runtime, tests, dependency/lockfile, example,
+  versions, and maintained documentation.
+- The orchestrator owns task/review records, review aggregation, verification,
+  Git integration, remote synchronization, and worktree cleanup.
+- Review agents are read-only and closed immediately after reporting.
+- Excluded: Java regex compatibility, unrelated option behavior, public
+  validator extensibility, recursion budgets, broad date/time frameworks,
+  publication, and `master`.
+
+## Implementation Plan
+
+1. Freeze byte-identical `time_options.proto` and `spine/time/time.proto` in
+   every package/test Proto module that needs them; update exact provenance,
+   compilation, lint exceptions, and deterministic generation checks.
+2. Add behavior-first fixtures and a deterministic clock seam for scalar,
+   repeated, and map `(when)` validation across Timestamp and all approved
+   Spine Temporal messages, including exact diagnostics and configuration
+   errors.
+3. Implement a narrow internal temporal conversion module. Use native
+   arithmetic for UTC/offset types and `temporal-polyfill@1.0.1` only for
+   Java-compatible `ZonedDateTime` IANA gap/overlap resolution.
+4. Add `(when)` to the fixed internal field-validator sequence and exact option
+   registry; preserve field order, collection element order, and one violation
+   per offending element.
+5. Advance every package/workspace to `2.0.0-snapshot.6`, add time scenarios to
+   the tested/compiled example, and update maintained contract, user,
+   architecture, contributor, example, package, TypeDoc, Proto, and protocol
+   docs with necessary-only root README changes.
+6. Run focused semantic/type/provenance/example checks, a complete specialist
+   review wave, one deduplicated correction batch, independent `pnpm verify`,
+   task push, `dev` integration, post-merge verification, and remote-ref
+   confirmation.
+
+## Decisions And Questions
+
+- Exact upstream checksums:
+  `time_options.proto=933858bdbb118930a171d9a2383d884b498d7ed465a35664f2f411a72785f5be`;
+  `spine/time/time.proto=da0e7482c69fb6e735441a4934222c054ec9795d7d4b46347751fccb5f692062`.
+- JVM comparison source:
+  Spine Time `4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc` and JVM Validation
+  `336d6f2bfab2ca6288283dbb64762456c61b31e0`.
+- The approved contract above resolves all material human questions.
 
 ## Verification
 
-Pending.
+| Command                | Result                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| Baseline `pnpm verify` | Passed: four generation-guard tests, 15 files / 300 tests, all canonical gates |
+
+Coverage: 94.07% statements, 91.56% branches, 99.03% functions, and 95.40%
+lines.
+
+## Review Dispositions
+
+| Concern                 | Reviewer | Disposition                                                            | Evidence |
+| ----------------------- | -------- | ---------------------------------------------------------------------- | -------- |
+| Style/maintainability   | Pending  | Pending                                                                |          |
+| Documentation           | Pending  | Pending                                                                |          |
+| TypeScript/API          | Pending  | Pending                                                                |          |
+| Performance/reliability | Pending  | Pending                                                                |          |
+| Security                | Pending  | High-risk temporal parsing and dependency intake require final review. |          |
+
+## Findings
+
+| ID  | Severity | Accepted? | Resolution |
+| --- | -------- | --------- | ---------- |
+
+## Integration
+
+- Task head and push:
+- `dev` merge:
+- Post-merge verification:
+- Remote refs:
+- Worktree cleanup:
