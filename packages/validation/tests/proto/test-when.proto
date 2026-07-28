@@ -3,6 +3,7 @@ syntax = "proto3";
 package tests;
 
 import "google/protobuf/timestamp.proto";
+import "spine/options.proto";
 import "spine/time/time.proto";
 import "spine/time_options.proto";
 
@@ -19,7 +20,17 @@ message TimeValidation {
     google.protobuf.Timestamp disabled = 10 [(when).in = TIME_UNDEFINED];
     google.protobuf.Timestamp custom_message = 11 [(when).in = PAST, (when).error_msg = "custom ${when.in} ${field.path}"];
     google.protobuf.Timestamp legacy_message = 12 [(when).in = PAST, (when).msg_format = "ignored"];
+    spine.time.OffsetDateTime past_offset_date_time = 13 [(when).in = PAST];
 }
 
 message UnsupportedWhenTarget { string unsupported = 1 [(when).in = PAST]; }
 message InvalidWhenPlaceholder { google.protobuf.Timestamp value = 1 [(when).in = PAST, (when).error_msg = "${bad}"]; }
+
+message NestedWhenValue {
+    google.protobuf.Timestamp future = 1 [(when).in = FUTURE];
+    string label = 2 [(required) = true];
+}
+message NestedWhenEnvelope {
+    google.protobuf.Timestamp first_future = 1 [(when).in = FUTURE];
+    NestedWhenValue nested = 2 [(validate) = true];
+}

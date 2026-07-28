@@ -79,8 +79,16 @@ describe("(when) time validation", () => {
     });
     setValidationClockForTesting(() => ({ seconds: 1_710_055_800n, nanos: 0 })); // 07:30Z
     expect(validate(TimeValidationSchema, gap)).toEqual([]);
+    setValidationClockForTesting(() => ({ seconds: 1_710_055_799n, nanos: 999_999_999 }));
+    expect(validate(TimeValidationSchema, gap).map((v) => v.fieldPath?.fieldName)).toEqual([
+      ["past_zoned_date_time"],
+    ]);
     setValidationClockForTesting(() => ({ seconds: 1_730_611_800n, nanos: 0 })); // 05:30Z
     expect(validate(TimeValidationSchema, overlap)).toEqual([]);
+    setValidationClockForTesting(() => ({ seconds: 1_730_611_799n, nanos: 999_999_999 }));
+    expect(validate(TimeValidationSchema, overlap).map((v) => v.fieldPath?.fieldName)).toEqual([
+      ["past_zoned_date_time"],
+    ]);
   });
 
   it("uses error_msg over the default message and supplies the documented when.in placeholder", () => {
