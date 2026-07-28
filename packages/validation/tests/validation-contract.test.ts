@@ -21,7 +21,7 @@ import {
   Int32ValueSchema,
   StringValueSchema,
 } from "@bufbuild/protobuf/wkt";
-import { formatTemplateString, ValidationConfigurationError } from "../src.js";
+import { formatTemplateString, ValidationConfigurationError } from "../src/index.js";
 import { createConstraintViolation, createValidationContext } from "../src/validation-contract.js";
 import { appendMessageViolation, legacyFieldValidator } from "../src/orchestration.js";
 import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb.js";

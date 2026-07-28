@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src.js";
+import { validate } from "../src/index.js";
 
 import {
   PatternValidationSchema,

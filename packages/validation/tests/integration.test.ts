@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate, formatViolations } from "../src.js";
+import { validate, formatViolations } from "../src/index.js";
 
 import { UserSchema, Role, GetUserResponseSchema } from "./generated/integration-user_pb.js";
 import { AccountSchema, AccountType } from "./generated/integration-account_pb.js";

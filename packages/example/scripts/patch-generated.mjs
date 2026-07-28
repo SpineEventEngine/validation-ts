@@ -1,16 +1,26 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const generated = resolve(process.cwd(), "src/generated/spine/options_pb.ts");
-const source = readFileSync(generated, "utf8");
+const generatedRoot = resolve(process.cwd(), "src/generated");
 const expected = "export const require: GenExtension<MessageOptions, RequireOption>";
 const replacement = "export const requireFields: GenExtension<MessageOptions, RequireOption>";
-const renamed = source.includes(replacement) ? source : source.replace(expected, replacement);
-if (!source.includes(replacement) && renamed === source) {
-  throw new Error(`Expected generated declaration was not found in ${generated}`);
+
+function patchDirectory(directory) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) patchDirectory(path);
+    else if (entry.isFile() && path.endsWith(".ts")) patchFile(path);
+  }
 }
-writeFileSync(
-  generated,
-  renamed.replaceAll(/((?:from|import)\s*["']\.{1,2}\/[^"]*?)(?<!\.js)(["'])/g, "$1.js$2"),
-  "utf8",
-);
+
+function patchFile(path) {
+  const source = readFileSync(path, "utf8");
+  const renamed = source.replace(expected, replacement);
+  const patched = renamed.replaceAll(
+    /(from\s+["'])(\.{1,2}\/[^"']*?)(?<!\.js)(["'])/g,
+    "$1$2.js$3",
+  );
+  writeFileSync(path, patched, "utf8");
+}
+
+patchDirectory(generatedRoot);

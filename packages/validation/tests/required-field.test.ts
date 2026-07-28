@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { ValidationConfigurationError, validate } from "../src.js";
+import { ValidationConfigurationError, validate } from "../src/index.js";
 
 import {
   UserIdentifierSchema,

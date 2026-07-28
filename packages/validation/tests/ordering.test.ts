@@ -17,7 +17,7 @@
 import { create } from "@bufbuild/protobuf";
 import { anyUnpack, StringValueSchema } from "@bufbuild/protobuf/wkt";
 
-import { validate } from "../src.js";
+import { validate } from "../src/index.js";
 import { AccountSchema } from "./generated/integration-account_pb.js";
 import { RepeatedPatternValidationSchema } from "./generated/test-pattern_pb.js";
 

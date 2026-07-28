@@ -81,7 +81,7 @@ throw for ordinary invalid data.
 ```ts
 import { create } from "@bufbuild/protobuf";
 import { formatViolations, validate, Violations } from "@spine-event-engine/validation";
-import { UserSchema } from "./generated/user_pb";
+import { UserSchema } from "./generated/user_pb.js";
 
 const user = create(UserSchema, { email: "not-an-email" });
 const violations = validate(UserSchema, user);
@@ -127,7 +127,7 @@ the [validation contract](validation-contract.md#configuration-errors).
 ```ts
 import { create } from "@bufbuild/protobuf";
 import { ValidationConfigurationError, validate } from "@spine-event-engine/validation";
-import { UserSchema } from "./generated/user_pb";
+import { UserSchema } from "./generated/user_pb.js";
 
 const user = create(UserSchema, { email: "not-an-email" });
 

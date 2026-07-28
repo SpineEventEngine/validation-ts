@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -40,7 +40,8 @@ try {
     repositoryRoot,
     true,
   );
-  const packResult = JSON.parse(output)[0];
+  const parsedPackResult = JSON.parse(output);
+  const packResult = Array.isArray(parsedPackResult) ? parsedPackResult[0] : parsedPackResult;
   const paths = new Set(packResult.files.map((file) => file.path));
   const required = [
     "package.json",
@@ -68,9 +69,13 @@ try {
   }
 
   const consumerRoot = join(temporaryRoot, "consumer");
+  await mkdir(consumerRoot);
   await writeFile(join(temporaryRoot, "package.json"), JSON.stringify({ private: true }, null, 2));
   const archive = join(temporaryRoot, archives[0]);
-  const protobufRuntime = resolve(repositoryRoot, "node_modules/@bufbuild/protobuf");
+  const protobufRuntime = resolve(
+    repositoryRoot,
+    "packages/validation/node_modules/@bufbuild/protobuf",
+  );
   await writeFile(
     join(consumerRoot, "package.json"),
     JSON.stringify({ private: true, type: "module" }, null, 2),

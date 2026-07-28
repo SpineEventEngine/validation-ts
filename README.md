@@ -121,8 +121,8 @@ pnpm verify
 
 ### Workspace Scripts
 
-| Command           | Description                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------- |
+| Command        | Description                                                                           |
+| -------------- | ------------------------------------------------------------------------------------- |
 | `pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
 | `pnpm build`   | Build the package and example                                                         |
 | `pnpm test`    | Run validation-package and executable-example Vitest tests                            |

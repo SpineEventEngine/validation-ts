@@ -89,6 +89,7 @@ function typecheckSnippet(snippet, file, root, index) {
       target: ts.ScriptTarget.ES2024,
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      ignoreDeprecations: "6.0",
       baseUrl: root,
       paths: { [publicPackage]: [index] },
     });

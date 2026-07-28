@@ -32,7 +32,7 @@
 
 import { create } from "@bufbuild/protobuf";
 import { anyPack, AnySchema } from "@bufbuild/protobuf/wkt";
-import { ValidationConfigurationError, validate } from "../src.js";
+import { ValidationConfigurationError, validate } from "../src/index.js";
 
 import {
   PersonWithAddressSchema,

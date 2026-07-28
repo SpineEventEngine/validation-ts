@@ -26,7 +26,7 @@ import path. The full setup, including Buf configuration, is in the
 ```ts
 import { create } from "@bufbuild/protobuf";
 import { validate, Violations } from "@spine-event-engine/validation";
-import { UserSchema } from "./generated/user_pb";
+import { UserSchema } from "./generated/user_pb.js";
 
 const user = create(UserSchema, { email: "invalid" });
 const violations = validate(UserSchema, user);
