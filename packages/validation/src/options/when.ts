@@ -17,8 +17,8 @@ import {
 const NANOSECONDS_PER_SECOND = 1_000_000_000n;
 const MIN_YEAR = -999_999_999;
 const MAX_YEAR = 999_999_999;
-const TEMPORAL_MIN_YEAR = -270_000;
-const TEMPORAL_MAX_YEAR = 275_000;
+const TIMESTAMP_MIN_SECONDS = -62_135_596_800n;
+const TIMESTAMP_MAX_SECONDS = 253_402_300_799n;
 const ZONE_IDENTIFIER = /^(?:UTC|[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)*)$/;
 const allowedPlaceholders = new Set([
   "field.path",
@@ -96,27 +96,34 @@ function temporalType(field: DescField): string {
 function toEpochNanoseconds(value: unknown, typeName?: string): bigint {
   if (!typeName) return checkedTimestamp(value);
   const temporal = value as Record<string, unknown>;
+  let epoch: bigint;
   switch (typeName) {
     case "google.protobuf.Timestamp":
       return checkedTimestamp(temporal);
     case "spine.time.YearMonth":
-      return localDateEpoch(temporal.year, temporal.month, 1, 0, 0, 0, 0);
+      epoch = localDateEpoch(temporal.year, temporal.month, 1, 0, 0, 0, 0);
+      break;
     case "spine.time.LocalDate":
-      return localDateEpoch(temporal.year, temporal.month, temporal.day, 0, 0, 0, 0);
+      epoch = localDateEpoch(temporal.year, temporal.month, temporal.day, 0, 0, 0, 0);
+      break;
     case "spine.time.LocalDateTime":
-      return localDateTimeEpoch(temporal);
+      epoch = localDateTimeEpoch(temporal);
+      break;
     case "spine.time.OffsetDateTime": {
       const dateTime = object(temporal.dateTime);
       const offset = object(temporal.offset);
       const seconds = integer(offset.amountSeconds);
       if (seconds < -64_800 || seconds > 64_800) throw new RangeError("Invalid offset");
-      return localDateTimeEpoch(dateTime) - BigInt(seconds) * NANOSECONDS_PER_SECOND;
+      epoch = localDateTimeEpoch(dateTime) - BigInt(seconds) * NANOSECONDS_PER_SECOND;
+      break;
     }
     case "spine.time.ZonedDateTime":
-      return zonedDateTimeEpoch(temporal);
+      epoch = zonedDateTimeEpoch(temporal);
+      break;
     default:
       throw new RangeError(`Unsupported temporal value ${typeName}`);
   }
+  return checkedEpoch(epoch);
 }
 
 function checkedTimestamp(value: unknown): bigint {
@@ -125,7 +132,16 @@ function checkedTimestamp(value: unknown): bigint {
   const nanos = integer(timestamp.nanos);
   if (nanos < 0 || nanos >= 1_000_000_000)
     throw new RangeError("Timestamp nanos must be within 0..999999999");
-  return seconds * NANOSECONDS_PER_SECOND + BigInt(nanos);
+  return checkedEpoch(seconds * NANOSECONDS_PER_SECOND + BigInt(nanos));
+}
+
+function checkedEpoch(epoch: bigint): bigint {
+  if (
+    epoch < TIMESTAMP_MIN_SECONDS * NANOSECONDS_PER_SECOND ||
+    epoch > TIMESTAMP_MAX_SECONDS * NANOSECONDS_PER_SECOND + 999_999_999n
+  )
+    throw new RangeError("Timestamp is outside the valid range");
+  return epoch;
 }
 
 function localDateTimeEpoch(value: Record<string, unknown>): bigint {
@@ -188,22 +204,11 @@ function zonedDateTimeEpoch(value: Record<string, unknown>): bigint {
   const zone = String(object(value.zone).value ?? "");
   if (zone.length === 0 || zone.length > 255 || !ZONE_IDENTIFIER.test(zone))
     throw new RangeError("Invalid zoned date-time");
-  const originalLocal = localDateTimeEpoch({ date, time });
-  const projectedYear = projectYear(integer(date.year));
-  const projectedLocal = localDateEpoch(
-    projectedYear,
-    integer(date.month),
-    integer(date.day),
-    integer(time.hour),
-    integer(time.minute),
-    integer(time.second),
-    integer(time.nano),
-  );
   try {
-    const resolved = Temporal.ZonedDateTime.from(
+    return Temporal.ZonedDateTime.from(
       {
         timeZone: zone,
-        year: projectedYear,
+        year: integer(date.year),
         month: integer(date.month),
         day: integer(date.day),
         hour: integer(time.hour),
@@ -215,16 +220,9 @@ function zonedDateTimeEpoch(value: Record<string, unknown>): bigint {
       },
       { disambiguation: "compatible" },
     ).epochNanoseconds;
-    return originalLocal + (resolved - projectedLocal);
   } catch {
     throw new RangeError("Invalid zoned date-time");
   }
-}
-
-function projectYear(year: number): number {
-  if (year >= TEMPORAL_MIN_YEAR && year <= TEMPORAL_MAX_YEAR) return year;
-  const remainder = ((year % 400) + 400) % 400;
-  return year < TEMPORAL_MIN_YEAR ? 1200 + remainder : 2400 + remainder;
 }
 
 function daysFromCivil(year: number, month: number, day: number): bigint {

@@ -50,9 +50,9 @@ message User {
 }
 ```
 
-For `(when)`, freeze and import both `spine/time_options.proto` and
-`spine/time/time.proto` at one Spine Time commit alongside `spine/options.proto`.
-They are immutable inputs, not project-owned style files:
+For `(when)`, freeze and import `spine/time_options.proto` at one Spine Time
+commit alongside `spine/options.proto`. Import `spine/time/time.proto` only
+when a field uses a Spine temporal message rather than `Timestamp`.
 
 ```protobuf
 import "google/protobuf/timestamp.proto";
@@ -65,8 +65,9 @@ message Session {
 
 `(when)` supports Timestamp and Spine temporal messages. Singular defaults are
 skipped; every repeated/map value is checked. Zoned values use compatible IANA
-gap/overlap resolution from the runtime tzdb, with a 400-year projection for
-the full Spine year range.
+gap/overlap resolution from the runtime tzdb. Every conversion must fit the
+JVM `Timestamp` instant range `0001-01-01T00:00:00Z` through
+`9999-12-31T23:59:59.999999999Z`; out-of-range conversions throw.
 
 ## Generate the schema
 

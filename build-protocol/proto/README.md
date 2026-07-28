@@ -9,11 +9,10 @@ Their original upstream commit cannot be established from repository history,
 so they are explicitly classified as a frozen legacy baseline rather than
 falsely attributed to the current upstream commit.
 
-The manifest separately records immutable commits and checksums for the current
-`options.proto` and future `time_options.proto` sources. They are references,
-not vendored inputs. Replacing or adding a Proto file requires a separately
-approved intake task, byte-for-byte retrieval from the recorded commit,
-compatibility review, and manifest update.
+The manifest records immutable checksums for the frozen `options.proto`,
+`time_options.proto`, and `spine/time/time.proto` inputs. Replacing or adding
+a Proto file requires a separately approved intake task, byte-for-byte
+retrieval from the recorded commit, compatibility review, and manifest update.
 
 Run:
 

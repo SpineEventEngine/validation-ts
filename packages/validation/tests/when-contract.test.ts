@@ -114,7 +114,7 @@ describe("(when) collection and temporal contract", () => {
     expect(failures).toBe(2);
   });
 
-  it("projects extreme New York years with the historical-past and future rule bands", () => {
+  it("rejects otherwise-valid Spine years outside the JVM Timestamp instant range", () => {
     const zoned = (year: number) =>
       create(TimeValidationSchema, {
         pastZonedDateTime: {
@@ -122,28 +122,33 @@ describe("(when) collection and temporal contract", () => {
           zone: { value: "America/New_York" },
         },
       });
-    setValidationClockForTesting(() => ({ seconds: -31_557_014_119_897_438n, nanos: 0 }));
-    expect(validate(TimeValidationSchema, zoned(-999_999_999))).toEqual([]);
-    setValidationClockForTesting(() => ({ seconds: -31_557_014_119_897_439n, nanos: 999_999_999 }));
-    expect(validate(TimeValidationSchema, zoned(-999_999_999))).toHaveLength(1);
-    setValidationClockForTesting(() => ({ seconds: 31_556_889_816_940_800n, nanos: 0 }));
-    expect(validate(TimeValidationSchema, zoned(999_999_999))).toEqual([]);
-    setValidationClockForTesting(() => ({ seconds: 31_556_889_816_940_799n, nanos: 999_999_999 }));
-    expect(validate(TimeValidationSchema, zoned(999_999_999))).toHaveLength(1);
+    expect(() => validate(TimeValidationSchema, zoned(-999_999_999))).toThrow(RangeError);
+    expect(() => validate(TimeValidationSchema, zoned(999_999_999))).toThrow(RangeError);
   });
 
-  it("converts BCE UTC and explicit offsets", () => {
-    const bce = create(TimeValidationSchema, {
-      pastDateTime: { date: { year: -1, month: 1, day: 1 } },
-      pastOffsetDateTime: {
-        dateTime: { date: { year: -1, month: 1, day: 1 }, time: { hour: 1 } },
-        offset: { amountSeconds: 3_600 },
-      },
-    });
-    setValidationClockForTesting(() => ({ seconds: -62_198_755_200n, nanos: 0 }));
-    expect(validate(TimeValidationSchema, bce)).toEqual([]);
-    setValidationClockForTesting(() => ({ seconds: -62_198_755_201n, nanos: 999_999_999 }));
-    expect(validate(TimeValidationSchema, bce)).toHaveLength(2);
+  it("accepts JVM Timestamp bounds and rejects seconds outside them", () => {
+    setValidationClockForTesting(() => ({ seconds: 0n, nanos: 0 }));
+    expect(
+      validate(
+        TimeValidationSchema,
+        create(TimeValidationSchema, {
+          pastTimestamp: { seconds: -62_135_596_800n },
+          futureTimestamp: { seconds: 253_402_300_799n, nanos: 999_999_999 },
+        }),
+      ),
+    ).toEqual([]);
+    expect(() =>
+      validate(
+        TimeValidationSchema,
+        create(TimeValidationSchema, { pastTimestamp: { seconds: -62_135_596_801n } }),
+      ),
+    ).toThrow(RangeError);
+    expect(() =>
+      validate(
+        TimeValidationSchema,
+        create(TimeValidationSchema, { futureTimestamp: { seconds: 253_402_300_800n } }),
+      ),
+    ).toThrow(RangeError);
   });
 
   it("uses Euclidean pre-epoch system clock division", () => {

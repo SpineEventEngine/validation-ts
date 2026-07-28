@@ -132,5 +132,5 @@ Singular descriptor-default messages are skipped; repeated and map elements,
 including defaults, are evaluated independently. Diagnostics use `error_msg`
 before the frozen default and expose `when.in`. Zoned conversion follows
 Temporal compatible gap/overlap resolution and the runtime tzdb. Years outside
-Temporal's direct range use a Gregorian 400-year-equivalent projection (a
-pre-transition past band and a post-rule future band) to obtain the zone offset.
+Every converted value must fit the JVM `Timestamp` instant range from year 1
+through year 9999; invalid or out-of-range conversions throw `RangeError`.

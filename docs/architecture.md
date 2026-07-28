@@ -110,5 +110,5 @@ Use [the documentation index](README.md) for reader-facing orientation.
 
 `options/when.ts` is an internal fixed validator. It uses bigint epoch
 nanoseconds for UTC and offsets, and `temporal-polyfill` only to resolve IANA
-ZonedDateTime rules. The effective zone offset is projected across the full
-Spine year domain; installed runtime tzdb data remains authoritative.
+ZonedDateTime rules. Converted values must fit the JVM Timestamp range; installed
+runtime tzdb data remains authoritative for compatible zone resolution.
