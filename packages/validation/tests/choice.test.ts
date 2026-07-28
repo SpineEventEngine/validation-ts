@@ -25,13 +25,13 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src/validation";
+import { validate } from "../src/validation.js";
 import {
   PaymentMethodSchema,
   ContactMethodSchema,
   ShippingOptionSchema,
   MultipleRequiredChoicesSchema,
-} from "./generated/test-choice_pb";
+} from "./generated/test-choice_pb.js";
 
 describe("Choice Option Validation (oneof)", () => {
   describe("Basic Choice Validation", () => {

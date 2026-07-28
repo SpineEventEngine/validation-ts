@@ -31,8 +31,8 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { formatViolations, validate, Violations } from "../src";
-import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb";
+import { formatViolations, validate, Violations } from "../src/index.js";
+import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb.js";
 
 describe("Basic Validation", () => {
   it("should export `validate` function", () => {

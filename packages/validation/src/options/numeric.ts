@@ -18,7 +18,7 @@ import { create, ScalarType } from "@bufbuild/protobuf";
 import type { DescField, DescMessage } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import { ValidationConfigurationError } from "../validation-configuration-error";
+import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 export type NumericValue = number | bigint;
 

@@ -43,7 +43,7 @@ import {
   if_has_duplicates,
   choice,
   requireFields,
-} from "./generated/spine/options_pb";
+} from "./generated/spine/options_pb.js";
 
 /**
  * Registry storing option extension references.

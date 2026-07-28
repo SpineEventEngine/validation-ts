@@ -8,25 +8,22 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "generate": "buf generate && node scripts/patch-generated.cjs",
-    "build": "npm run generate && tsc",
-    "start": "npm run build --workspace=@spine-event-engine/validation && npm run build && npm run start:built",
+    "generate": "buf generate && node scripts/patch-generated.mjs",
+    "build": "pnpm generate && tsc -b",
+    "start": "pnpm --filter @spine-event-engine/validation build && pnpm build && pnpm start:built",
     "start:built": "node dist/index.js",
-    "test": "npm run build --workspace=@spine-event-engine/validation && npm run generate && jest --config jest.config.cjs",
+    "test": "pnpm --filter @spine-event-engine/validation build && pnpm generate && vitest run",
     "clean": "rm -rf dist src/generated",
     "proto:lint": "buf lint"
   },
   "dependencies": {
     "@bufbuild/protobuf": "2.13.0",
-    "@spine-event-engine/validation": "*"
+    "@spine-event-engine/validation": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "1.72.0",
     "@bufbuild/protoc-gen-es": "2.13.0",
     "@types/node": "24.13.2",
-    "@types/jest": "30.0.0",
-    "jest": "30.4.2",
-    "ts-jest": "29.4.12",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   }
 }

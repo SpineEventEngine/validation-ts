@@ -30,12 +30,12 @@ import {
   UInt64ValueSchema,
 } from "@bufbuild/protobuf/wkt";
 
-import { FieldPathSchema } from "./generated/spine/base/field_path_pb";
+import { FieldPathSchema } from "./generated/spine/base/field_path_pb.js";
 import {
   ConstraintViolationSchema,
   type ConstraintViolation,
-} from "./generated/spine/validate/validation_error_pb";
-import { TemplateStringSchema } from "./generated/spine/validate/error_message_pb";
+} from "./generated/spine/validate/validation_error_pb.js";
+import { TemplateStringSchema } from "./generated/spine/validate/error_message_pb.js";
 
 /** Shared root entry and current Proto-field path for validation. */
 export class ValidationContext {

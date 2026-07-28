@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { ValidationConfigurationError, validate } from "../src";
+import { ValidationConfigurationError, validate } from "../src/index.js";
 
 import {
   RequiredFieldsSchema,
@@ -40,7 +40,7 @@ import {
   InvalidRequiredNumericSchema,
   InvalidRequiredBooleanSchema,
   Status,
-} from "./generated/test-required_pb";
+} from "./generated/test-required_pb.js";
 
 describe("Required Field Validation", () => {
   describe("Basic Required Fields", () => {

@@ -21,15 +21,15 @@ import type { DescField } from "@bufbuild/protobuf";
 import { scalarEquals } from "@bufbuild/protobuf/reflect";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
+import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import {
   default_message,
   IfHasDuplicatesOptionSchema,
   type IfHasDuplicatesOption,
-} from "../generated/spine/options_pb";
-import { getRegisteredOption } from "../options-registry";
-import { createConstraintViolation, ValidationContext } from "../validation-contract";
-import { ValidationConfigurationError } from "../validation-configuration-error";
+} from "../generated/spine/options_pb.js";
+import { getRegisteredOption } from "../options-registry.js";
+import { createConstraintViolation, ValidationContext } from "../validation-contract.js";
+import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 interface EqualityClass {
   representative: unknown;

@@ -18,23 +18,23 @@ import { getOption, hasOption } from "@bufbuild/protobuf";
 import type { DescField } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
+import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import {
   default_message,
   MaxOptionSchema,
   MinOptionSchema,
   type MaxOption,
   type MinOption,
-} from "../generated/spine/options_pb";
-import { getRegisteredOption } from "../options-registry";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract";
+} from "../generated/spine/options_pb.js";
+import { getRegisteredOption } from "../options-registry.js";
+import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
 import {
   assertNumericTarget,
   compareNumeric,
   isNaNNumeric,
   resolveBound,
   runtimeNumeric,
-} from "./numeric";
+} from "./numeric.js";
 
 /** Validates `(min)` and `(max)` for a single field in orchestration order. */
 export function validateMinMaxField(

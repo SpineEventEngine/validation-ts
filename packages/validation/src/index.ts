@@ -32,25 +32,25 @@
  * @packageDocumentation
  */
 
-export { validate, formatViolations, Violations } from "./validation";
+export { validate, formatViolations, Violations } from "./validation.js";
 export {
   ValidationConfigurationError,
   type ValidationConfigurationErrorCode,
   type ValidationConfigurationErrorInit,
-} from "./validation-configuration-error";
+} from "./validation-configuration-error.js";
 
 /**
  * Internal utility function for formatting template strings.
  * End-users typically don't need to use this directly. Use `Violations.formatMessage()` instead.
  * @internal
  */
-export { formatTemplateString } from "./validation";
+export { formatTemplateString } from "./validation.js";
 
 export type {
   ConstraintViolation,
   ValidationError,
-} from "./generated/spine/validate/validation_error_pb";
+} from "./generated/spine/validate/validation_error_pb.js";
 
-export type { TemplateString } from "./generated/spine/validate/error_message_pb";
+export type { TemplateString } from "./generated/spine/validate/error_message_pb.js";
 
-export type { FieldPath } from "./generated/spine/base/field_path_pb";
+export type { FieldPath } from "./generated/spine/base/field_path_pb.js";

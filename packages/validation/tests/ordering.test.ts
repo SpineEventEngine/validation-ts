@@ -17,9 +17,9 @@
 import { create } from "@bufbuild/protobuf";
 import { anyUnpack, StringValueSchema } from "@bufbuild/protobuf/wkt";
 
-import { validate } from "../src";
-import { AccountSchema } from "./generated/integration-account_pb";
-import { RepeatedPatternValidationSchema } from "./generated/test-pattern_pb";
+import { validate } from "../src/index.js";
+import { AccountSchema } from "./generated/integration-account_pb.js";
+import { RepeatedPatternValidationSchema } from "./generated/test-pattern_pb.js";
 
 describe("deterministic validation orchestration", () => {
   it("runs message constraints first and then validators field by field", () => {

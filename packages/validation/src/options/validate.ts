@@ -31,10 +31,10 @@ import type { DescField, DescMessage, Registry } from "@bufbuild/protobuf";
 import { anyUnpack } from "@bufbuild/protobuf/wkt";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
-import { getRegisteredOption } from "../options-registry";
-import type { ValidationContext } from "../validation-contract";
-import { ValidationConfigurationError } from "../validation-configuration-error";
+import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
+import { getRegisteredOption } from "../options-registry.js";
+import type { ValidationContext } from "../validation-contract.js";
+import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 /** Internal recursive validation seam, supplied by the validation orchestrator. */
 export type NestedValidator = (

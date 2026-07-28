@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { ValidationConfigurationError, validate } from "../src";
+import { ValidationConfigurationError, validate } from "../src/index.js";
 
 import {
   UserIdentifierSchema,
@@ -53,7 +53,7 @@ import {
   InvalidRequireTrailingAndSchema,
   InvalidRequireEmptyGroupSchema,
   RequireOneofSchema,
-} from "./generated/test-required-field_pb";
+} from "./generated/test-required-field_pb.js";
 
 describe("Required Field Option Validation", () => {
   describe("Simple OR Logic", () => {

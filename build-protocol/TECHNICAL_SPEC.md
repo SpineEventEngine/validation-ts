@@ -60,9 +60,12 @@ See Q-0001 in `questions/UNRESOLVED.md`.
 
 ## Compatibility
 
-- npm remains the package manager.
-- Jest remains the test runner.
-- The published package remains CommonJS.
+- pnpm 11.9.0 is the package manager and its committed lockfile is the
+  deterministic dependency graph.
+- Vitest 4.1.9 with V8 coverage is the test runner.
+- The published package is ESM-only and must be consumed through its export
+  map; CommonJS `require()` is unsupported.
+- Node.js 24 or later is required; 24.18.0 is pinned and tested.
 - The package name is `@spine-event-engine/validation`.
 - Snapshot versions use `2.0.0-snapshot.<increment>`.
 - `master` pushes publish automatically; `dev` is the integration branch.

@@ -16,7 +16,7 @@
 
 import { create } from "@bufbuild/protobuf";
 
-import { validate } from "../src";
+import { validate } from "../src/index.js";
 import {
   NumericBoundsContractSchema,
   NumericReferencesSchema,
@@ -39,7 +39,7 @@ import {
   InvalidDoubleOverflowSchema,
   NumericTypesSchema,
   RepeatedMinMaxSchema,
-} from "./generated/test-min-max_pb";
+} from "./generated/test-min-max_pb.js";
 import {
   ExactLongRangesSchema,
   InvalidRangeTargetSchema,
@@ -48,7 +48,7 @@ import {
   ReversedRangeSchema,
   NumericTypeRangesSchema,
   RepeatedRangeSchema,
-} from "./generated/test-range_pb";
+} from "./generated/test-range_pb.js";
 
 describe("exact numeric validation contract", () => {
   it("keeps 64-bit integer bounds exact and packs a repeated offending value", () => {

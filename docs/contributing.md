@@ -4,6 +4,9 @@ This repository has a governed delivery workflow. Read `AGENTS.md` first, then
 the current [project plan](../build-protocol/PROJECT_PLAN.md), active task
 record, technical specification, and relevant work/review logs.
 
+Use Node.js 24 or later. The committed `.node-version` pins the tested version,
+24.18.0. Install dependencies with pnpm 11.9.0 via Corepack.
+
 ## Intake, approval, and ownership
 
 Before implementation, reconcile Git state, inspect code and contract inputs,
@@ -34,18 +37,18 @@ exist, and stale unnamespaced diagnostic placeholders are rejected.
 ## Commands
 
 ```sh
-npm ci
-npm run generate
-npm run test:validation
-npm run test:example
-npm run docs:check
-npm run typecheck:generated
-npm run lint
-npm run format:check
-npm run verify
+corepack pnpm install --frozen-lockfile
+pnpm generate
+pnpm test:validation
+pnpm test:example
+pnpm docs:check
+pnpm typecheck:generated
+pnpm lint
+pnpm format:check
+pnpm verify
 ```
 
-Use the narrowest relevant command during implementation. `npm run verify` is
+Use the narrowest relevant command during implementation. `pnpm verify` is
 the final evidence gate; do not claim completion from an earlier or partial
 run. It includes generation/provenance, strict typechecking, lint and format,
 coverage, docs, Proto checks, build/package checks, and diff hygiene.

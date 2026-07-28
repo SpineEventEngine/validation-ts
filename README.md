@@ -1,5 +1,7 @@
 # Spine Validation — TypeScript Client Library
 
+Requires Node.js 24 or later; development and CI pin and test Node.js 24.18.0.
+
 A TypeScript validation library for Protobuf messages using [Spine Validation](https://github.com/SpineEventEngine/validation/) options,
 built on [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2).
 
@@ -74,7 +76,7 @@ version command for a reproducible install.
 
 ## 📦 What's Included
 
-This repository is structured as an npm workspace:
+This repository is structured as a pnpm workspace:
 
 ```
 validation-ts/
@@ -109,24 +111,24 @@ git clone <repository-url>
 cd validation-ts
 
 # Install the committed dependency graph
-npm ci
+corepack pnpm install --frozen-lockfile
 ```
 
 ### Build & Test
 
 ```bash
 # Run the complete local and CI quality gate
-npm run verify
+pnpm verify
 ```
 
 ### Workspace Scripts
 
-| Command           | Description                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| `npm run verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
-| `npm run build`   | Build the package and example                                                         |
-| `npm test`        | Run validation-package and executable-example Jest tests                              |
-| `npm run example` | Run the example project                                                               |
+| Command        | Description                                                                           |
+| -------------- | ------------------------------------------------------------------------------------- |
+| `pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
+| `pnpm build`   | Build the package and example                                                         |
+| `pnpm test`    | Run validation-package and executable-example Vitest tests                            |
+| `pnpm example` | Run the example project                                                               |
 
 ---
 

@@ -31,16 +31,16 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate, formatViolations } from "../src";
+import { validate, formatViolations } from "../src/index.js";
 
-import { UserSchema, Role, GetUserResponseSchema } from "./generated/integration-user_pb";
-import { AccountSchema, AccountType } from "./generated/integration-account_pb";
+import { UserSchema, Role, GetUserResponseSchema } from "./generated/integration-user_pb.js";
+import { AccountSchema, AccountType } from "./generated/integration-account_pb.js";
 import {
   SecureAccountSchema,
   AdvancedConfigSchema,
   ColorSettingsSchema,
   ScheduledEventSchema,
-} from "./generated/test-goes_pb";
+} from "./generated/test-goes_pb.js";
 
 describe("Integration Tests", () => {
   it("should `validate` User message with multiple constraint types", () => {

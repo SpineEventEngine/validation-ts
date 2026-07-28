@@ -20,13 +20,13 @@ import { getExtension, getOption, hasExtension } from "@bufbuild/protobuf";
 import type { DescField, DescOneof } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb";
-import { default_message, RequireOptionSchema } from "../generated/spine/options_pb";
-import type { RequireOption } from "../generated/spine/options_pb";
-import { getRegisteredOption } from "../options-registry";
-import { isOneofPresent, isPresent, supportsPresence } from "../presence";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract";
-import { ValidationConfigurationError } from "../validation-configuration-error";
+import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
+import { default_message, RequireOptionSchema } from "../generated/spine/options_pb.js";
+import type { RequireOption } from "../generated/spine/options_pb.js";
+import { getRegisteredOption } from "../options-registry.js";
+import { isOneofPresent, isPresent, supportsPresence } from "../presence.js";
+import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 type Requirement = { readonly field?: DescField; readonly oneof?: DescOneof };
 

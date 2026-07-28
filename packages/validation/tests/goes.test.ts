@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate } from "../src";
+import { validate } from "../src/index.js";
 
 import {
   ScheduledEventSchema,
@@ -50,7 +50,7 @@ import {
   InvalidGoesTargetSchema,
   InvalidGoesUnknownCompanionSchema,
   InvalidGoesNumericCompanionSchema,
-} from "./generated/test-goes_pb";
+} from "./generated/test-goes_pb.js";
 
 describe("Field Dependency Validation (goes)", () => {
   describe("Basic Goes Constraint", () => {

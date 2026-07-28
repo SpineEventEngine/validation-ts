@@ -18,9 +18,9 @@ import { create } from "@bufbuild/protobuf";
 import type { DescField, Registry } from "@bufbuild/protobuf";
 import type { GenMessage } from "@bufbuild/protobuf/codegenv2";
 
-import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb";
-import { FieldPathSchema } from "./generated/spine/base/field_path_pb";
-import { createConstraintViolation, type ValidationContext } from "./validation-contract";
+import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb.js";
+import { FieldPathSchema } from "./generated/spine/base/field_path_pb.js";
+import { createConstraintViolation, type ValidationContext } from "./validation-contract.js";
 
 type LegacyFieldValidator = (
   schema: GenMessage<any>,
