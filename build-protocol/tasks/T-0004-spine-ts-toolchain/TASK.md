@@ -123,15 +123,15 @@ Coverage: migrated Vitest/V8 result is 93.85% statements, 91.36% branches,
 
 ## Findings
 
-| ID    | Severity | Accepted? | Resolution         |
-| ----- | -------- | --------- | ------------------ |
-| F-001 | P1       | Yes       | Pending correction |
-| F-002 | P1       | Yes       | Pending correction |
-| F-003 | P2       | Yes       | Pending correction |
-| F-004 | P2       | Yes       | Pending correction |
-| F-005 | P1       | Yes       | Pending correction |
-| F-006 | P2       | Yes       | Pending correction |
-| F-007 | P2       | Yes       | Pending correction |
+| ID    | Severity | Accepted? | Resolution                                                 |
+| ----- | -------- | --------- | ---------------------------------------------------------- |
+| F-001 | P1       | Yes       | Confirmed by narrow re-review                              |
+| F-002 | P1       | Yes       | Confirmed by narrow re-review                              |
+| F-003 | P2       | Yes       | Confirmed by narrow re-review                              |
+| F-004 | P2       | Yes       | Residual cross-platform required-target correction pending |
+| F-005 | P1       | Yes       | Confirmed by narrow re-review                              |
+| F-006 | P2       | Yes       | Residual user-guide compatibility statement pending        |
+| F-007 | P2       | Yes       | Confirmed by narrow re-review                              |
 
 ## Integration
 
