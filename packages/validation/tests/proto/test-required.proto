@@ -64,13 +64,13 @@ message Address {
     // Supplies the unconstrained city component of the address.
     string city = 2;
 }
-// Enum `Status` supplies values for this fixture.
+// Identifies the required account status in `RequiredFields`.
 enum Status {
-    // Represents `STATUS_UNSPECIFIED` in this fixture enum.
+    // Is the default unset status rejected by `(required)`.
     STATUS_UNSPECIFIED = 0;
-    // Represents `STATUS_ACTIVE` in this fixture enum.
+    // Represents an active status that satisfies `(required)`.
     STATUS_ACTIVE = 1;
-    // Represents `STATUS_INACTIVE` in this fixture enum.
+    // Represents an inactive status that still satisfies `(required)`.
     STATUS_INACTIVE = 2;
 }
 // Fixture `CustomErrorMessages` exercises `(required)`.
