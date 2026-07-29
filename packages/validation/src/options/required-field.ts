@@ -28,94 +28,94 @@ import { ValidationConfigurationError } from "../validation-configuration-error.
 
 type Requirement = { readonly field?: DescField; readonly oneof?: DescOneof };
 
-function requireDefaultMessage(): string | undefined {
-  return getOption(RequireOptionSchema, default_message);
-}
+/** Owns `(require)` option parsing and validation. */
+export const Require = {
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    violations: ConstraintViolation[],
+  ): void {
+    const requireOption = ValidationOptions.get("requireFields");
+    const options = schema.proto.options;
+    if (!options || !hasExtension(options, requireOption)) return;
 
-function invalidOption(schema: DescMessage): never {
-  throw new ValidationConfigurationError({
-    code: "INVALID_OPTION_VALUE",
-    option: "require",
-    typeName: schema.typeName,
-  });
-}
-
-/** Parses the documented OR-of-AND grammar, resolving every token eagerly. */
-function parseRequirements(
-  expression: string,
-  schema: DescMessage,
-): readonly (readonly Requirement[])[] {
-  if (!expression.trim() || /[()]/.test(expression)) invalidOption(schema);
-
-  const groups = expression.split("|").map((group) => group.trim());
-  if (groups.some((group) => !group)) invalidOption(schema);
-
-  return groups.map((group) => {
-    const tokens = group.split("&").map((token) => token.trim());
-    if (tokens.some((token) => !token || /\s/.test(token))) invalidOption(schema);
-    return tokens.map((token) => resolveRequirement(token, schema));
-  });
-}
-
-function resolveRequirement(token: string, schema: DescMessage): Requirement {
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) invalidOption(schema);
-
-  const field = schema.fields.find((candidate) => candidate.name === token);
-  if (field !== undefined) {
-    if (!Presence.supports(field)) {
-      throw new ValidationConfigurationError({
-        code: "INVALID_FIELD_REFERENCE",
-        option: "require",
-        typeName: schema.typeName,
-        fieldPath: [field.name],
-      });
+    const require = getExtension(options, requireOption);
+    const expression = require.fields;
+    const groups = Require.parseRequirements(expression, schema);
+    if (
+      groups.some((group) =>
+        group.every((requirement) => Require.requirementIsPresent(requirement, message)),
+      )
+    ) {
+      return;
     }
-    return { field };
-  }
 
-  const oneof = schema.oneofs.find((candidate) => candidate.name === token);
-  if (oneof !== undefined) return { oneof };
+    violations.push(
+      ViolationFactory.create(context, undefined, undefined, {
+        customMessage: require.errorMsg,
+        defaultMessage: Require.defaultMessage(),
+        placeholders: { "require.fields": expression },
+      }),
+    );
+  },
 
-  throw new ValidationConfigurationError({
-    code: "UNKNOWN_FIELD_REFERENCE",
-    option: "require",
-    typeName: schema.typeName,
-    fieldPath: [token],
-  });
-}
+  defaultMessage(): string | undefined {
+    return getOption(RequireOptionSchema, default_message);
+  },
 
-function requirementIsPresent(requirement: Requirement, message: Message): boolean {
-  if (requirement.field !== undefined) {
-    return Presence.is(requirement.field, MessageFields.read(message, requirement.field));
-  }
-  return Presence.isOneof(requirement.oneof as DescOneof, message);
-}
+  invalidOption(schema: DescMessage): never {
+    throw new ValidationConfigurationError({
+      code: "INVALID_OPTION_VALUE",
+      option: "require",
+      typeName: schema.typeName,
+    });
+  },
 
-/** Validates a `(require)` option once for the message validation entry. */
-export function validateRequireOption(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  violations: ConstraintViolation[],
-): void {
-  const requireOption = ValidationOptions.get("requireFields");
-  const options = schema.proto.options;
-  if (!options || !hasExtension(options, requireOption)) return;
+  parseRequirements(expression: string, schema: DescMessage): readonly (readonly Requirement[])[] {
+    if (!expression.trim() || /[()]/.test(expression)) Require.invalidOption(schema);
 
-  const require = getExtension(options, requireOption);
-  const expression = require.fields;
-  const groups = parseRequirements(expression, schema);
-  if (
-    groups.some((group) => group.every((requirement) => requirementIsPresent(requirement, message)))
-  ) {
-    return;
-  }
+    const groups = expression.split("|").map((group) => group.trim());
+    if (groups.some((group) => !group)) Require.invalidOption(schema);
 
-  violations.push(
-    ViolationFactory.create(context, undefined, undefined, {
-      customMessage: require.errorMsg,
-      defaultMessage: requireDefaultMessage(),
-      placeholders: { "require.fields": expression },
-    }),
-  );
-}
+    return groups.map((group) => {
+      const tokens = group.split("&").map((token) => token.trim());
+      if (tokens.some((token) => !token || /\s/.test(token))) Require.invalidOption(schema);
+      return tokens.map((token) => Require.resolve(token, schema));
+    });
+  },
+
+  resolve(token: string, schema: DescMessage): Requirement {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) Require.invalidOption(schema);
+
+    const field = schema.fields.find((candidate) => candidate.name === token);
+    if (field !== undefined) {
+      if (!Presence.supports(field)) {
+        throw new ValidationConfigurationError({
+          code: "INVALID_FIELD_REFERENCE",
+          option: "require",
+          typeName: schema.typeName,
+          fieldPath: [field.name],
+        });
+      }
+      return { field };
+    }
+
+    const oneof = schema.oneofs.find((candidate) => candidate.name === token);
+    if (oneof !== undefined) return { oneof };
+
+    throw new ValidationConfigurationError({
+      code: "UNKNOWN_FIELD_REFERENCE",
+      option: "require",
+      typeName: schema.typeName,
+      fieldPath: [token],
+    });
+  },
+
+  requirementIsPresent(requirement: Requirement, message: Message): boolean {
+    if (requirement.field !== undefined) {
+      return Presence.is(requirement.field, MessageFields.read(message, requirement.field));
+    }
+    return Presence.isOneof(requirement.oneof as DescOneof, message);
+  },
+} as const;

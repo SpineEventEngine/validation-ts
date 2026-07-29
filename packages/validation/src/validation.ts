@@ -37,34 +37,34 @@ import type { DescFile, DescMessage, MessageShape, Registry } from "@bufbuild/pr
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb.js";
 import type { TemplateString } from "./generated/spine/validate/error_message_pb.js";
 
-import { validateRequiredField } from "./options/required.js";
+import { Required } from "./options/required.js";
 import { validatePatternFields } from "./options/pattern.js";
-import { validateRequireOption } from "./options/required-field.js";
-import { validateMinMaxField } from "./options/min-max.js";
-import { validateRangeField } from "./options/range.js";
+import { Require } from "./options/required-field.js";
+import { MinMax } from "./options/min-max.js";
+import { Range } from "./options/range.js";
 import { validateWhenField } from "./options/when.js";
 import { validateDistinctField } from "./options/distinct.js";
 import { validateNestedField } from "./options/validate.js";
-import { validateGoesField } from "./options/goes.js";
-import { validateChoiceOptions } from "./options/choice.js";
+import { Goes } from "./options/goes.js";
+import { Choice } from "./options/choice.js";
 import { ValidationOrchestration, type FieldValidator } from "./orchestration.js";
 import { ValidationContext } from "./validation-contract.js";
 
 const fieldValidators: readonly FieldValidator[] = [
   {
     validate(context, schema, message, field, violations) {
-      validateRequiredField(context, schema, message, field, violations);
+      Required.validate(context, schema, message, field, violations);
     },
   },
   ValidationOrchestration.legacyFieldValidator(validatePatternFields),
   {
     validate(context, schema, message, field, violations) {
-      validateMinMaxField(context, schema, message, field, violations);
+      MinMax.validate(context, schema, message, field, violations);
     },
   },
   {
     validate(context, schema, message, field, violations) {
-      validateRangeField(context, schema, message, field, violations);
+      Range.validate(context, schema, message, field, violations);
     },
   },
   {
@@ -92,7 +92,7 @@ const fieldValidators: readonly FieldValidator[] = [
   },
   {
     validate(context, schema, message, field, violations) {
-      validateGoesField(context, schema, message, field, violations);
+      Goes.validate(context, schema, message, field, violations);
     },
   },
 ];
@@ -172,7 +172,7 @@ const ValidationEngine = {
   ): ConstraintViolation[] {
     const violations: ConstraintViolation[] = [];
 
-    validateRequireOption(context, schema, message, violations);
+    Require.validate(context, schema, message, violations);
 
     for (const field of schema.fields) {
       for (const validator of fieldValidators) {
@@ -180,7 +180,7 @@ const ValidationEngine = {
       }
     }
 
-    validateChoiceOptions(context, schema, message, violations);
+    Choice.validate(context, schema, message, violations);
 
     return violations;
   },

@@ -26,44 +26,46 @@ import { Presence } from "../presence.js";
 import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
-function defaultMessage(): string | undefined {
-  return getOption(IfMissingOptionSchema, default_message);
-}
+/** Owns `(required)` option validation. */
+export const Required = {
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    field: DescField,
+    violations: ConstraintViolation[],
+  ): void {
+    const requiredOption = ValidationOptions.get("required");
+    if (!requiredOption || !hasOption(field, requiredOption) || !getOption(field, requiredOption))
+      return;
 
-/** Validates one field, allowing orchestration to preserve declaration order. */
-export function validateRequiredField(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  field: DescField,
-  violations: ConstraintViolation[],
-): void {
-  const requiredOption = ValidationOptions.get("required");
-  if (!requiredOption || !hasOption(field, requiredOption) || !getOption(field, requiredOption))
-    return;
+    if (!Presence.supports(field)) {
+      throw new ValidationConfigurationError({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "required",
+        typeName: schema.typeName,
+        fieldPath: [field.name],
+      });
+    }
 
-  if (!Presence.supports(field)) {
-    throw new ValidationConfigurationError({
-      code: "UNSUPPORTED_OPTION_TARGET",
-      option: "required",
-      typeName: schema.typeName,
-      fieldPath: [field.name],
-    });
-  }
+    const value = MessageFields.read(message, field);
+    if (Presence.is(field, value)) return;
 
-  const value = MessageFields.read(message, field);
-  if (Presence.is(field, value)) return;
+    const ifMissingOption = ValidationOptions.get("if_missing");
+    const ifMissing = hasOption(field, ifMissingOption)
+      ? getOption(field, ifMissingOption)
+      : undefined;
+    const customMessage = ifMissing?.errorMsg || undefined;
 
-  const ifMissingOption = ValidationOptions.get("if_missing");
-  const ifMissing = hasOption(field, ifMissingOption)
-    ? getOption(field, ifMissingOption)
-    : undefined;
-  const customMessage = ifMissing?.errorMsg || undefined;
+    violations.push(
+      ViolationFactory.create(context.atField(field), field, undefined, {
+        customMessage,
+        defaultMessage: Required.defaultMessage(),
+      }),
+    );
+  },
 
-  violations.push(
-    ViolationFactory.create(context.atField(field), field, undefined, {
-      customMessage,
-      defaultMessage: defaultMessage(),
-    }),
-  );
-}
+  defaultMessage(): string | undefined {
+    return getOption(IfMissingOptionSchema, default_message);
+  },
+} as const;

@@ -25,31 +25,33 @@ import { ValidationOptions } from "../options-registry.js";
 import { Presence } from "../presence.js";
 import { ViolationFactory, type ValidationContext } from "../validation-contract.js";
 
-function defaultMessage(): string | undefined {
-  return getOption(ChoiceOptionSchema, default_message);
-}
+/** Owns `(choice)` option validation. */
+export const Choice = {
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    violations: ConstraintViolation[],
+  ): void {
+    const choiceOption = ValidationOptions.get("choice");
+    if (!choiceOption) return;
 
-/** Validates required oneof groups in descriptor order. */
-export function validateChoiceOptions(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  violations: ConstraintViolation[],
-): void {
-  const choiceOption = ValidationOptions.get("choice");
-  if (!choiceOption) return;
+    for (const oneof of schema.oneofs) {
+      if (!hasOption(oneof, choiceOption)) continue;
+      const option = getOption(oneof, choiceOption);
+      if (!option.required || Presence.isOneof(oneof, message)) continue;
 
-  for (const oneof of schema.oneofs) {
-    if (!hasOption(oneof, choiceOption)) continue;
-    const option = getOption(oneof, choiceOption);
-    if (!option.required || Presence.isOneof(oneof, message)) continue;
+      violations.push(
+        ViolationFactory.create(context, undefined, undefined, {
+          customMessage: option.errorMsg,
+          defaultMessage: Choice.defaultMessage(),
+          placeholders: { "group.path": oneof.name, "parent.type": context.rootTypeName },
+        }),
+      );
+    }
+  },
 
-    violations.push(
-      ViolationFactory.create(context, undefined, undefined, {
-        customMessage: option.errorMsg,
-        defaultMessage: defaultMessage(),
-        placeholders: { "group.path": oneof.name, "parent.type": context.rootTypeName },
-      }),
-    );
-  }
-}
+  defaultMessage(): string | undefined {
+    return getOption(ChoiceOptionSchema, default_message);
+  },
+} as const;
