@@ -19,7 +19,7 @@ name even for nested leaves. `fieldPath.fieldName` contains unqualified Proto
 names joined by dots, without list indices or map keys. Message `(require)` and
 oneof `(choice)` failures have an empty path. `fieldValue` is a descriptor-packed
 `Any` when an offending value exists. `message` is present for these validators
-validators and may have an empty template.
+and may have an empty template.
 
 `Violations.failurePath()` returns the dot-separated path or `"unknown"`.
 `Violations.formatMessage()` substitutes the template map, and

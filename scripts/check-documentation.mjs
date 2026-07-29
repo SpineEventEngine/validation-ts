@@ -13,7 +13,7 @@ import ts from "typescript";
 
 const stalePlaceholder =
   /(?:\$\{(?:value|other|field|regex)\}|(?<!\$)\{(?:value|other|field|regex)\})/;
-const localLink = /\[[^\]]*\]\(([^)#]+)(?:#[^)]+)?\)/g;
+const markdownLink = /\[[^\]]*\]\(([^)\s]+)\)/g;
 const typeScriptFence = /```(?:ts|typescript)\s*\r?\n([\s\S]*?)```/gi;
 const shellFence = /```(?:bash|sh|shell)\s*\r?\n([\s\S]*?)```/gi;
 const publicPackage = "@spine-event-engine/validation";
@@ -79,6 +79,62 @@ function checkPackageDocumentationLinks(root) {
     }
   };
   visit(docs);
+}
+
+function headingAnchors(content) {
+  const counts = new Map();
+  const anchors = new Set();
+  for (const match of content.matchAll(/^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm)) {
+    const slug = match[1]
+      .trim()
+      .toLowerCase()
+      .replace(/[\]`*_~()]/g, "")
+      .replace(/[^\p{L}\p{N}\s-]/gu, "")
+      .replace(/\s+/g, "-");
+    if (!slug) continue;
+    const duplicate = counts.get(slug) ?? 0;
+    counts.set(slug, duplicate + 1);
+    anchors.add(duplicate === 0 ? slug : `${slug}-${duplicate}`);
+  }
+  return anchors;
+}
+
+function checkLocalMarkdownLinks(content, file) {
+  for (const match of content.matchAll(markdownLink)) {
+    const destination = match[1];
+    if (/^[a-z]+:/i.test(destination) || destination.startsWith("api/reference/")) continue;
+    const hashIndex = destination.indexOf("#");
+    const target = hashIndex === -1 ? destination : destination.slice(0, hashIndex);
+    const anchor =
+      hashIndex === -1 ? undefined : decodeURIComponent(destination.slice(hashIndex + 1));
+    const targetPath = target ? resolve(dirname(file), target) : file;
+    if (!existsSync(targetPath)) throw new Error(`Broken local link ${target} in ${file}`);
+    if (
+      anchor &&
+      extname(targetPath) === ".md" &&
+      !headingAnchors(readFileSync(targetPath, "utf8")).has(anchor)
+    )
+      throw new Error(`Broken local anchor ${anchor} in ${file}`);
+  }
+}
+
+function checkCompleteProtoExample(root) {
+  const packageReadme = resolve(root, "packages/validation/README.md");
+  const content = readFileSync(packageReadme, "utf8");
+  const example = content.match(
+    /^## Complete Proto Example\s*\n\n```protobuf\s*\n([\s\S]*?)```/m,
+  )?.[1];
+  if (!example) return;
+  if (!/import "google\/protobuf\/timestamp\.proto";/.test(example))
+    throw new Error("Complete Proto Example must import google/protobuf/timestamp.proto");
+  if (
+    !/google\.protobuf\.Timestamp\s+expires_at\s*=\s*11\s+\[\(when\)\.in\s*=\s*FUTURE\];/.test(
+      example,
+    )
+  )
+    throw new Error("Complete Proto Example must demonstrate (when) with expires_at");
+  if (/^\s*message\s+(\w+)\s*\{\s*\n\s*message\s+\1\s*\{/m.test(example))
+    throw new Error("Complete Proto Example must not immediately duplicate a message declaration");
 }
 
 function checkSourceTsDoc(root, index, publicExports) {
@@ -229,16 +285,11 @@ export function checkDocumentation({ root }) {
       index,
       publicExports,
     );
-    for (const match of content.matchAll(localLink)) {
-      const target = match[1];
-      if (/^[a-z]+:/i.test(target)) continue;
-      if (target.startsWith("api/reference/")) continue;
-      if (!existsSync(resolve(dirname(file), target)))
-        throw new Error(`Broken local link ${target} in ${file}`);
-    }
+    checkLocalMarkdownLinks(content, file);
   }
 
   checkPackageDocumentationLinks(root);
+  checkCompleteProtoExample(root);
 
   const publicTsDoc = resolve(root, "packages/validation/src/validation.ts");
   const publicTsDocSource = readFileSync(publicTsDoc, "utf8");

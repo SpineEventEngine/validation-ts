@@ -130,22 +130,30 @@ console.log(violations.length);
 ### `ValidationConfigurationError`
 
 Invalid declarations of supported options throw this public error rather than
-adding a data violation. Its fields are `code`, `option`, `typeName`, optional
-`fieldPath`, and optional `cause`. `code` is one of
+adding a data violation. Ordinary user data does not trigger it. Its fields are
+`code`, `option`, `typeName`, optional `fieldPath`, and optional `cause`. `code` is one of
 `UNSUPPORTED_OPTION_TARGET`, `INVALID_OPTION_VALUE`,
 `UNKNOWN_FIELD_REFERENCE`, or `INVALID_FIELD_REFERENCE`; `option` has the
-canonical name without Proto parentheses.
+canonical name without Proto parentheses. Handle it at the validation boundary:
+the branch runs only when the generated schema contains an invalid supported
+option declaration.
 
 ```ts
+import { create } from "@bufbuild/protobuf";
 import { ValidationConfigurationError, validate } from "@spine-event-engine/validation";
 import { UserSchema } from "./generated/user_pb.js";
 
-declare const user: never;
+const user = create(UserSchema, { email: "reader@example.test" });
 
 try {
-  validate(UserSchema, user);
+  const violations = validate(UserSchema, user);
+  console.log(violations);
 } catch (error) {
-  if (error instanceof ValidationConfigurationError) console.error(error.code);
+  if (error instanceof ValidationConfigurationError) {
+    console.error(`${error.option}: ${error.code}`);
+    throw error;
+  }
+  throw error;
 }
 ```
 
@@ -232,6 +240,7 @@ for (const violation of violations) console.error(Violations.failurePath(violati
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 import "spine/options.proto";
 import "spine/time_options.proto";
 
@@ -256,6 +265,7 @@ message User {
   google.protobuf.Any details = 8 [(validate) = true];
   string tracking_number = 9 [(goes).with = "carrier"];
   string carrier = 10 [(goes).with = "tracking_number"];
+  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];
 }
 
 message PaymentMethod {

@@ -146,6 +146,12 @@ function expectFailure(root, expression) {
     writeReadme(root, "[missing](docs/missing.md)");
     expectFailure(root, /Broken local link docs\/missing.md/);
 
+    writeReadme(root, withPublicImport("[missing heading](docs/target.md#missing-heading)"));
+    expectFailure(root, /Broken local anchor missing-heading/);
+
+    writeReadme(root, withPublicImport("[target heading](docs/target.md#target)"));
+    assert.equal(checkDocumentation({ root }).length, 3);
+
     writeReadme(
       root,
       withPublicImport(
@@ -224,6 +230,55 @@ function expectFailure(root, expression) {
       "bool legacy = 1 [(is_required) = true];\n",
     );
     expectFailure(root, /Deprecated active option/);
+
+    writeFileSync(join(root, "packages", "example", "proto", "user.proto"), 'syntax = "proto3";\n');
+    writeReadme(root, withPublicImport("[target heading](docs/target.md#target)"));
+    writeFileSync(
+      join(root, "packages", "validation", "README.md"),
+      [
+        "## Complete Proto Example",
+        "",
+        "```protobuf",
+        'import "google/protobuf/timestamp.proto";',
+        "message User {}",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    expectFailure(root, /must demonstrate \(when\)/);
+
+    writeFileSync(
+      join(root, "packages", "validation", "README.md"),
+      [
+        "## Complete Proto Example",
+        "",
+        "```protobuf",
+        'import "google/protobuf/timestamp.proto";',
+        "message User {",
+        "message User {",
+        "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
+        "}",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    expectFailure(root, /immediately duplicate a message declaration/);
+
+    writeFileSync(
+      join(root, "packages", "validation", "README.md"),
+      [
+        "## Complete Proto Example",
+        "",
+        "```protobuf",
+        'import "google/protobuf/timestamp.proto";',
+        "message User {",
+        "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
+        "}",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    assert.equal(checkDocumentation({ root }).length, 4);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
