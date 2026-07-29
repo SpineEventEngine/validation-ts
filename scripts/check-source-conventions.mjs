@@ -63,12 +63,24 @@ async function findFiles(rootDir, roots, suffix) {
   return files.sort();
 }
 
-/** Reads JSDoc blocks directly leading a declaration. */
+/** Returns normalized prose from a documentation comment. */
+function normalizedCommentProse(comment) {
+  return comment
+    .replace(/^\/\*\*?|\*\/$/g, "")
+    .split("\n")
+    .map((line) => line.replace(/^\s*\*?\s?/, "").trim())
+    .filter((line) => line && !line.startsWith("@"))
+    .join(" ")
+    .trim();
+}
+
+/** Reads meaningful JSDoc blocks directly leading a declaration. */
 function leadingJsDocs(sourceFile, node) {
   const ranges = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) ?? [];
   return ranges
     .filter(({ pos, end }) => sourceFile.text.slice(pos, end).startsWith("/**"))
-    .map((range) => ({ ...range, text: sourceFile.text.slice(range.pos, range.end) }));
+    .map((range) => ({ ...range, text: sourceFile.text.slice(range.pos, range.end) }))
+    .filter((range) => normalizedCommentProse(range.text).length > 0);
 }
 
 /** Reads the last JSDoc block directly leading a declaration. */
@@ -88,8 +100,9 @@ function nodeName(node) {
 }
 
 /** Determines whether a function declaration is the deliberate validate exception. */
-function isAllowedValidate(node) {
+function isAllowedValidate(path, node) {
   return (
+    path === "packages/validation/src/validation.ts" &&
     ts.isFunctionDeclaration(node) &&
     node.name?.text === "validate" &&
     Boolean(node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword))
@@ -118,10 +131,14 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
   const documentationTarget =
     ts.isVariableDeclaration(node) && ts.isVariableStatement(node.parent.parent)
       ? node.parent.parent
-      : node;
+      : ts.isArrowFunction(node) || ts.isFunctionExpression(node)
+        ? node.parent
+        : node;
   const comment = leadingJsDoc(sourceFile, documentationTarget);
   const name =
-    nodeName(node) ?? (ts.isConstructorDeclaration(node) ? "constructor" : "declaration");
+    nodeName(node) ??
+    nodeName(documentationTarget) ??
+    (ts.isConstructorDeclaration(node) ? "constructor" : "declaration");
   if (!comment) {
     addFinding(
       findings,
@@ -135,10 +152,7 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
   }
   if (!callable) return;
   const documentationText = comment.replace(/^\/\*\*|\*\/$/g, "");
-  const description = documentationText
-    .split("\n")
-    .map((line) => line.replace(/^\s*\*?\s?/, "").trim())
-    .find((line) => line && !line.startsWith("@"));
+  const description = normalizedCommentProse(comment);
   const firstWord = description?.match(/^[A-Za-z]+/)?.[0]?.toLowerCase();
   if (!firstWord || !(["is", "has", "does"].includes(firstWord) || firstWord.endsWith("s"))) {
     addFinding(
@@ -245,6 +259,7 @@ function checkName(findings, path, sourceFile, identifier) {
 /** Checks TypeScript declarations in one source file. */
 function checkTypeScriptFile(findings, path, contents, productionSource) {
   const sourceFile = ts.createSourceFile(path, contents, ts.ScriptTarget.Latest, true);
+  let allowedValidateCount = 0;
   if (productionSource) checkTsDocBlocks(findings, path, sourceFile);
   const visit = (node) => {
     const moduleScoped = node.parent === sourceFile;
@@ -263,6 +278,9 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
       ts.isVariableDeclaration(node.parent.parent) &&
       node.parent.parent.initializer === node.parent &&
       node.parent.parent.parent.parent.parent === sourceFile;
+    const functionValuedProperty =
+      (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) &&
+      (ts.isPropertyDeclaration(node.parent) || ts.isPropertyAssignment(node.parent));
     const documentationDeclaration =
       (moduleScoped &&
         (ts.isFunctionDeclaration(node) ||
@@ -282,7 +300,8 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
         (ts.isPropertyAssignment(node) ||
           ts.isShorthandPropertyAssignment(node) ||
           ts.isGetAccessorDeclaration(node) ||
-          ts.isSetAccessorDeclaration(node)));
+          ts.isSetAccessorDeclaration(node))) ||
+      functionValuedProperty;
     if (productionSource && documentationDeclaration) {
       const documentationTarget =
         ts.isVariableDeclaration(node) && ts.isVariableStatement(node.parent.parent)
@@ -304,6 +323,7 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
         sourceFile,
         node,
         callable ||
+          functionValuedProperty ||
           ts.isConstructorDeclaration(node) ||
           ts.isMethodDeclaration(node) ||
           ts.isMethodSignature(node) ||
@@ -316,7 +336,7 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
       productionSource &&
       moduleScoped &&
       ts.isFunctionDeclaration(node) &&
-      !isAllowedValidate(node)
+      !isAllowedValidate(path, node)
     ) {
       addFinding(
         findings,
@@ -327,6 +347,8 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
         `Module-scope function ${node.name?.text ?? "<anonymous>"} is not allowed.`,
       );
     }
+    if (productionSource && moduleScoped && isAllowedValidate(path, node))
+      allowedValidateCount += 1;
     if (
       productionSource &&
       ts.isVariableDeclaration(node) &&
@@ -346,6 +368,19 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
     ts.forEachChild(node, visit);
   };
   ts.forEachChild(sourceFile, visit);
+  if (
+    productionSource &&
+    path === "packages/validation/src/validation.ts" &&
+    allowedValidateCount !== 1
+  )
+    addFinding(
+      findings,
+      path,
+      sourceFile,
+      0,
+      "ts-validate-entry-point",
+      "packages/validation/src/validation.ts must export validate exactly once.",
+    );
 }
 
 /** Tokenizes the Proto grammar subset required for declaration conventions. */
@@ -420,10 +455,14 @@ function checkProtoDeclaration(findings, path, sourceFile, token, comment) {
     );
 }
 
-/** Determines whether a Proto comment begins its own documentation line. */
+/** Determines whether a Proto comment begins its own meaningful documentation line. */
 function isLeadingProtoComment(contents, comment) {
   const lineStart = contents.lastIndexOf("\n", comment.position) + 1;
-  return contents.slice(lineStart, comment.position).trim().length === 0;
+  const prose = comment.text
+    .replace(/^\/\/|^\/\*|\*\/$/g, "")
+    .replace(/^\s*\*?\s?/gm, "")
+    .trim();
+  return contents.slice(lineStart, comment.position).trim().length === 0 && prose.length > 0;
 }
 
 /** Checks project-owned Proto declarations using the small declaration tokenizer. */
@@ -509,7 +548,7 @@ function checkProtoFile(findings, path, contents) {
   parseBody(0, "file");
 }
 
-/** Reads frozen Proto paths from the immutable upstream-source manifest. */
+/** Reads immutable upstream Proto paths from the upstream-source manifest. */
 async function frozenProtoPaths(rootDir) {
   const manifestPath = join(rootDir, "build-protocol/proto/UPSTREAM_SOURCES.json");
   if (!existsSync(manifestPath)) return new Set();

@@ -34,7 +34,7 @@ function rules(result) {
 test("accepts documented TypeScript declarations and allowed function forms", async () => {
   await withFixture(
     {
-      "packages/validation/src/valid.ts": `
+      "packages/validation/src/validation.ts": `
       /** Validates a message. @param schema Describes the schema. @param message Describes the message. @returns Returns violations. */
       export function validate<T>(schema: T, message?: T): T { return schema; }
       /** Describes a documented owner. */
@@ -43,8 +43,10 @@ test("accepts documented TypeScript declarations and allowed function forms", as
         constructor() {}
         /** Returns the supplied value unchanged. @param value Value to return unchanged. @returns The supplied value. */
         method<T>(value?: T): T | undefined { return value; }
-        /** Describes a callback property. */
+        /** Joins the supplied values. @param values Values to join. @returns The joined values. */
         callback = (...values: string[]) => values.join(',');
+        /** Returns the supplied value. @param value Value to return. @returns The supplied value. */
+        expression = function (value: string) { return value; };
       }
       /** Describes a named object. */
       export const namedObject = {
@@ -75,6 +77,78 @@ test("accepts documented TypeScript declarations and allowed function forms", as
     async (rootDir) => {
       const result = await checkSourceConventions({ rootDir });
       assert.deepEqual(rules(result), [], result.output);
+    },
+  );
+});
+
+test("allows exactly one exported validate from validation.ts and documents function-valued properties", async () => {
+  await withFixture(
+    {
+      "packages/validation/src/validation.ts": `
+        /** Validates a message. @param value Value to validate. @returns The validated value. */
+        export function validate(value: string) { return value; }
+      `,
+      "packages/validation/src/other.ts": `
+        /** Validates a message. @param value Value to validate. @returns The validated value. */
+        export function validate(value: string) { return value; }
+        /** Describes an owner. */
+        export class Owner {
+          /** Callback for values. */
+          callback = (value: string) => value;
+          /** Returns a value. @returns A value. */
+          expression = function (value: string) { return value; };
+        }
+      `,
+      "packages/example/src/example.ts": `
+        /** Validates a message. @param value Value to validate. @returns The validated value. */
+        export function validate(value: string) { return value; }
+      `,
+    },
+    async (rootDir) => {
+      const result = await checkSourceConventions({ rootDir });
+      assert.equal(rules(result).filter((rule) => rule === "ts-standalone-function").length, 2);
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-missing-param").length, 2);
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-missing-returns").length, 1);
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-callable-summary").length, 1);
+    },
+  );
+});
+
+test("requires the validation entry point to export validate exactly once", async () => {
+  await withFixture(
+    {
+      "packages/validation/src/validation.ts": `
+        /** Validates a message. @param value Value to validate. @returns The validated value. */
+        export function validate(value: string) { return value; }
+        /** Validates a second message. @param value Value to validate. @returns The validated value. */
+        export function validate(value: string) { return value; }
+      `,
+    },
+    async (rootDir) => {
+      const result = await checkSourceConventions({ rootDir });
+      assert.deepEqual(rules(result), ["ts-validate-entry-point"]);
+    },
+  );
+});
+
+test("rejects whitespace-only declaration comments", async () => {
+  await withFixture(
+    {
+      "packages/validation/src/empty.ts": `
+        /** */ export class EmptyClass {}
+        /**\n         *\n         */ export interface EmptyInterface {}
+      `,
+      "packages/validation/proto/empty.proto": `
+        /** */ message EmptyMessage {}
+        //
+        message EmptyLineComment {}
+        /* */ message EmptyBlockComment {}
+      `,
+    },
+    async (rootDir) => {
+      const result = await checkSourceConventions({ rootDir });
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-missing").length, 2);
+      assert.equal(rules(result).filter((rule) => rule === "proto-missing-comment").length, 3);
     },
   );
 });
@@ -178,7 +252,12 @@ test("reports overlong TypeScript names across source and test roots but not gen
     },
     async (rootDir) => {
       const result = await checkSourceConventions({ rootDir });
-      assert.deepEqual(rules(result), ["ts-name-too-long", "ts-name-too-long", "ts-name-too-long"]);
+      assert.deepEqual(rules(result), [
+        "ts-name-too-long",
+        "ts-name-too-long",
+        "ts-standalone-function",
+        "ts-name-too-long",
+      ]);
       assert.match(result.output, /ThisNameHasFiveWords/);
       assert.doesNotMatch(result.output, /generated_name_has_five_words|dist_name_has_five_words/);
     },

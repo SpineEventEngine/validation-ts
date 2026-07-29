@@ -17,7 +17,8 @@ TypeScript runtime validation for Protobuf messages with [Spine Validation](http
 Use Buf and `@bufbuild/protoc-gen-es` 2.x to generate the Protobuf-ES schemas
 that this package validates. You need Node.js 24 or later,
 `@bufbuild/protobuf` 2.10.2 or later (a peer dependency), Buf, and the ES
-generator. Copy the official `spine/options.proto` files unchanged onto the
+generator. TypeScript 5.4 or later is required because the public API uses
+`NoInfer`. Copy the official `spine/options.proto` files unchanged onto the
 Proto import path. `(when)` also needs `spine/time_options.proto` and its
 Spine Time imports.
 
@@ -69,14 +70,20 @@ syntax = "proto3";
 import "spine/options.proto";
 
 message User {
-  string name = 1 [(required) = true];
+  string name = 1 [
+    (required) = true,
+    (if_missing).error_msg = "Name is required."
+  ];
   string email = 2 [
     (required) = true,
     (pattern).regex = "^[^@]+@[^@]+\\.[^@]+$",
     (pattern).error_msg = "Email must be valid."
   ];
   int32 age = 3 [(range).value = "[13..120]"];
-  repeated string tags = 4 [(distinct) = true];
+  repeated string tags = 4 [
+    (distinct) = true,
+    (if_has_duplicates).error_msg = "Tags must be unique."
+  ];
 }
 ```
 
@@ -212,12 +219,14 @@ for (const violation of violations) console.error(Violations.failurePath(violati
 ### Field-level options
 
 - ✅ **`(required)`** — Requires presence for message, enum, string, bytes,
-  repeated, and map fields.
+  repeated, and map fields. Set a custom absence message with
+  `(if_missing).error_msg`.
 - ✅ **`(pattern)`** — Tests a string with ECMAScript `RegExp`.
 - ✅ **`(min)` / `(max)`** — Applies numeric bounds and supported references.
 - ✅ **`(range)`** — Applies numeric ranges written with bracket notation.
 - ✅ **`(when)`** — Checks timestamps and Spine Time values against past/future bounds.
 - ✅ **`(distinct)`** — Finds duplicate classes in repeated fields and map values.
+  Set a custom duplicate message with `(if_has_duplicates).error_msg`.
 - ✅ **`(validate)`** — Validates nested messages and known `Any` values.
 - ✅ **`(goes)`** — Requires a companion field when the declaring field is set.
 
@@ -287,7 +296,9 @@ the direction, for example `(when).in = FUTURE`.
 
 Proto3 numeric values default to `0`, strings to `""`, and booleans to `false`.
 `(required)` is defined for message, enum, string, bytes, repeated, and map
-fields. Use numeric constraints for numeric values.
+fields. Use numeric constraints for numeric values. Use
+`(if_missing).error_msg` to customize the message emitted when a required
+field is absent.
 
 ### Nested messages and `Any`
 
@@ -352,7 +363,7 @@ incompatible references throw `ValidationConfigurationError`.
 `(distinct)` uses Protobuf-ES equality, not JavaScript object identity. For
 `[A, A, A, B, B, C]`, it produces one violation for `A` and one for `B`.
 `${field.value}` is the collection and `${field.duplicates}` is the duplicate
-class.
+class. Use `(if_has_duplicates).error_msg` to customize that violation.
 
 ### Spine Time `(when)`
 

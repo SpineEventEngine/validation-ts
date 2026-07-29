@@ -4,10 +4,11 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, extname, join, resolve } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
@@ -22,11 +23,13 @@ const exactPreview = /@spine-event-engine\/validation@\d+\.\d+\.\d+-snapshot\.\d
 const historicalWorkflowLanguage =
   /(?:\bimplementation[- ]history\b|\bchat(?:\s+transcript)?\b|\btask(?:\s+(?:record|log|branch|history))?\b|(?<!-)\bfrozen\b|\bprovenance\b|\bintake record\b|\bshared-envelope\b|\blegacy (?:adapter|behavior)\b|\bimplementation seams\b|\bapproved (?:direction|comparison)\b)/i;
 
-/** Returns maintained Markdown files, excluding generated TypeDoc and task-history records. */
+/** Returns maintained Markdown files, excluding generated TypeDoc and protocol records. */
 export function findMaintainedMarkdown(root) {
   const markdown = [resolve(root, "README.md")];
   const visit = (directory) => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )) {
       if (["node_modules", ".worktrees", "api", "build-protocol"].includes(entry.name)) continue;
       const path = resolve(directory, entry.name);
       if (entry.isDirectory()) visit(path);
@@ -36,7 +39,7 @@ export function findMaintainedMarkdown(root) {
   for (const directory of [resolve(root, "docs"), resolve(root, "packages")]) {
     if (existsSync(directory)) visit(directory);
   }
-  return markdown;
+  return markdown.sort((left, right) => left.localeCompare(right));
 }
 
 function executableLines(fence) {
@@ -47,6 +50,8 @@ function checkPreviewInstallSequences(content, file) {
   for (const match of content.matchAll(shellFence)) {
     const fence = match[1];
     if (!previewInstall.test(fence)) continue;
+    if (hasShellOperator(fence))
+      throw new Error(`Quick-install sequence in ${file} must not use shell chaining or operators`);
     const commands = executableLines(fence);
     if (commands.length !== 1)
       throw new Error(
@@ -64,11 +69,38 @@ function checkPreviewInstallSequences(content, file) {
   }
 }
 
+/** Detects shell control operators outside quoted package arguments. */
+function hasShellOperator(command) {
+  let quote;
+  for (let index = 0; index < command.length; index += 1) {
+    const character = command[index];
+    if (character === "\\") {
+      if (!quote && (command[index + 1] === "\n" || command.slice(index + 1, index + 3) === "\r\n"))
+        return true;
+      index += 1;
+      continue;
+    }
+    if (quote) {
+      if (character === quote) quote = undefined;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      continue;
+    }
+    if (character === ";" || character === "|") return true;
+    if (character === "&" && command[index + 1] === "&") return true;
+  }
+  return false;
+}
+
 function checkPackageDocumentationLinks(root) {
   const docs = resolve(root, "packages/validation/docs");
   if (!existsSync(docs)) return;
   const visit = (directory) => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )) {
       const path = resolve(directory, entry.name);
       if (entry.isDirectory()) visit(path);
       else if (extname(entry.name) === ".md") {
@@ -99,7 +131,22 @@ function headingAnchors(content) {
   return anchors;
 }
 
-function checkLocalMarkdownLinks(content, file) {
+/** Throws when a resolved local path leaves the real repository root. */
+function assertWithinRepository(repositoryRoot, targetPath, destination, file) {
+  const resolvedRoot = resolve(repositoryRoot);
+  const realRepositoryRoot = realpathSync(repositoryRoot);
+  const resolvedTarget = resolve(targetPath);
+  const contained = (root, path) => {
+    const pathRelative = relative(root, path);
+    return pathRelative === "" || (!pathRelative.startsWith("..") && !isAbsolute(pathRelative));
+  };
+  if (!contained(resolvedRoot, resolvedTarget))
+    throw new Error(`Local link ${destination} in ${file} escapes the repository root`);
+  if (existsSync(resolvedTarget) && !contained(realRepositoryRoot, realpathSync(resolvedTarget)))
+    throw new Error(`Local link ${destination} in ${file} escapes the repository root`);
+}
+
+function checkLocalMarkdownLinks(content, file, root) {
   for (const match of content.matchAll(markdownLink)) {
     const destination = match[1];
     if (/^[a-z]+:/i.test(destination) || destination.startsWith("api/reference/")) continue;
@@ -107,7 +154,10 @@ function checkLocalMarkdownLinks(content, file) {
     const target = hashIndex === -1 ? destination : destination.slice(0, hashIndex);
     const anchor =
       hashIndex === -1 ? undefined : decodeURIComponent(destination.slice(hashIndex + 1));
+    if (target && isAbsolute(target))
+      throw new Error(`Local link ${destination} in ${file} escapes the repository root`);
     const targetPath = target ? resolve(dirname(file), target) : file;
+    assertWithinRepository(root, targetPath, destination, file);
     if (!existsSync(targetPath)) throw new Error(`Broken local link ${target} in ${file}`);
     if (
       anchor &&
@@ -285,7 +335,7 @@ export function checkDocumentation({ root }) {
       index,
       publicExports,
     );
-    checkLocalMarkdownLinks(content, file);
+    checkLocalMarkdownLinks(content, file, root);
   }
 
   checkPackageDocumentationLinks(root);

@@ -87,6 +87,57 @@ try {
   );
   run("pnpm", ["add", "--ignore-scripts", archive, protobufRuntime], consumerRoot);
 
+  const typeSmokePath = join(consumerRoot, "smoke.ts");
+  await writeFile(
+    typeSmokePath,
+    [
+      'import type { DescMessage, Message } from "@bufbuild/protobuf";',
+      'import * as validation from "@spine-event-engine/validation";',
+      'import { ValidationConfigurationError, validate, Violations, type ConstraintViolation } from "@spine-event-engine/validation";',
+      "",
+      'type SmokeMessage = Message<"smoke.Message"> & { text: string };',
+      "type SmokeSchema = DescMessage & { readonly $codegenv2: { a: SmokeMessage; b: unknown } };",
+      "declare const schema: SmokeSchema;",
+      "declare const message: SmokeMessage;",
+      "declare const violation: ConstraintViolation;",
+      "",
+      "const violations = validate(schema, message);",
+      "Violations.formatAll(violations);",
+      "Violations.formatMessage(violation);",
+      "Violations.failurePath(violation);",
+      'const configurationError = new ValidationConfigurationError({ code: "INVALID_OPTION_VALUE", option: "range", typeName: "smoke.Message" });',
+      "const configurationCode: string = configurationError.code;",
+      "void configurationCode;",
+      "",
+      "// @ts-expect-error validate requires a message matching the schema.",
+      'validate(schema, { $typeName: "smoke.Other" });',
+      "// @ts-expect-error Removed collection formatter is not public.",
+      "validation.formatViolations(violations);",
+      "// @ts-expect-error Removed template formatter is not public.",
+      "validation.formatTemplateString(violation.message);",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    join(consumerRoot, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
+          noEmit: true,
+          strict: true,
+          skipLibCheck: true,
+          target: "ES2024",
+        },
+        files: ["smoke.ts"],
+      },
+      null,
+      2,
+    ),
+  );
+  run(resolve(repositoryRoot, "node_modules/.bin/tsc"), ["-p", "tsconfig.json"], consumerRoot);
+
   const smokePath = join(consumerRoot, "smoke.mjs");
   await writeFile(
     smokePath,

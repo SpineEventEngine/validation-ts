@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { checkDocumentation } from "./check-documentation.mjs";
+import { checkDocumentation, findMaintainedMarkdown } from "./check-documentation.mjs";
 
 function createFixture() {
   const root = mkdtempSync(join(tmpdir(), "validation-docs-"));
@@ -146,6 +146,23 @@ function expectFailure(root, expression) {
     writeReadme(root, "[missing](docs/missing.md)");
     expectFailure(root, /Broken local link docs\/missing.md/);
 
+    writeReadme(root, withPublicImport("[absolute](/tmp/outside.md)"));
+    expectFailure(root, /escapes the repository root/);
+
+    writeReadme(root, withPublicImport("[traversal](../../outside.md)"));
+    expectFailure(root, /escapes the repository root/);
+
+    const outside = mkdtempSync(join(tmpdir(), "validation-docs-outside-"));
+    try {
+      writeFileSync(join(outside, "outside.md"), "# Outside\n");
+      symlinkSync(outside, join(root, "docs", "outside"), "dir");
+      writeReadme(root, withPublicImport("[symlink](docs/outside/outside.md)"));
+      expectFailure(root, /escapes the repository root/);
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+      rmSync(join(root, "docs", "outside"), { force: true });
+    }
+
     writeReadme(root, withPublicImport("[missing heading](docs/target.md#missing-heading)"));
     expectFailure(root, /Broken local anchor missing-heading/);
 
@@ -164,6 +181,25 @@ function expectFailure(root, expression) {
       ),
     );
     expectFailure(root, /exactly one executable command/);
+
+    for (const chainedInstall of [
+      "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf && echo done",
+      "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf; echo done",
+      "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf || echo done",
+      "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf | tee install.log",
+      "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf \\\n+echo done",
+    ]) {
+      writeReadme(root, withPublicImport(`\`\`\`sh\n${chainedInstall}\n\`\`\``));
+      expectFailure(root, /must not use shell chaining or operators/);
+    }
+
+    writeReadme(
+      root,
+      withPublicImport(
+        "```sh\npnpm add '@spine-event-engine/validation@snapshot&&literal' @bufbuild/protobuf\n```",
+      ),
+    );
+    assert.equal(checkDocumentation({ root }).length, 3);
 
     writeReadme(
       root,
@@ -279,6 +315,23 @@ function expectFailure(root, expression) {
       ].join("\n"),
     );
     assert.equal(checkDocumentation({ root }).length, 4);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = createFixture();
+  try {
+    writeReadme(root, withPublicImport("# Root"));
+    writeFileSync(join(root, "docs", "z-last.md"), "{field}");
+    writeFileSync(join(root, "docs", "a-first.md"), "{value}");
+    const markdown = findMaintainedMarkdown(root);
+    assert.deepEqual(
+      markdown,
+      [...markdown].sort((left, right) => left.localeCompare(right)),
+    );
+    expectFailure(root, /docs\/a-first\.md/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
