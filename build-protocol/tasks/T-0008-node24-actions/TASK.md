@@ -1,6 +1,6 @@
 # T-0008: Move pnpm Workflow Setup to Node 24
 
-Status: Ready for integration
+Status: Complete
 Classification: High-risk
 Baseline: `48a3ccab3d4a09de86af115b03469a078be6b4aa`
 Branch: `task/T-0008-node24-actions`
@@ -170,16 +170,25 @@ lines.
 ## Integration
 
 - Task commit:
-- Task push:
-- `dev` merge:
-- Post-merge verification:
-- Remote refs:
-- Remote Actions:
-- Worktree cleanup:
+  `81da42d86fc7d8db4c1811cc5fb506e597cbfba8`.
+- Task push: `origin/task/T-0008-node24-actions` at the task commit.
+- `dev` merge: `82ce0cc92e5db5c99a7c5c8f1438a8e22b6baf71`.
+- Post-merge verification: `pnpm install --frozen-lockfile` and `pnpm verify`
+  passed, including 16 policy tests, 17 files / 319 runtime tests, package
+  packing, and installed-consumer loading.
+- Remote refs after the integration push: `origin/dev` at the merge,
+  `origin/task/T-0008-node24-actions` at the task commit, and `origin/master`
+  unchanged at `24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- Remote Actions: [Build and Test #34](https://github.com/SpineEventEngine/validation-ts/actions/runs/30443648028)
+  completed successfully for the exact merge commit. Both full verification
+  and Node 24 compatibility passed; the Annotations region was empty, with no
+  Node 20 deprecation warning.
+- Worktree cleanup: The clean merged worktree and immutable temporary review
+  packages were removed after remote success.
 
 ## Open Risks And Follow-Up
 
 | Risk                                                                     | Owner        | Route                                                                                   | Disposition | Review point     |
 | ------------------------------------------------------------------------ | ------------ | --------------------------------------------------------------------------------------- | ----------- | ---------------- |
-| A major action update can change setup behavior despite the same inputs. | Orchestrator | Focused structural test, full gate, compatibility job, and security/reliability review. | Mitigated   | Remote Actions   |
+| A major action update can change setup behavior despite the same inputs. | Orchestrator | Focused structural test, full gate, compatibility job, and security/reliability review. | Closed      | Remote run #34   |
 | The publish workflow does not run on `dev`.                              | Orchestrator | Structural parity guard plus review; do not trigger publication for this task.          | Mitigated   | Completed review |
