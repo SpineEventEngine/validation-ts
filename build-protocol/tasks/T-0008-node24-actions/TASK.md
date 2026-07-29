@@ -1,6 +1,6 @@
 # T-0008: Move pnpm Workflow Setup to Node 24
 
-Status: Implementation complete; review pending
+Status: Ready for integration
 Classification: High-risk
 Baseline: `48a3ccab3d4a09de86af115b03469a078be6b4aa`
 Branch: `task/T-0008-node24-actions`
@@ -58,9 +58,9 @@ Approved plan: Human instruction to address the remaining
 | ---------------------------- | -------------------------- | --------------- | ------------------ | ------------------------------------------------------------ | --------- |
 | Requirements split           | `/root/t0008_requirements` | `gpt-5.6-sol`   | high               | Audit runtime, test, publishing, and verification boundaries | Completed |
 | Implementation               | `/root/t0008_implementer`  | `gpt-5.6-terra` | medium             | Own workflow guard, workflows, package script, and logs      | Completed |
-| Style/maintainability review | `/root/t0008_style`        | `gpt-5.6-terra` | high               | Guard quality, minimality, task-record accuracy              | Planned   |
-| Reliability review           | `/root/t0008_reliability`  | `gpt-5.6-terra` | high               | CI parity, supported action runtime, deterministic gates     | Planned   |
-| Security review              | `/root/t0008_security`     | `gpt-5.6-terra` | high               | Publishing workflow integrity and action supply-chain risk   | Planned   |
+| Style/maintainability review | `/root/t0008_style`        | `gpt-5.6-terra` | high               | Guard quality, minimality, task-record accuracy              | Completed |
+| Reliability review           | `/root/t0008_reliability`  | `gpt-5.6-terra` | high               | CI parity, supported action runtime, deterministic gates     | Completed |
+| Security review              | `/root/t0008_security`     | `gpt-5.6-terra` | high               | Publishing workflow integrity and action supply-chain risk   | Completed |
 
 ## Scope And Ownership
 
@@ -94,8 +94,8 @@ Approved plan: Human instruction to address the remaining
   quoted keys, multiline/nested flow maps, and could false-trigger on scalar
   content. This concrete evidence supersedes the earlier no-dependency plan.
   The guard now uses the maintained `yaml@2.9.0` package as a direct root
-  test-only dependency, parsing each workflow semantically and walking exact
-  `uses` keys recursively; the pre-existing lock resolution is reused.
+  test-only dependency and parses each workflow semantically; the pre-existing
+  lock resolution is reused.
 - Semantic scope is restricted to GitHub Actions action locations only:
   `jobs.<job_id>.uses` for reusable-workflow jobs and
   `jobs.<job_id>.steps[*].uses` for step actions. Other keys named `uses`, such
@@ -126,29 +126,30 @@ Approved plan: Human instruction to address the remaining
 | Review-correction focused guard                             | Passed: 9/9 cases, including block-scalar, flow-mapping, and comment boundaries.        |
 | Frozen install and semantic-parser focused guard            | Passed: `pnpm install --frozen-lockfile`; 14/14 guard cases.                            |
 | Action-location scope focused guard                         | Passed: 16/16 cases; `env.uses` ignored while job/step action refs are enforced.        |
+| Final independent `pnpm verify`                             | Passed: 16 workflow-policy tests, 17 files / 319 tests, and every canonical gate.       |
 
 Coverage: 94.71% statements, 91.51% branches, 99.19% functions, and 95.96%
 lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer                  | Disposition       | Evidence                                                         |
-| ----------------------- | ------------------------- | ----------------- | ---------------------------------------------------------------- |
-| Style/maintainability   | `/root/t0008_style`       | Re-review pending | P2 block-scalar false positive corrected; re-review is required. |
-| Documentation           | N/A                       | Pending           | No maintained user/package documentation contract changes.       |
-| TypeScript/API          | N/A                       | Pending           | No package source, declarations, exports, or API changes.        |
-| Performance/reliability | `/root/t0008_reliability` | Pending           |                                                                  |
-| Security                | `/root/t0008_security`    | Re-review pending | P2 flow-mapping bypass corrected; re-review is required.         |
+| Concern                 | Reviewer                  | Disposition | Evidence                                                                     |
+| ----------------------- | ------------------------- | ----------- | ---------------------------------------------------------------------------- |
+| Style/maintainability   | `/root/t0008_style`       | Clean       | Final action-location and dependency-evidence corrections re-reviewed clean. |
+| Documentation           | N/A                       | N/A         | No maintained user/package documentation contract changes.                   |
+| TypeScript/API          | N/A                       | N/A         | No package source, declarations, exports, or API changes.                    |
+| Performance/reliability | `/root/t0008_reliability` | Clean       | Semantic parser correction re-reviewed clean.                                |
+| Security                | `/root/t0008_security`    | Clean       | Semantic parser, lock integrity, and policy bypasses re-reviewed clean.      |
 
 ## Findings
 
-| ID    | Severity               | Accepted? | Resolution                                                                                                                                                                                                                                                   |
-| ----- | ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| T8-R1 | P2 style               | Yes       | The line regex matched `uses:` text inside YAML literal/folded scalar bodies. Semantic YAML parsing now treats those bodies as scalar values; corrected, re-review pending.                                                                                  |
-| T8-R2 | P2 security            | Yes       | The line regex omitted `uses:` fields in YAML flow mappings, including after another key. Semantic parser support at step locations finds them; corrected, re-review pending.                                                                                |
-| T8-R3 | P2 correctness         | Yes       | Re-review rejected the partial lexical extractor: quoted keys, multiline/nested flow maps, and quoted scalar boundaries remained incomplete. Replaced with semantic `yaml@2.9.0` parsing; corrected, re-review pending.                                      |
-| T8-R4 | P2 correctness         | Yes       | Recursive semantic traversal falsely treated unrelated values such as `env.uses` as actions. Restricted inspection to `jobs.*.uses` and `jobs.*.steps[*].uses`; corrected, re-review pending.                                                                |
-| T8-R5 | P2 dependency evidence | Yes       | Node has no YAML parser; custom scanning was rejected, and transitive `js-yaml` is a weaker undeclared/untyped direct contract. Direct test-only `yaml@2.9.0` provides maintained Node 24 ESM support and bundled declarations; accepted, re-review pending. |
+| ID    | Severity               | Accepted? | Resolution                                                                                                                                                                                                                                                      |
+| ----- | ---------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T8-R1 | P2 style               | Yes       | The line regex matched `uses:` text inside YAML literal/folded scalar bodies. Semantic YAML parsing now treats those bodies as scalar values; corrected and re-reviewed clean.                                                                                  |
+| T8-R2 | P2 security            | Yes       | The line regex omitted `uses:` fields in YAML flow mappings, including after another key. Semantic parser support at step locations finds them; corrected and re-reviewed clean.                                                                                |
+| T8-R3 | P2 correctness         | Yes       | Re-review rejected the partial lexical extractor: quoted keys, multiline/nested flow maps, and quoted scalar boundaries remained incomplete. Replaced with semantic `yaml@2.9.0` parsing; corrected and re-reviewed clean.                                      |
+| T8-R4 | P2 correctness         | Yes       | Recursive semantic traversal falsely treated unrelated values such as `env.uses` as actions. Restricted inspection to `jobs.*.uses` and `jobs.*.steps[*].uses`; corrected and re-reviewed clean.                                                                |
+| T8-R5 | P2 dependency evidence | Yes       | Node has no YAML parser; custom scanning was rejected, and transitive `js-yaml` is a weaker undeclared/untyped direct contract. Direct test-only `yaml@2.9.0` provides maintained Node 24 ESM support and bundled declarations; accepted and re-reviewed clean. |
 
 ## Implementation Self-Review
 
@@ -178,7 +179,7 @@ lines.
 
 ## Open Risks And Follow-Up
 
-| Risk                                                                     | Owner        | Route                                                                                   | Disposition | Review point       |
-| ------------------------------------------------------------------------ | ------------ | --------------------------------------------------------------------------------------- | ----------- | ------------------ |
-| A major action update can change setup behavior despite the same inputs. | Orchestrator | Focused structural test, full gate, compatibility job, and security/reliability review. | Open        | Before integration |
-| The publish workflow does not run on `dev`.                              | Orchestrator | Structural parity guard plus review; do not trigger publication for this task.          | Open        | Before completion  |
+| Risk                                                                     | Owner        | Route                                                                                   | Disposition | Review point     |
+| ------------------------------------------------------------------------ | ------------ | --------------------------------------------------------------------------------------- | ----------- | ---------------- |
+| A major action update can change setup behavior despite the same inputs. | Orchestrator | Focused structural test, full gate, compatibility job, and security/reliability review. | Mitigated   | Remote Actions   |
+| The publish workflow does not run on `dev`.                              | Orchestrator | Structural parity guard plus review; do not trigger publication for this task.          | Mitigated   | Completed review |
