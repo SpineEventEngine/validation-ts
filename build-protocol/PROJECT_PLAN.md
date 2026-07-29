@@ -11,6 +11,7 @@
 | T-0005 | Remove generated-code patching and strengthen runtime type boundaries.            | Complete |
 | T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Complete |
 | T-0007 | Restore clean-CI documentation compilation after the pnpm migration.              | Complete |
+| T-0008 | Move pnpm workflow setup to its supported Node 24 action runtime.                 | Active   |
 
 ## Accepted Follow-Up Boundaries
 
