@@ -12,6 +12,7 @@
 | T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Complete |
 | T-0007 | Restore clean-CI documentation compilation after the pnpm migration.              | Complete |
 | T-0008 | Move pnpm workflow setup to its supported Node 24 action runtime.                 | Complete |
+| T-0009 | Restore package guidance and enforce concise, documented source conventions.      | Active   |
 
 ## Accepted Follow-Up Boundaries
 
