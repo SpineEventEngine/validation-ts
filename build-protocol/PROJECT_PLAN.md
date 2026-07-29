@@ -10,7 +10,7 @@
 | T-0004 | Adopt the current Spine TS pnpm, Vitest, TypeScript, and ESM build stack.         | Complete |
 | T-0005 | Remove generated-code patching and strengthen runtime type boundaries.            | Complete |
 | T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Complete |
-| T-0007 | Restore clean-CI documentation compilation after the pnpm migration.              | Active   |
+| T-0007 | Restore clean-CI documentation compilation after the pnpm migration.              | Complete |
 
 ## Accepted Follow-Up Boundaries
 

@@ -1,6 +1,6 @@
 # T-0007: Restore Clean-CI Documentation Compilation
 
-Status: Active
+Status: Complete
 Classification: Standard
 Baseline: `33a0a83c5b8707d5957655f2ece06e28fed09834`
 Branch: `task/T-0007-ci-doc-dependency`
@@ -104,15 +104,24 @@ lines.
 
 ## Integration
 
-- Task commit:
-- Task push:
-- `dev` merge:
-- Post-merge verification:
-- Remote refs:
-- Worktree cleanup:
+- Task commit and push:
+  `b4a0f6d089147790104fa724f0a281786706f837` on
+  `origin/task/T-0007-ci-doc-dependency`.
+- `dev` merge: `3eacc0819450b29d1243670e2ea18b6e8ccaf4b6`
+  (`Merge T-0007 CI documentation dependency repair`).
+- Post-merge verification: Fresh `pnpm install --frozen-lockfile` and
+  `pnpm verify` passed 17 files / 319 tests, all coverage thresholds, and every
+  canonical gate.
+- Remote refs: Verified the task ref and `origin/dev` merge directly.
+  `master` remained `24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- Remote CI: GitHub Actions
+  [Build and Test #32](https://github.com/SpineEventEngine/validation-ts/actions/runs/30438431930)
+  completed successfully for the exact `dev` merge.
+- Worktree cleanup: Removed the clean, merged T-0007 worktree and its temporary
+  external verification checkout.
 
 ## Open Risks And Follow-Up
 
-| Risk                                                                   | Owner        | Route                                                           | Disposition                                   | Review point               |
-| ---------------------------------------------------------------------- | ------------ | --------------------------------------------------------------- | --------------------------------------------- | -------------------------- |
-| Clean CI may expose another previously hoisted package after this fix. | Orchestrator | Run the entire frozen-install gate and remote Actions workflow. | Locally resolved; remote confirmation pending | Before integration closure |
+| Risk                                                                   | Owner        | Route                                                           | Disposition                                                                           | Review point |
+| ---------------------------------------------------------------------- | ------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------ |
+| Clean CI may expose another previously hoisted package after this fix. | Orchestrator | Run the entire frozen-install gate and remote Actions workflow. | Resolved: local, external clean-checkout, post-merge, and Ubuntu Actions gates passed | Complete     |
