@@ -74,15 +74,15 @@ plan completed on 2026-07-29
 
 ## Agent Dispatch
 
-| Role/function                  | Expected model  | Expected reasoning | Scope                                                                                  | Status  |
-| ------------------------------ | --------------- | ------------------ | -------------------------------------------------------------------------------------- | ------- |
-| Requirements split             | `gpt-5.6-sol`   | high               | Order public API, source ownership, documentation, and deterministic-gate slices       | Pending |
-| Implementation                 | `gpt-5.6-terra` | medium             | Own all overlapping production, example, documentation, checker, and task-log files    | Pending |
-| Style/maintainability review   | `gpt-5.6-terra` | high               | Ownership, naming, checker quality, and behavior preservation                          | Pending |
-| Documentation review           | `gpt-5.6-terra` | medium             | Restored guide, development reference, TSDoc, Proto comments, and links                | Pending |
-| TypeScript/API review          | `gpt-5.6-terra` | high               | Export removal, `Violations` API, declarations, TypeDoc, and package surface           | Pending |
-| Performance/reliability review | `gpt-5.6-terra` | high               | Deterministic checkers, verification integration, and bounded scans                    | Pending |
-| Security review                | `gpt-5.6-terra` | high               | No new trust boundary, dependency, publishing, or security-sensitive behavior expected | N/A     |
+| Role/function                  | Expected model                            | Expected reasoning | Scope                                                                                  | Status   |
+| ------------------------------ | ----------------------------------------- | ------------------ | -------------------------------------------------------------------------------------- | -------- |
+| Requirements split             | `/root/t0009_requirements`; `gpt-5.6-sol` | high               | Order public API, source ownership, documentation, and deterministic-gate slices       | Complete |
+| Implementation                 | `gpt-5.6-terra`                           | medium             | Own all overlapping production, example, documentation, checker, and task-log files    | Pending  |
+| Style/maintainability review   | `gpt-5.6-terra`                           | high               | Ownership, naming, checker quality, and behavior preservation                          | Pending  |
+| Documentation review           | `gpt-5.6-terra`                           | medium             | Restored guide, development reference, TSDoc, Proto comments, and links                | Pending  |
+| TypeScript/API review          | `gpt-5.6-terra`                           | high               | Export removal, `Violations` API, declarations, TypeDoc, and package surface           | Pending  |
+| Performance/reliability review | `gpt-5.6-terra`                           | high               | Deterministic checkers, verification integration, and bounded scans                    | Pending  |
+| Security review                | `gpt-5.6-terra`                           | high               | No new trust boundary, dependency, publishing, or security-sensitive behavior expected | N/A      |
 
 ## Scope And Ownership
 
