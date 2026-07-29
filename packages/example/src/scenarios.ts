@@ -7,26 +7,24 @@ import { validate, type ConstraintViolation } from "@spine-event-engine/validati
 import { ProductEnvelopeSchema, ProductSchema } from "./generated/product_pb.js";
 import { Role, UserSchema } from "./generated/user_pb.js";
 
-/** Inspectable result returned by each executable validation scenario. */
-/** Describes the purpose of the `ExampleScenarioResult` member. */
+/** Captures the input identity and validation outcome of one runnable example scenario. */
 export interface ExampleScenarioResult {
-  /** Describes the purpose of the `name` member. */
+  /** Identifies the scenario for console output and test assertions. */
   name: string;
-  /** Describes the purpose of the `typeName` member. */
+  /** Names the Protobuf message type used by the scenario. */
   typeName: string;
-  /** Describes the purpose of the `violationCount` member. */
+  /** Counts violations returned while validating the scenario message. */
   violationCount: number;
-  /** Describes the purpose of the `fieldPaths` member. */
+  /** Lists dot-separated paths for violations that identify a field. */
   fieldPaths: string[];
-  /** Describes the purpose of the `violations` member. */
+  /** Contains the complete validation violations for the scenario message. */
   violations: ConstraintViolation[];
 }
 
 /** Runs generated-schema scenarios used by the console adapter and tests. */
-/** Describes the purpose of the `ExampleScenarios` member. */
 export const ExampleScenarios = {
-  /** Processes inputs for `run`.
-   * @returns Returns the computed result.
+  /** Produces the fixed set of executable validation scenarios.
+   * @returns Results for every example scenario in display order.
    */
   run(): ExampleScenarioResult[] {
     return [
@@ -105,11 +103,11 @@ export const ExampleScenarios = {
     ];
   },
 
-  /** Processes inputs for `result`.
-   * @param name Supplies the name input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @returns Returns the computed result.
+  /** Validates one scenario message and records presentation-ready details.
+   * @param name Display name for the scenario.
+   * @param schema Generated descriptor used to validate the message.
+   * @param message Message instance supplied to validation.
+   * @returns Scenario identity, violations, and derived display fields.
    */
   result<T extends Message>(
     name: string,

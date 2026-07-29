@@ -14,6 +14,19 @@ const PROTO_ROOTS = [
 const EXCLUDED_DIRECTORY_NAMES = new Set(["coverage", "dist", "generated", "node_modules"]);
 const FORBIDDEN_TSDOC =
   /\b(?:t-\d+|task|agent|workflow|chat|transcript|implementation[ -]history|implemented)\b/i;
+const FILLER_TSDOC = [
+  /\bprocesses inputs for\b/i,
+  /\bsupplies the [^\n]* input\b/i,
+  /\breturns the computed result\b/i,
+  /\bdescribes the [^\n]*\b(?:value|data)\b/i,
+  /\brepresents the [^\n]*\bdata\b/i,
+  /\bprovides helper methods\b/i,
+  /\blegacy (?:adapter|behavior|exception)\b/i,
+  /\bfrozen (?:proto|contract)\b/i,
+  /\bshared-envelope\b/i,
+  /\b(?:documents|records|preserves) (?:the )?(?:source|contract) provenance\b/i,
+  /\b(?:documents|records|preserves) (?:the )?(?:source|contract) intake\b/i,
+];
 
 /** Counts semantic words in an identifier. */
 export function countSemanticWords(name) {
@@ -123,6 +136,16 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
       node.getStart(sourceFile),
       "tsdoc-forbidden-wording",
       `TSDoc for ${name} contains workflow or history wording.`,
+    );
+  }
+  if (FILLER_TSDOC.some((pattern) => pattern.test(comment))) {
+    addFinding(
+      findings,
+      path,
+      sourceFile,
+      node.getStart(sourceFile),
+      "tsdoc-filler-wording",
+      `TSDoc for ${name} uses generic or implementation-history wording.`,
     );
   }
   if (!callable) return;

@@ -55,9 +55,8 @@ export class ValidationConfigurationError extends Error {
   /** Describes the purpose of the `cause` member. */
   readonly cause?: unknown;
 
-  /** Processes inputs for `member`.
-   * @param init Supplies the init input.
-   * @returns Returns the computed result.
+  /** Creates an error that identifies an invalid validation-option declaration.
+   * @param init Structured location and classification of the invalid declaration.
    */
   constructor(init: ValidationConfigurationErrorInit) {
     super(

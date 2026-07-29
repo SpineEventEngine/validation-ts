@@ -27,11 +27,11 @@ import { ViolationFactory, type ValidationContext } from "../validation-contract
 
 /** Owns `(choice)` option validation. */
 export const Choice = {
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param violations Supplies the violations input.
+  /** Adds violations for required oneof groups that have no selected member.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor whose oneof declarations carry `(choice)` options.
+   * @param message Candidate message whose oneof presence is inspected.
+   * @param violations Mutable collection receiving failed choice diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -57,8 +57,8 @@ export const Choice = {
     }
   },
 
-  /** Processes inputs for `defaultMessage`.
-   * @returns Returns the computed result.
+  /** Retrieves the extension-level fallback message for `(choice)` violations.
+   * @returns The configured fallback template, when the option schema supplies one.
    */
   defaultMessage(): string | undefined {
     return getOption(ChoiceOptionSchema, default_message);

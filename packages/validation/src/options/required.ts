@@ -28,12 +28,12 @@ import { ValidationConfigurationError } from "../validation-configuration-error.
 
 /** Owns `(required)` option validation. */
 export const Required = {
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
+  /** Adds a violation when a required field is absent from the message.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to report unsupported option targets.
+   * @param message Candidate message whose field presence is checked.
+   * @param field Field declaring the `(required)` option.
+   * @param violations Mutable collection receiving required-field diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -72,8 +72,8 @@ export const Required = {
     );
   },
 
-  /** Processes inputs for `defaultMessage`.
-   * @returns Returns the computed result.
+  /** Retrieves the extension-level fallback message for `(required)` violations.
+   * @returns The configured fallback template, when present.
    */
   defaultMessage(): string | undefined {
     return getOption(IfMissingOptionSchema, default_message);

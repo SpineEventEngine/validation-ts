@@ -47,14 +47,14 @@ export type NestedValidator = <S extends DescMessage>(
 /** Owns descriptor-defined recursive `(validate)` option processing. */
 export const NestedValidation = {
   /** Validates one field in declaration order, preserving the root validation context. */
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
-   * @param registry Supplies the registry input.
-   * @param validateNested Supplies the validateNested input.
+  /** Traverses nested messages selected by a `(validate)` field option.
+   * @param context Root type and path for nested violations.
+   * @param schema Descriptor containing the nested field.
+   * @param message Candidate message supplying nested values.
+   * @param field Field declaring `(validate)`.
+   * @param violations Collection receiving leaf violations.
+   * @param registry Descriptor registry used for `Any` resolution.
+   * @param validateNested Callback that validates each nested message.
    */
   validate(
     context: ValidationContext,
@@ -121,9 +121,9 @@ export const NestedValidation = {
     }
   },
 
-  /** Processes inputs for `messageSchema`.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Extracts the message descriptor carried by a nested-validation field.
+   * @param field Field descriptor to inspect.
+   * @returns The nested message descriptor, when the field contains messages.
    */
   messageSchema(field: DescField): DescMessage | undefined {
     if (field.fieldKind === "message") return field.message;
@@ -132,22 +132,22 @@ export const NestedValidation = {
     return undefined;
   },
 
-  /** Processes inputs for `isDefault`.
-   * @param schema Supplies the schema input.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Determines whether a nested message equals its schema default instance.
+   * @param schema Descriptor used for equality comparison.
+   * @param value Nested runtime value to compare.
+   * @returns Whether the value is absent or equal to the default message.
    */
   isDefault(schema: DescMessage, value: unknown): boolean {
     return equals(schema, value as never, create(schema));
   },
 
-  /** Processes inputs for `append`.
-   * @param schema Supplies the schema input.
-   * @param value Supplies the value input.
-   * @param context Supplies the context input.
-   * @param registry Supplies the registry input.
-   * @param violations Supplies the violations input.
-   * @param validateNested Supplies the validateNested input.
+  /** Appends leaf violations produced by one nested message value.
+   * @param schema Descriptor of the nested message.
+   * @param value Nested runtime message to validate.
+   * @param context Parent violation context.
+   * @param registry Descriptor registry used by recursive validation.
+   * @param violations Collection receiving nested leaf violations.
+   * @param validateNested Callback that performs recursive validation.
    */
   append(
     schema: DescMessage,
@@ -165,12 +165,12 @@ export const NestedValidation = {
     violations.push(...validateNested(schema, value, context, registry));
   },
 
-  /** Processes inputs for `appendPackedAny`.
-   * @param value Supplies the value input.
-   * @param context Supplies the context input.
-   * @param registry Supplies the registry input.
-   * @param violations Supplies the violations input.
-   * @param validateNested Supplies the validateNested input.
+  /** Unpacks a known `Any` payload and appends its nested leaf violations.
+   * @param value Runtime `Any` message to unpack.
+   * @param context Parent violation context.
+   * @param registry Registry used to resolve the packed message type.
+   * @param violations Collection receiving nested leaf violations.
+   * @param validateNested Callback that performs recursive validation.
    */
   appendPackedAny(
     value: unknown,

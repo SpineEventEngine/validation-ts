@@ -4,8 +4,8 @@ import { ExampleScenarios } from "./scenarios.js";
 
 /** Describes the purpose of the `ConsoleOutput` member. */
 const ConsoleOutput = {
-  /** Processes inputs for `displayViolations`.
-   * @param violations Supplies the violations input.
+  /** Prints each scenario violation in the same presentation used by the example.
+   * @param violations Scenario violations to render, or an empty collection for a success message.
    */
   displayViolations(
     violations: ReturnType<typeof ExampleScenarios.run>[number]["violations"],

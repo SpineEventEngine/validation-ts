@@ -34,13 +34,12 @@ const supportedTypes = new Set([
 
 /** Owns immutable Spine Time `(when)` validation and temporal conversion helpers. */
 export const When = {
-  /** Validates immutable Spine Time `(when)` declarations in field-validator order. */
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
+  /** Adds a violation when a temporal value is not in its required past or future.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to report invalid `(when)` declarations.
+   * @param message Candidate message supplying temporal values.
+   * @param field Temporal field declaring `(when)`.
+   * @param violations Mutable collection receiving temporal diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -81,10 +80,10 @@ export const When = {
     }
   },
 
-  /** Processes inputs for `collectionValues`.
-   * @param field Supplies the field input.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Flattens a temporal field value into values that must each satisfy `(when)`.
+   * @param field Descriptor that distinguishes scalar, list, and map handling.
+   * @param value Runtime field value from the candidate message.
+   * @returns Individual temporal values to compare with the clock.
    */
   collectionValues(field: DescField, value: unknown): unknown[] {
     if (field.fieldKind === "list") return Array.isArray(value) ? value : [];
@@ -93,9 +92,9 @@ export const When = {
     return [value];
   },
 
-  /** Processes inputs for `temporalType`.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Obtains the message type name carried by a temporal field.
+   * @param field Field descriptor to inspect.
+   * @returns The temporal message type name, or an empty string for other fields.
    */
   temporalType(field: DescField): string {
     if (
@@ -107,10 +106,10 @@ export const When = {
     return "";
   },
 
-  /** Processes inputs for `toEpochNanoseconds`.
-   * @param value Supplies the value input.
-   * @param typeName Supplies the typeName input.
-   * @returns Returns the computed result.
+  /** Converts a supported temporal message to an epoch-nanosecond instant.
+   * @param value Runtime temporal message to convert.
+   * @param typeName Declared temporal message type; omitted for a clock timestamp.
+   * @returns The validated instant in epoch nanoseconds.
    */
   toEpochNanoseconds(value: unknown, typeName?: string): bigint {
     if (!typeName) return When.checkedTimestamp(value);
@@ -145,9 +144,9 @@ export const When = {
     return When.checkedEpoch(epoch);
   },
 
-  /** Processes inputs for `checkedTimestamp`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Converts a Protobuf timestamp after checking its nanosecond component.
+   * @param value Timestamp-shaped runtime value.
+   * @returns The timestamp as a valid epoch-nanosecond instant.
    */
   checkedTimestamp(value: unknown): bigint {
     const timestamp = When.object(value);
@@ -158,9 +157,9 @@ export const When = {
     return When.checkedEpoch(seconds * NANOSECONDS_PER_SECOND + BigInt(nanos));
   },
 
-  /** Processes inputs for `checkedEpoch`.
-   * @param epoch Supplies the epoch input.
-   * @returns Returns the computed result.
+  /** Checks that an epoch instant fits the Protobuf timestamp range.
+   * @param epoch Candidate epoch-nanosecond instant.
+   * @returns The same instant after range validation.
    */
   checkedEpoch(epoch: bigint): bigint {
     if (
@@ -171,9 +170,9 @@ export const When = {
     return epoch;
   },
 
-  /** Processes inputs for `localDateTimeEpoch`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Converts a Spine local date-time value to an epoch-nanosecond instant.
+   * @param value Local date-time record containing date and time components.
+   * @returns The corresponding UTC epoch-nanosecond instant.
    */
   localDateTimeEpoch(value: Record<string, unknown>): bigint {
     const date = When.object(value.date);
@@ -189,15 +188,15 @@ export const When = {
     );
   },
 
-  /** Processes inputs for `localDateEpoch`.
-   * @param yearValue Supplies the yearValue input.
-   * @param monthValue Supplies the monthValue input.
-   * @param dayValue Supplies the dayValue input.
-   * @param hourValue Supplies the hourValue input.
-   * @param minuteValue Supplies the minuteValue input.
-   * @param secondValue Supplies the secondValue input.
-   * @param nanoValue Supplies the nanoValue input.
-   * @returns Returns the computed result.
+  /** Converts checked local date-time components to an epoch-nanosecond instant.
+   * @param yearValue Calendar year component.
+   * @param monthValue One-based calendar month component.
+   * @param dayValue Day within the supplied month.
+   * @param hourValue Hour within the day.
+   * @param minuteValue Minute within the hour.
+   * @param secondValue Second within the minute.
+   * @param nanoValue Nanosecond within the second.
+   * @returns The corresponding UTC epoch-nanosecond instant.
    */
   localDateEpoch(
     yearValue: unknown,
@@ -240,9 +239,9 @@ export const When = {
     );
   },
 
-  /** Processes inputs for `zonedDateTimeEpoch`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Converts a Spine zoned date-time through its named IANA time zone.
+   * @param value Zoned date-time record containing local date-time and zone.
+   * @returns The resolved epoch-nanosecond instant.
    */
   zonedDateTimeEpoch(value: Record<string, unknown>): bigint {
     const date = When.object(When.object(value.dateTime).date);
@@ -271,11 +270,11 @@ export const When = {
     }
   },
 
-  /** Processes inputs for `daysFromCivil`.
-   * @param year Supplies the year input.
-   * @param month Supplies the month input.
-   * @param day Supplies the day input.
-   * @returns Returns the computed result.
+  /** Counts days from the Unix epoch for a Gregorian calendar date.
+   * @param year Gregorian calendar year.
+   * @param month One-based Gregorian calendar month.
+   * @param day Day within the supplied month.
+   * @returns Whole days from 1970-01-01 to the date.
    */
   daysFromCivil(year: number, month: number, day: number): bigint {
     const adjustedYear = year - (month <= 2 ? 1 : 0);
@@ -286,10 +285,10 @@ export const When = {
     const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
     return BigInt(era * 146097 + doe - 719468);
   },
-  /** Processes inputs for `daysInMonth`.
-   * @param year Supplies the year input.
-   * @param month Supplies the month input.
-   * @returns Returns the computed result.
+  /** Calculates the number of days in a Gregorian calendar month.
+   * @param year Gregorian calendar year, used for leap-year handling.
+   * @param month One-based Gregorian calendar month.
+   * @returns The number of days in the specified month.
    */
   daysInMonth(year: number, month: number): number {
     return month === 2
@@ -300,27 +299,27 @@ export const When = {
         ? 30
         : 31;
   },
-  /** Processes inputs for `object`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Requires a temporal component to be an object record.
+   * @param value Runtime temporal component to normalize.
+   * @returns The component as an object record, or an empty record for `undefined`.
    */
   object(value: unknown): Record<string, unknown> {
     if (value === undefined) return {};
     if (!value || typeof value !== "object") throw new RangeError("Missing temporal value");
     return value as Record<string, unknown>;
   },
-  /** Processes inputs for `integer`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Converts a temporal component to an integer.
+   * @param value Runtime temporal component to convert.
+   * @returns The converted integer component.
    */
   integer(value: unknown): number {
     const result = Number(value ?? 0);
     if (!Number.isInteger(result)) throw new RangeError("Expected an integer temporal component");
     return result;
   },
-  /** Processes inputs for `bigint`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Converts timestamp seconds to a bigint.
+   * @param value Runtime timestamp-seconds component.
+   * @returns The converted bigint seconds value.
    */
   bigint(value: unknown): bigint {
     try {
@@ -329,21 +328,21 @@ export const When = {
       throw new RangeError("Expected timestamp seconds");
     }
   },
-  /** Processes inputs for `assertPlaceholders`.
-   * @param template Supplies the template input.
-   * @param schema Supplies the schema input.
-   * @param field Supplies the field input.
+  /** Rejects a `(when)` message template that uses an unsupported placeholder.
+   * @param template Custom error-message template to inspect.
+   * @param schema Descriptor used to locate a configuration error.
+   * @param field Field declaring the invalid template.
    */
   assertPlaceholders(template: string, schema: DescMessage, field: DescField): void {
     for (const [, key] of template.matchAll(/\$\{([^}]+)\}/g))
       if (!allowedPlaceholders.has(key))
         throw When.configurationError("INVALID_OPTION_VALUE", schema, field);
   },
-  /** Processes inputs for `configurationError`.
-   * @param code Supplies the code input.
-   * @param schema Supplies the schema input.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Creates a location-aware configuration error for a `(when)` declaration.
+   * @param code Configuration failure classification.
+   * @param schema Descriptor containing the invalid option.
+   * @param field Field declaring the invalid option.
+   * @returns A structured error ready to throw.
    */
   configurationError(
     code: "UNSUPPORTED_OPTION_TARGET" | "INVALID_OPTION_VALUE",

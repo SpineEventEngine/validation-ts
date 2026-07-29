@@ -91,9 +91,9 @@ type OptionRegistry = typeof optionRegistry;
  */
 /** Describes the purpose of the `ValidationOptions` member. */
 export const ValidationOptions = {
-  /** Processes inputs for `get`.
-   * @param name Supplies the name input.
-   * @returns Returns the computed result.
+  /** Retrieves the generated extension registered under an option name.
+   * @param name Name of the validation option extension to retrieve.
+   * @returns The extension associated with `name`.
    */
   get<N extends OptionName>(name: N): OptionRegistry[N] {
     return optionRegistry[name];

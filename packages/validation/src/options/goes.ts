@@ -28,12 +28,12 @@ import { ValidationConfigurationError } from "../validation-configuration-error.
 
 /** Owns `(goes)` option validation. */
 export const Goes = {
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
+  /** Adds a violation when a present field lacks its configured companion.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to find the configured companion field.
+   * @param message Candidate message whose field presence is compared.
+   * @param field Field declaring the `(goes)` option.
+   * @param violations Mutable collection receiving dependency diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -98,8 +98,8 @@ export const Goes = {
     );
   },
 
-  /** Processes inputs for `defaultMessage`.
-   * @returns Returns the computed result.
+  /** Retrieves the extension-level fallback message for `(goes)` violations.
+   * @returns The configured fallback template, when present.
    */
   defaultMessage(): string | undefined {
     return getOption(GoesOptionSchema, default_message);

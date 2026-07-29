@@ -30,12 +30,12 @@ import { NumericValues } from "./numeric.js";
 /** Validates `(min)` and `(max)` for a single field in orchestration order. */
 /** Owns `(min)` and `(max)` option validation. */
 export const MinMax = {
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
+  /** Checks the minimum and maximum bounds declared on one numeric field.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to resolve numeric references.
+   * @param message Candidate message supplying the compared values.
+   * @param field Numeric field declaring `(min)` or `(max)`.
+   * @param violations Mutable collection receiving bound diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -48,13 +48,13 @@ export const MinMax = {
     MinMax.validateBound("max", context, schema, message, field, violations);
   },
 
-  /** Processes inputs for `validateBound`.
-   * @param name Supplies the name input.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
+  /** Checks one named numeric bound and adds its diagnostic when it is exceeded.
+   * @param name Option name identifying the bound extension to evaluate.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to resolve numeric references.
+   * @param message Candidate message supplying the compared values.
+   * @param field Numeric field declaring the named bound.
+   * @param violations Mutable collection receiving the bound diagnostic.
    */
   validateBound(
     name: "min" | "max",

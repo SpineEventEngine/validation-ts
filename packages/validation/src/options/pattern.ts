@@ -51,12 +51,12 @@ import type { PatternOption } from "../generated/spine/options_pb.js";
  */
 /** Owns descriptor-defined `(pattern)` validation and its private diagnostics. */
 export const Pattern = {
-  /** Processes inputs for `createViolation`.
-   * @param typeName Supplies the typeName input.
-   * @param fieldName Supplies the fieldName input.
-   * @param fieldValue Supplies the fieldValue input.
-   * @param violationMessage Supplies the violationMessage input.
-   * @returns Returns the computed result.
+  /** Creates the historical `(pattern)` violation envelope.
+   * @param typeName Type name reported by the violation.
+   * @param fieldName Failing field name.
+   * @param fieldValue String value that failed the expression.
+   * @param violationMessage Custom or default pattern message.
+   * @returns A pattern-specific constraint violation.
    */
   createViolation(
     typeName: string,
@@ -91,11 +91,11 @@ export const Pattern = {
    * @param patternOption The pattern option object with optional modifiers.
    * @returns `true` if the value matches the pattern, `false` otherwise.
    */
-  /** Processes inputs for `validateValue`.
-   * @param value Supplies the value input.
-   * @param regex Supplies the regex input.
-   * @param patternOption Supplies the patternOption input.
-   * @returns Returns the computed result.
+  /** Tests a string against a configured regular expression.
+   * @param value Candidate string to test.
+   * @param regex Compiled expression from the option.
+   * @param patternOption Pattern configuration defining inversion and message.
+   * @returns Whether the candidate string satisfies the option.
    */
   validateValue(value: string, regex: string, patternOption: PatternOption): boolean {
     if (typeof value !== "string") {
@@ -145,10 +145,10 @@ export const Pattern = {
    * @param message The message instance to validate.
    * @param violations Array to collect constraint violations.
    */
-  /** Processes inputs for `validate`.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param violations Supplies the violations input.
+  /** Applies legacy `(pattern)` validation across a message.
+   * @param schema Descriptor containing pattern-configured fields.
+   * @param message Candidate message supplying string values.
+   * @param violations Collection receiving pattern diagnostics.
    */
   validate<S extends DescMessage>(
     schema: S,

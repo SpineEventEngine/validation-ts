@@ -36,11 +36,11 @@ interface Requirement {
 
 /** Owns `(require)` option parsing and validation. */
 export const Require = {
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param violations Supplies the violations input.
+  /** Adds a violation when a `(require)` expression is not satisfied.
+   * @param context Violation location for the validated message.
+   * @param schema Descriptor declaring `(require)` expressions.
+   * @param message Candidate message whose required fields are inspected.
+   * @param violations Collection receiving requirement diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -72,15 +72,15 @@ export const Require = {
     );
   },
 
-  /** Processes inputs for `defaultMessage`.
-   * @returns Returns the computed result.
+  /** Retrieves the extension-level fallback message for `(require)` violations.
+   * @returns The configured fallback template, when present.
    */
   defaultMessage(): string | undefined {
     return getOption(RequireOptionSchema, default_message);
   },
 
-  /** Processes inputs for `invalidOption`.
-   * @param schema Supplies the schema input.
+  /** Creates an error for an invalid `(require)` option expression.
+   * @param schema Descriptor containing the invalid expression.
    */
   invalidOption(schema: DescMessage): never {
     throw new ValidationConfigurationError({
@@ -90,10 +90,10 @@ export const Require = {
     });
   },
 
-  /** Processes inputs for `parseRequirements`.
-   * @param expression Supplies the expression input.
-   * @param schema Supplies the schema input.
-   * @returns Returns the computed result.
+  /** Parses the field groups encoded by a `(require)` expression.
+   * @param expression Option expression to parse.
+   * @param schema Descriptor used to resolve named fields.
+   * @returns Resolved field groups that represent the requirement.
    */
   parseRequirements(expression: string, schema: DescMessage): readonly (readonly Requirement[])[] {
     if (!expression.trim() || /[()]/.test(expression)) Require.invalidOption(schema);
@@ -108,10 +108,10 @@ export const Require = {
     });
   },
 
-  /** Processes inputs for `resolve`.
-   * @param token Supplies the token input.
-   * @param schema Supplies the schema input.
-   * @returns Returns the computed result.
+  /** Resolves one field name used in a `(require)` expression.
+   * @param token Field name from the option expression.
+   * @param schema Descriptor whose fields are searched.
+   * @returns The matching field descriptor.
    */
   resolve(token: string, schema: DescMessage): Requirement {
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) Require.invalidOption(schema);
@@ -140,10 +140,10 @@ export const Require = {
     });
   },
 
-  /** Processes inputs for `requirementIsPresent`.
-   * @param requirement Supplies the requirement input.
-   * @param message Supplies the message input.
-   * @returns Returns the computed result.
+  /** Determines whether at least one field in a required group is present.
+   * @param requirement Resolved fields forming one required group.
+   * @param message Candidate message whose fields are read.
+   * @returns Whether the group has a present field.
    */
   requirementIsPresent(requirement: Requirement, message: Message): boolean {
     if (requirement.field !== undefined) {

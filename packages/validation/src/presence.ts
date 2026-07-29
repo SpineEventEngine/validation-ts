@@ -18,11 +18,11 @@ import { create, equals, ScalarType } from "@bufbuild/protobuf";
 import type { DescField, DescOneof, Message } from "@bufbuild/protobuf";
 import { MessageFields } from "./validation-contract.js";
 
-/** Describes the purpose of the `Presence` member. */
+/** Determines whether descriptor values count as present for validation options. */
 export const Presence = {
-  /** Processes inputs for `supports`.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Identifies field kinds whose default values can be distinguished from presence.
+   * @param field Field descriptor to inspect.
+   * @returns Whether the field supports presence-aware validation.
    */
   supports(field: DescField): boolean {
     return (
@@ -35,10 +35,10 @@ export const Presence = {
     );
   },
 
-  /** Processes inputs for `is`.
-   * @param field Supplies the field input.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Determines whether a field value is present rather than its Protobuf default.
+   * @param field Descriptor defining the value's field kind.
+   * @param value Runtime field value to evaluate.
+   * @returns Whether the value is present according to its field kind.
    */
   is(field: DescField, value: unknown): boolean {
     if (field.fieldKind === "message") {
@@ -56,10 +56,10 @@ export const Presence = {
     return value instanceof Uint8Array && value.length > 0;
   },
 
-  /** Processes inputs for `isOneof`.
-   * @param oneof Supplies the oneof input.
-   * @param message Supplies the message input.
-   * @returns Returns the computed result.
+  /** Determines whether a oneof currently selects a member.
+   * @param oneof Oneof descriptor to inspect.
+   * @param message Message containing the oneof value.
+   * @returns Whether the message selects a oneof member.
    */
   isOneof(oneof: DescOneof, message: Message): boolean {
     const value = MessageFields.read(message, oneof);

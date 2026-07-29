@@ -40,13 +40,12 @@ interface EqualityClass {
 
 /** Owns descriptor-defined `(distinct)` validation and its private formatting helpers. */
 export const Distinct = {
-  /** Validates `(distinct)` for one field in deterministic orchestration order. */
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
+  /** Adds one diagnostic for each duplicate equality class in a marked collection.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to describe unsupported option targets.
+   * @param message Candidate message supplying the list or map values.
+   * @param field Collection field declaring `(distinct)`.
+   * @param violations Mutable collection receiving duplicate diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -99,11 +98,10 @@ export const Distinct = {
     }
   },
 
-  /** Validates every field for internal callers outside orchestration. */
-  /** Processes inputs for `validateAll`.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param violations Supplies the violations input.
+  /** Applies `(distinct)` validation to every field in a message descriptor.
+   * @param schema Descriptor whose fields are inspected for `(distinct)`.
+   * @param message Candidate message supplying collection values.
+   * @param violations Mutable collection receiving duplicate diagnostics.
    */
   validateAll(schema: DescMessage, message: Message, violations: ConstraintViolation[]): void {
     const context = new ValidationContext(schema.typeName);
@@ -111,10 +109,10 @@ export const Distinct = {
       Distinct.validate(context, schema, message, field, violations);
   },
 
-  /** Processes inputs for `collectionValues`.
-   * @param field Supplies the field input.
-   * @param collection Supplies the collection input.
-   * @returns Returns the computed result.
+  /** Extracts comparable elements from a list or map field value.
+   * @param field Collection descriptor that determines list or map handling.
+   * @param collection Runtime collection read from the candidate message.
+   * @returns The list elements or map values, or an empty array for another value.
    */
   collectionValues(field: DescField, collection: unknown): unknown[] {
     if (field.fieldKind === "list") return Array.isArray(collection) ? collection : [];
@@ -122,11 +120,11 @@ export const Distinct = {
     return Object.values(collection);
   },
 
-  /** Processes inputs for `valuesAreEqual`.
-   * @param field Supplies the field input.
-   * @param left Supplies the left input.
-   * @param right Supplies the right input.
-   * @returns Returns the computed result.
+  /** Compares two collection elements with the equality semantics of their descriptor.
+   * @param field Collection descriptor that selects scalar, enum, or message equality.
+   * @param left First collection element to compare.
+   * @param right Second collection element to compare.
+   * @returns Whether both elements belong to the same equality class.
    */
   valuesAreEqual(field: DescField, left: unknown, right: unknown): boolean {
     if (field.fieldKind === "list") {
@@ -144,26 +142,26 @@ export const Distinct = {
     return equals(field.message, left as never, right as never);
   },
 
-  /** Processes inputs for `diagnostic`.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Reads the optional duplicate-message configuration from a collection field.
+   * @param field Field whose `(if_has_duplicates)` extension is read.
+   * @returns The configured duplicate diagnostic, if the field declares one.
    */
   diagnostic(field: DescField): IfHasDuplicatesOption | undefined {
     const extension = ValidationOptions.get("if_has_duplicates");
     return hasOption(field, extension) ? getOption(field, extension) : undefined;
   },
 
-  /** Processes inputs for `formatCollection`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Renders a collection value for a duplicate diagnostic placeholder.
+   * @param value Runtime collection or duplicate representative to render.
+   * @returns A stable diagnostic representation of `value`.
    */
   formatCollection(value: unknown): string {
     return Distinct.formatValue(value);
   },
 
-  /** Processes inputs for `formatValue`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Renders a nested runtime value without losing bytes or bigint information.
+   * @param value Scalar, collection, map, or message-like value to render.
+   * @returns A stable diagnostic representation of `value`.
    */
   formatValue(value: unknown): string {
     if (value instanceof Uint8Array) return Distinct.bytesToHex(value);
@@ -177,9 +175,9 @@ export const Distinct = {
     return String(value);
   },
 
-  /** Processes inputs for `bytesToHex`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Encodes binary field content as lower-case hexadecimal for diagnostics.
+   * @param value Bytes from a field or collection element.
+   * @returns The hexadecimal encoding of `value`.
    */
   bytesToHex(value: Uint8Array): string {
     return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");

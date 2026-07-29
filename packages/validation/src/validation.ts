@@ -52,13 +52,12 @@ import { ValidationContext } from "./validation-contract.js";
 
 const fieldValidators: readonly FieldValidator[] = [
   {
-    /** Processes inputs for `validate`.
-     * @param context Supplies the context input.
-     * @param schema Supplies the schema input.
-     * @param message Supplies the message input.
-     * @param field Supplies the field input.
-     * @param violations Supplies the violations input.
-     * @returns Returns the computed result.
+    /** Applies `(required)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
      */
     validate(context, schema, message, field, violations) {
       Required.validate(context, schema, message, field, violations);
@@ -66,66 +65,61 @@ const fieldValidators: readonly FieldValidator[] = [
   },
   ValidationOrchestration.legacyFieldValidator(Pattern.validate),
   {
-    /** Processes inputs for `validate`.
-     * @param context Supplies the context input.
-     * @param schema Supplies the schema input.
-     * @param message Supplies the message input.
-     * @param field Supplies the field input.
-     * @param violations Supplies the violations input.
-     * @returns Returns the computed result.
+    /** Applies `(min)` and `(max)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
      */
     validate(context, schema, message, field, violations) {
       MinMax.validate(context, schema, message, field, violations);
     },
   },
   {
-    /** Processes inputs for `validate`.
-     * @param context Supplies the context input.
-     * @param schema Supplies the schema input.
-     * @param message Supplies the message input.
-     * @param field Supplies the field input.
-     * @param violations Supplies the violations input.
-     * @returns Returns the computed result.
+    /** Applies `(range)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
      */
     validate(context, schema, message, field, violations) {
       Range.validate(context, schema, message, field, violations);
     },
   },
   {
-    /** Processes inputs for `validate`.
-     * @param context Supplies the context input.
-     * @param schema Supplies the schema input.
-     * @param message Supplies the message input.
-     * @param field Supplies the field input.
-     * @param violations Supplies the violations input.
-     * @returns Returns the computed result.
+    /** Applies `(when)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
      */
     validate(context, schema, message, field, violations) {
       When.validate(context, schema, message, field, violations);
     },
   },
   {
-    /** Processes inputs for `validate`.
-     * @param context Supplies the context input.
-     * @param schema Supplies the schema input.
-     * @param message Supplies the message input.
-     * @param field Supplies the field input.
-     * @param violations Supplies the violations input.
-     * @returns Returns the computed result.
+    /** Applies `(distinct)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
      */
     validate(context, schema, message, field, violations) {
       Distinct.validate(context, schema, message, field, violations);
     },
   },
   {
-    /** Processes inputs for `validate`.
-     * @param context Supplies the context input.
-     * @param schema Supplies the schema input.
-     * @param message Supplies the message input.
-     * @param field Supplies the field input.
-     * @param violations Supplies the violations input.
-     * @param registry Supplies the registry input.
-     * @returns Returns the computed result.
+    /** Applies nested `(validate)` traversal to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     * @param registry Registry for nested message descriptors.
      */
     validate(context, schema, message, field, violations, registry) {
       NestedValidation.validate(
@@ -140,13 +134,12 @@ const fieldValidators: readonly FieldValidator[] = [
     },
   },
   {
-    /** Processes inputs for `validate`.
-     * @param context Supplies the context input.
-     * @param schema Supplies the schema input.
-     * @param message Supplies the message input.
-     * @param field Supplies the field input.
-     * @param violations Supplies the violations input.
-     * @returns Returns the computed result.
+    /** Applies `(goes)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
      */
     validate(context, schema, message, field, violations) {
       Goes.validate(context, schema, message, field, violations);
@@ -175,7 +168,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * Proto field names, and a descriptor-packed offending value when one exists.
  * Their diagnostic is always present; an option without a custom or default
  * message produces an empty template string. `(pattern)` is the documented
- * legacy exception; see [the pattern section](../docs/validation-contract.md#implemented-options).
+ * historical pattern-specific envelope; see the package validation contract for details.
  *
  * Currently supported validation options:
  * - `(required)` — validates supported presence targets
@@ -207,11 +200,6 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * }
  * ```
  */
-/** Processes inputs for `validate`.
- * @param schema Supplies the schema input.
- * @param message Supplies the message input.
- * @returns Returns the computed result.
- */
 export function validate<S extends DescMessage>(
   schema: S,
   message: NoInfer<MessageShape<S>>,
@@ -226,12 +214,12 @@ export function validate<S extends DescMessage>(
 
 /** Coordinates internal traversal while preserving context and registry state. */
 const ValidationEngine = {
-  /** Processes inputs for `validateInternal`.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param context Supplies the context input.
-   * @param registry Supplies the registry input.
-   * @returns Returns the computed result.
+  /** Traverses one message descriptor and accumulates its constraint violations.
+   * @param schema Descriptor whose options are evaluated.
+   * @param message Candidate message being validated.
+   * @param context Root type and nested path for resulting violations.
+   * @param registry Descriptor registry used by nested validation.
+   * @returns The violations emitted while traversing this message.
    */
   validateInternal<S extends DescMessage>(
     schema: S,
@@ -254,17 +242,17 @@ const ValidationEngine = {
     return violations;
   },
 
-  /** Processes inputs for `createRootRegistry`.
-   * @param schema Supplies the schema input.
-   * @returns Returns the computed result.
+  /** Builds a descriptor registry containing the root file and its dependencies.
+   * @param schema Root message descriptor.
+   * @returns A registry usable for nested-message lookup.
    */
   createRootRegistry(schema: DescMessage): Registry {
     return createRegistry(...ValidationEngine.dependencyClosure(schema.file));
   },
 
-  /** Processes inputs for `dependencyClosure`.
-   * @param root Supplies the root input.
-   * @returns Returns the computed result.
+  /** Collects a file and every transitive descriptor dependency exactly once.
+   * @param root File from which to begin traversal.
+   * @returns The dependency closure in traversal order.
    */
   dependencyClosure(root: DescFile): DescFile[] {
     const files: DescFile[] = [];
@@ -292,9 +280,9 @@ const ValidationEngine = {
  */
 /** Describes the purpose of the `TemplateStrings` member. */
 const TemplateStrings = {
-  /** Processes inputs for `format`.
-   * @param template Supplies the template input.
-   * @returns Returns the computed result.
+  /** Replaces literal template placeholders with their supplied diagnostic values.
+   * @param template Message template containing placeholder values.
+   * @returns The rendered diagnostic text.
    */
   format(template: TemplateString): string {
     let result = template.withPlaceholders;
@@ -374,10 +362,6 @@ export const Violations = {
    * // Returns: "Email must be valid. Provided: `invalid@`."
    * ```
    */
-  /** Processes inputs for `formatMessage`.
-   * @param violation Supplies the violation input.
-   * @returns Returns the computed result.
-   */
   formatMessage(violation: ConstraintViolation): string {
     return violation.message ? TemplateStrings.format(violation.message) : "Validation failed";
   },
@@ -399,10 +383,6 @@ export const Violations = {
    * const path = Violations.failurePath(violation);
    * // Returns: "user.email"
    * ```
-   */
-  /** Processes inputs for `failurePath`.
-   * @param violation Supplies the violation input.
-   * @returns Returns the computed result.
    */
   failurePath(violation: ConstraintViolation): string {
     return violation.fieldPath?.fieldName.join(".") || "unknown";

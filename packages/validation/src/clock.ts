@@ -6,23 +6,22 @@ interface ClockInstant {
   nanos: number;
 }
 
-/** Internal deterministic clock seam. Production reads the system clock. */
-/** Describes the purpose of the `ValidationClock` member. */
+/** Supplies clock instants to temporal validators and permits deterministic test overrides. */
 export const ValidationClock = {
-  /** Processes inputs for `read`.
-   * @returns Returns the computed result.
+  /** Returns the instant produced by the configured clock source.
+   * @returns Current epoch seconds and nanosecond adjustment.
    */
   read(): ClockInstant {
     return clock();
   },
-  /** Processes inputs for `set`.
-   * @param replacement Supplies the replacement input.
+  /** Sets the clock source used by subsequent temporal validations.
+   * @param replacement Optional clock source; omitting it restores the system clock.
    */
   set(replacement?: () => ClockInstant): void {
     clock = replacement ?? ValidationClock.system;
   },
-  /** Processes inputs for `system`.
-   * @returns Returns the computed result.
+  /** Reads the current system time as Protobuf timestamp components.
+   * @returns Current epoch seconds and nanosecond adjustment.
    */
   system(): ClockInstant {
     const milliseconds = BigInt(Date.now());

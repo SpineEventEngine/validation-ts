@@ -44,29 +44,26 @@ export class ValidationContext {
   /** Describes the purpose of the `fieldPath` member. */
   readonly fieldPath: readonly string[];
 
-  /** Processes inputs for `member`.
-   * @param rootTypeName Supplies the rootTypeName input.
-   * @param fieldPath Supplies the fieldPath input.
-   * @returns Returns the computed result.
+  /** Creates a context for a root message and its current nested field path.
+   * @param rootTypeName Fully qualified type name of the root message.
+   * @param fieldPath Proto field names from the root to the current location.
    */
   constructor(rootTypeName: string, fieldPath: readonly string[] = []) {
     this.rootTypeName = rootTypeName;
     this.fieldPath = fieldPath;
   }
 
-  /** Creates the root context for a message descriptor. */
-  /** Processes inputs for `create`.
-   * @param schema Supplies the schema input.
-   * @returns Returns the computed result.
+  /** Creates the empty-path context for a root message descriptor.
+   * @param schema Descriptor whose type name identifies the root message.
+   * @returns A context rooted at `schema`.
    */
   static create(schema: DescMessage): ValidationContext {
     return new ValidationContext(schema.typeName);
   }
 
-  /** Extends the current path with one unqualified Proto field name. */
-  /** Processes inputs for `atField`.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Extends this context with one descriptor field.
+   * @param field Field whose Proto name is appended to the path.
+   * @returns A new context for `field`.
    */
   atField(field: DescField): ValidationContext {
     return new ValidationContext(this.rootTypeName, [...this.fieldPath, field.name]);
@@ -76,10 +73,10 @@ export class ValidationContext {
 /** Reads one descriptor-named field from a generated message at the reflective seam. */
 /** Describes the purpose of the `MessageFields` member. */
 export const MessageFields = {
-  /** Processes inputs for `read`.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Reads a generated message property identified by its descriptor local name.
+   * @param message Generated message to inspect.
+   * @param field Descriptor view containing the generated property name.
+   * @returns The field's runtime value.
    */
   read(message: Message, field: Pick<DescField, "localName">): unknown {
     return (message as unknown as Record<string, unknown>)[field.localName];
@@ -99,12 +96,12 @@ export interface ViolationMessage {
 
 /** Creates shared violation envelopes from descriptor-aware field values. */
 export const ViolationFactory = {
-  /** Processes inputs for `create`.
-   * @param context Supplies the context input.
-   * @param field Supplies the field input.
-   * @param fieldValue Supplies the fieldValue input.
-   * @param message Supplies the message input.
-   * @returns Returns the computed result.
+  /** Builds a descriptor-packed violation with resolved message placeholders.
+   * @param context Root type and field path of the failure.
+   * @param field Failing field, when the failure is field-scoped.
+   * @param fieldValue Runtime value that failed validation.
+   * @param message Custom, default, and placeholder message content.
+   * @returns The normalized constraint violation.
    */
   create(
     context: ValidationContext,
@@ -145,10 +142,10 @@ export const ViolationFactory = {
     });
   },
 
-  /** Processes inputs for `packFieldValue`.
-   * @param field Supplies the field input.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Packs a field value into the appropriate `Any` representation.
+   * @param field Descriptor selecting the packing strategy.
+   * @param value Runtime field value to pack.
+   * @returns The packed field value.
    */
   packFieldValue(field: DescField, value: unknown) {
     if (field.fieldKind === "message") return ViolationFactory.packMessage(field.message, value);
@@ -164,10 +161,10 @@ export const ViolationFactory = {
     return ViolationFactory.packScalar(field.scalar, value);
   },
 
-  /** Processes inputs for `packScalar`.
-   * @param scalar Supplies the scalar input.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Packs a scalar into its matching Protobuf wrapper message.
+   * @param scalar Scalar type selecting the wrapper schema.
+   * @param value Runtime scalar value to pack.
+   * @returns The scalar wrapper packed in `Any`.
    */
   packScalar(scalar: ScalarType, value: unknown) {
     switch (scalar) {
@@ -198,27 +195,27 @@ export const ViolationFactory = {
     }
   },
 
-  /** Processes inputs for `packWrapper`.
-   * @param schema Supplies the schema input.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Creates and packs a scalar wrapper message.
+   * @param schema Wrapper message schema.
+   * @param value Scalar value assigned to the wrapper.
+   * @returns The packed wrapper message.
    */
   packWrapper(schema: DescMessage, value: unknown) {
     return anyPack(schema, create(schema, { value }));
   },
 
-  /** Processes inputs for `packMessage`.
-   * @param schema Supplies the schema input.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Packs a message-valued field without changing its shape.
+   * @param schema Message schema for the value.
+   * @param value Runtime message value to pack.
+   * @returns The packed message.
    */
   packMessage(schema: DescMessage, value: unknown) {
     return anyPack(schema, value as never);
   },
 
-  /** Processes inputs for `fieldTypeName`.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Derives the Protobuf type name displayed for a field.
+   * @param field Descriptor whose field kind is inspected.
+   * @returns A message, enum, or scalar Protobuf type name.
    */
   fieldTypeName(field: DescField): string {
     if (field.fieldKind === "message") return field.message.typeName;
@@ -234,9 +231,9 @@ export const ViolationFactory = {
     return ViolationFactory.scalarProtoTypeName(field.scalar);
   },
 
-  /** Processes inputs for `scalarProtoTypeName`.
-   * @param scalar Supplies the scalar input.
-   * @returns Returns the computed result.
+  /** Maps a scalar enum value to its Protobuf spelling.
+   * @param scalar Scalar type to render.
+   * @returns The canonical Protobuf scalar name.
    */
   scalarProtoTypeName(scalar: ScalarType): string {
     switch (scalar) {
@@ -273,9 +270,9 @@ export const ViolationFactory = {
     }
   },
 
-  /** Processes inputs for `formatFieldValue`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Renders a field value for a diagnostic placeholder.
+   * @param value Runtime field value to render.
+   * @returns A string representation that preserves bytes and bigint values.
    */
   formatFieldValue(value: unknown): string {
     if (value instanceof Uint8Array) {

@@ -41,7 +41,7 @@ test("accepts documented TypeScript declarations and allowed function forms", as
       export class ValidOwner {
         /** Creates an owner. */
         constructor() {}
-        /** Returns a value. @param value Describes the value. @returns Returns the value. */
+        /** Returns the supplied value unchanged. @param value Value to return unchanged. @returns The supplied value. */
         method<T>(value?: T): T | undefined { return value; }
         /** Describes a callback property. */
         callback = (...values: string[]) => values.join(',');
@@ -54,7 +54,7 @@ test("accepts documented TypeScript declarations and allowed function forms", as
         get summary() { return this.label; },
         /** Sets an accessor value. @param value Describes the label. */
         set summary(value: string) { this.label = value; },
-        /** Returns a value. @param value Describes the value. @returns Returns the value. */
+        /** Returns the supplied value unchanged. @param value Value to return unchanged. @returns The supplied value. */
         method(value: string) { return value; },
       };
       /** Describes a type alias. */
@@ -109,6 +109,30 @@ test("reports TypeScript documentation, standalone functions, and forbidden prod
       assert.ok(rules(result).includes("tsdoc-missing-returns-description"));
       assert.ok(rules(result).filter((rule) => rule === "tsdoc-missing").length >= 6);
       assert.equal(rules(result).filter((rule) => rule === "ts-standalone-function").length, 3);
+    },
+  );
+});
+
+test("rejects generic and implementation-history TSDoc without banning domain terms", async () => {
+  await withFixture(
+    {
+      "packages/validation/src/filler.ts": `
+      /** Processes inputs for a field. @param value Supplies the value input. @returns Returns the computed result. */
+      export function validate(value: string): string { return value; }
+      /** Describes the validation data. */
+      export interface ValidationData {}
+      /** Provides helper methods for a frozen Proto contract intake. */
+      export const helper = { /** Returns a value. @returns Returns a value. */ value() { return "value"; } };
+      /** Documents source provenance for a product contract. */
+      export type HistoricalNotes = string;
+      /** Reports the provenance field supplied by a message. */
+      export interface DomainTerms { /** Identifies the provenance field. */ provenance: string; }
+    `,
+    },
+    async (rootDir) => {
+      const result = await checkSourceConventions({ rootDir });
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-filler-wording").length, 4);
+      assert.doesNotMatch(result.output, /Reports the provenance field/);
     },
   );
 });

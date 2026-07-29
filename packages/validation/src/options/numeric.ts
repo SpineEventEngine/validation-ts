@@ -53,7 +53,7 @@ const integerLimits: Readonly<Partial<Record<ScalarType, readonly [bigint, bigin
 
 /** Describes the purpose of the `ResolvedBound` member. */
 export interface ResolvedBound {
-  /** Describes the purpose of the `value` member. */
+  /** Stores the parsed numeric bound used during comparison. */
   value: NumericValue;
   /** Describes the purpose of the `display` member. */
   display: string;
@@ -61,9 +61,9 @@ export interface ResolvedBound {
 
 /** Owns numeric parsing, reference resolution, and comparison for numeric options. */
 export const NumericValues = {
-  /** Processes inputs for `numericScalar`.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Identifies the supported numeric scalar type of a field.
+   * @param field Field descriptor whose scalar type is inspected.
+   * @returns The numeric scalar type, or `undefined` for a nonnumeric field.
    */
   numericScalar(field: DescField): ScalarType | undefined {
     if (field.fieldKind === "scalar")
@@ -73,11 +73,11 @@ export const NumericValues = {
     return undefined;
   },
 
-  /** Processes inputs for `assertTarget`.
-   * @param option Supplies the option input.
-   * @param schema Supplies the schema input.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Rejects a numeric option applied to an unsupported field target.
+   * @param option Name of the numeric option being configured.
+   * @param schema Descriptor owning the configured field.
+   * @param field Field descriptor whose target compatibility is checked.
+   * @returns The field's supported numeric scalar type.
    */
   assertTarget(option: string, schema: DescMessage, field: DescField): ScalarType {
     const scalar = NumericValues.numericScalar(field);
@@ -87,13 +87,13 @@ export const NumericValues = {
     ]);
   },
 
-  /** Processes inputs for `parseLiteral`.
-   * @param declaration Supplies the declaration input.
-   * @param scalar Supplies the scalar input.
-   * @param option Supplies the option input.
-   * @param typeName Supplies the typeName input.
-   * @param fieldPath Supplies the fieldPath input.
-   * @returns Returns the computed result.
+  /** Parses a numeric literal according to the target scalar type.
+   * @param declaration Literal text from an option declaration.
+   * @param scalar Scalar type that constrains parsing.
+   * @param option Name of the option owning the literal.
+   * @param typeName Message type reported in configuration errors.
+   * @param fieldPath Field path reported in configuration errors.
+   * @returns The parsed number or bigint value.
    */
   parseLiteral(
     declaration: string,
@@ -119,14 +119,14 @@ export const NumericValues = {
     return NumericValues.is64Bit(scalar) ? value : Number(value);
   },
 
-  /** Processes inputs for `resolveBound`.
-   * @param declaration Supplies the declaration input.
-   * @param scalar Supplies the scalar input.
-   * @param option Supplies the option input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param target Supplies the target input.
-   * @returns Returns the computed result.
+  /** Resolves a numeric bound from either a literal or a message-field reference.
+   * @param declaration Literal or reference declared by the option.
+   * @param scalar Scalar type expected for the resolved bound.
+   * @param option Name of the option owning the bound.
+   * @param schema Descriptor used to resolve references.
+   * @param message Candidate message used to read referenced fields.
+   * @param target Field being constrained by the bound.
+   * @returns The resolved comparable bound.
    */
   resolveBound(
     declaration: string,
@@ -181,27 +181,27 @@ export const NumericValues = {
     ]);
   },
 
-  /** Processes inputs for `compare`.
-   * @param left Supplies the left input.
-   * @param right Supplies the right input.
-   * @returns Returns the computed result.
+  /** Orders two numeric values without coercing bigint values through numbers.
+   * @param left First numeric operand.
+   * @param right Second numeric operand.
+   * @returns A negative, zero, or positive comparison result.
    */
   compare(left: NumericValue, right: NumericValue): number {
     return left < right ? -1 : left > right ? 1 : 0;
   },
 
-  /** Processes inputs for `isNaN`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Detects a floating-point `NaN` value.
+   * @param value Runtime numeric value to inspect.
+   * @returns Whether `value` is a number whose value is `NaN`.
    */
   isNaN(value: NumericValue): boolean {
     return typeof value === "number" && Number.isNaN(value);
   },
 
-  /** Processes inputs for `runtime`.
-   * @param value Supplies the value input.
-   * @param scalar Supplies the scalar input.
-   * @returns Returns the computed result.
+  /** Normalizes a declared numeric value to its runtime scalar representation.
+   * @param value Parsed numeric value.
+   * @param scalar Target Protobuf scalar type.
+   * @returns The number or bigint representation used by message fields.
    */
   runtime(value: unknown, scalar: ScalarType): NumericValue {
     if (NumericValues.is64Bit(scalar))
@@ -209,12 +209,12 @@ export const NumericValues = {
     return Number(value);
   },
 
-  /** Processes inputs for `configurationError`.
-   * @param code Supplies the code input.
-   * @param option Supplies the option input.
-   * @param typeName Supplies the typeName input.
-   * @param fieldPath Supplies the fieldPath input.
-   * @returns Returns the computed result.
+  /** Creates a numeric-option configuration error with its location details.
+   * @param code Configuration failure classification.
+   * @param option Name of the invalid numeric option.
+   * @param typeName Message type containing the invalid declaration.
+   * @param fieldPath Field path containing the invalid declaration.
+   * @returns A structured error ready to throw.
    */
   configurationError(
     code:
@@ -229,25 +229,25 @@ export const NumericValues = {
     return new ValidationConfigurationError({ code, option, typeName, fieldPath });
   },
 
-  /** Processes inputs for `isNumeric`.
-   * @param scalar Supplies the scalar input.
-   * @returns Returns the computed result.
+  /** Determines whether a Protobuf scalar supports numeric bounds.
+   * @param scalar Protobuf scalar type to classify.
+   * @returns Whether validation accepts numeric values of this scalar type.
    */
   isNumeric(scalar: ScalarType): boolean {
     return integerLimits[scalar] !== undefined || NumericValues.isFloating(scalar);
   },
 
-  /** Processes inputs for `isFloating`.
-   * @param scalar Supplies the scalar input.
-   * @returns Returns the computed result.
+  /** Determines whether a scalar uses floating-point comparison.
+   * @param scalar Protobuf scalar type to classify.
+   * @returns Whether `scalar` is float or double.
    */
   isFloating(scalar: ScalarType): boolean {
     return scalar === ScalarType.FLOAT || scalar === ScalarType.DOUBLE;
   },
 
-  /** Processes inputs for `is64Bit`.
-   * @param scalar Supplies the scalar input.
-   * @returns Returns the computed result.
+  /** Determines whether a scalar uses a 64-bit integer representation.
+   * @param scalar Protobuf scalar type to classify.
+   * @returns Whether `scalar` is a 64-bit integer variant.
    */
   is64Bit(scalar: ScalarType): boolean {
     return (
@@ -259,9 +259,9 @@ export const NumericValues = {
     );
   },
 
-  /** Processes inputs for `looksLikeReference`.
-   * @param value Supplies the value input.
-   * @returns Returns the computed result.
+  /** Detects the field-reference form accepted by numeric option declarations.
+   * @param value Declared bound text to classify.
+   * @returns Whether `value` names another message field.
    */
   looksLikeReference(value: string): boolean {
     return /^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$/.test(value);

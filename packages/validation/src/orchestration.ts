@@ -31,13 +31,13 @@ type LegacyFieldValidator = <S extends DescMessage>(
 /** The common internal contract for field-level validation adapters. */
 /** Describes the purpose of the `FieldValidator` member. */
 export interface FieldValidator {
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
-   * @param registry Supplies the registry input.
+  /** Validates one field during the ordered validation pass.
+   * @param context Root type and path for produced violations.
+   * @param schema Descriptor containing the current field.
+   * @param message Candidate message being validated.
+   * @param field Current field descriptor.
+   * @param violations Collection receiving failures.
+   * @param registry Descriptor registry for nested validation.
    */
   validate<S extends DescMessage>(
     context: ValidationContext,
@@ -54,19 +54,18 @@ export interface FieldValidator {
  * seam while normalizing its output through the shared violation envelope.
  */
 export const ValidationOrchestration = {
-  /** Processes inputs for `legacyFieldValidator`.
-   * @param legacy Supplies the legacy input.
-   * @returns Returns the computed result.
+  /** Adapts an all-fields validator to the field-by-field orchestration contract.
+   * @param legacy Validator that evaluates a descriptor's fields together.
+   * @returns A field validator that normalizes the legacy output.
    */
   legacyFieldValidator(legacy: LegacyFieldValidator): FieldValidator {
     return {
-      /** Processes inputs for `validate`.
-       * @param context Supplies the context input.
-       * @param schema Supplies the schema input.
-       * @param message Supplies the message input.
-       * @param field Supplies the field input.
-       * @param violations Supplies the violations input.
-       * @returns Returns the computed result.
+      /** Validates only the current field through the all-fields implementation.
+       * @param context Root type and path for normalized violations.
+       * @param schema Descriptor containing the current field.
+       * @param message Candidate message being validated.
+       * @param field Field exposed to the adapted validator.
+       * @param violations Collection receiving normalized failures.
        */
       validate<S extends DescMessage>(
         context: ValidationContext,
@@ -104,11 +103,10 @@ export const ValidationOrchestration = {
     };
   },
 
-  /** Normalizes a message-level or oneof-level legacy violation. */
-  /** Processes inputs for `appendMessageViolation`.
-   * @param context Supplies the context input.
-   * @param legacyViolation Supplies the legacyViolation input.
-   * @param violations Supplies the violations input.
+  /** Normalizes and appends a message-level or oneof-level violation.
+   * @param context Root type and path for the normalized violation.
+   * @param legacyViolation Existing violation to normalize.
+   * @param violations Collection receiving the normalized violation.
    */
   appendMessageViolation(
     context: ValidationContext,
@@ -123,11 +121,11 @@ export const ValidationOrchestration = {
     violations.push(normalized);
   },
 
-  /** Processes inputs for `offendingValue`.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violation Supplies the violation input.
-   * @returns Returns the computed result.
+  /** Locates the runtime value named by a legacy violation's nested path.
+   * @param message Candidate message holding the value.
+   * @param field Top-level field named by the violation.
+   * @param violation Legacy violation supplying list or map path details.
+   * @returns The offending nested value, when it can be located.
    */
   offendingValue(message: Message, field: DescField, violation: ConstraintViolation): unknown {
     const value = MessageFields.read(message, field);
@@ -145,10 +143,10 @@ export const ValidationOrchestration = {
     return value;
   },
 
-  /** Processes inputs for `nestedFieldPath`.
-   * @param field Supplies the field input.
-   * @param violation Supplies the violation input.
-   * @returns Returns the computed result.
+  /** Removes the top-level field and collection segment from a nested failure path.
+   * @param field Top-level field used to interpret the path.
+   * @param violation Violation whose field path is normalized.
+   * @returns Remaining nested field-name segments.
    */
   nestedFieldPath(field: DescField, violation: ConstraintViolation): string[] {
     const path = violation.fieldPath?.fieldName ?? [];

@@ -26,12 +26,12 @@ import { NumericValues, type ResolvedBound } from "./numeric.js";
 /** Validates `(range)` for one field in orchestration order. */
 /** Owns `(range)` option validation. */
 export const Range = {
-  /** Processes inputs for `validate`.
-   * @param context Supplies the context input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @param violations Supplies the violations input.
+  /** Adds a violation when a numeric field lies outside its `(range)` interval.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to resolve range references.
+   * @param message Candidate message supplying the compared value.
+   * @param field Numeric field declaring `(range)`.
+   * @param violations Mutable collection receiving range diagnostics.
    */
   validate(
     context: ValidationContext,
@@ -69,13 +69,13 @@ export const Range = {
     }
   },
 
-  /** Processes inputs for `parse`.
-   * @param declaration Supplies the declaration input.
-   * @param scalar Supplies the scalar input.
-   * @param schema Supplies the schema input.
-   * @param message Supplies the message input.
-   * @param field Supplies the field input.
-   * @returns Returns the computed result.
+  /** Parses a `(range)` declaration into comparable lower and upper bounds.
+   * @param declaration Range expression from the field option.
+   * @param scalar Numeric scalar type accepted by the field.
+   * @param schema Descriptor used to resolve field references.
+   * @param message Candidate message used to read referenced bounds.
+   * @param field Field whose range expression is interpreted.
+   * @returns Parsed bounds and their inclusive or exclusive delimiters.
    */
   parse(
     declaration: string,
@@ -106,11 +106,11 @@ export const Range = {
     };
   },
 
-  /** Processes inputs for `renderBound`.
-   * @param raw Supplies the raw input.
-   * @param token Supplies the token input.
-   * @param bound Supplies the bound input.
-   * @returns Returns the computed result.
+  /** Renders a parsed bound for use in a range diagnostic.
+   * @param raw Original range expression.
+   * @param token Text identifying the bound within the expression.
+   * @param bound Resolved numeric bound value.
+   * @returns The literal token or resolved numeric value shown to callers.
    */
   renderBound(raw: string, token: string, bound: ResolvedBound): string {
     return bound.display === token ? raw : raw.replace(token, bound.display);
