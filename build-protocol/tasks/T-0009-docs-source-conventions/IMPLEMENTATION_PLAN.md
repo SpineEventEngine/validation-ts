@@ -144,7 +144,7 @@ exception, word splitting, nested/multiline/one-line Proto declarations,
 comments containing declaration-like text, strings containing braces, map
 fields, enum values, oneofs, and manifest-based frozen-file exclusion.
 
-## Slice 1: Lock Convention Tooling With RED/GREEN
+## Task 1: Lock Convention Tooling With RED/GREEN
 
 Write checker fixtures before implementation.
 
@@ -186,7 +186,7 @@ AST aliases, inferred returns, overload-like declarations, nested Proto
 declarations, and braces inside strings can create false results. Resolve them
 in tokenizer/AST fixtures rather than with path-specific exemptions.
 
-## Slice 2: Change The Public Interface And Deepen Source Ownership
+## Task 2: Change The Public Interface And Deepen Source Ownership
 
 Write public-surface and behavior tests before editing production sources.
 Update existing internal tests to cross the new owning interfaces instead of
@@ -258,7 +258,7 @@ callback binding. Use explicit owner references, preserve array ordering, and
 verify recursive validation, clock reads, and mapped method callbacks
 specifically.
 
-## Slice 3: Complete TypeScript TSDoc, Names, And Project-Owned Proto Comments
+## Task 3: Complete TypeScript TSDoc, Names, And Project-Owned Proto Comments
 
 Use the stable live checker inventory from Slice 1. Work file-by-file, with
 TypeScript source first and project-owned Proto fixtures second. Do not touch a
@@ -320,7 +320,7 @@ Fixture renames change generated symbol imports, while option-bearing one-line
 fixtures are easy to parse or document incorrectly. Regenerate after each
 bounded fixture batch and keep invalid declarations semantically identical.
 
-## Slice 4: Restore The Authoritative Guide And Relocate Development Docs
+## Task 4: Restore The Authoritative Guide And Relocate Development Docs
 
 Use the 507-line `packages/validation/README.md` from `23335b1^` as the
 editorial baseline, not as text to copy blindly. Preserve its useful
@@ -403,7 +403,7 @@ instructions. Treat its organization and explanatory depth as the baseline;
 verify every technical statement against current manifests, source, examples,
 and frozen contracts.
 
-## Slice 5: Package Contract And Canonical Gate Integration
+## Task 5: Package Contract And Canonical Gate Integration
 
 Update `scripts/check-package.mjs` test-first so the installed-consumer smoke
 test asserts the new public interface and repository-only docs boundary.
