@@ -187,6 +187,7 @@ function expectFailure(root, expression) {
       "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf; echo done",
       "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf || echo done",
       "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf | tee install.log",
+      "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf & echo done",
       "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf \\\n+echo done",
     ]) {
       writeReadme(root, withPublicImport(`\`\`\`sh\n${chainedInstall}\n\`\`\``));
@@ -332,6 +333,24 @@ function expectFailure(root, expression) {
       [...markdown].sort((left, right) => left.localeCompare(right)),
     );
     expectFailure(root, /docs\/a-first\.md/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = createFixture();
+  try {
+    writeReadme(root, withPublicImport("# Root"));
+    writeFileSync(
+      join(root, "packages", "validation", "src", "z-last.ts"),
+      "/** legacy adapter. */\nexport const last = 1;\n",
+    );
+    writeFileSync(
+      join(root, "packages", "validation", "src", "a-first.ts"),
+      "/** legacy adapter. */\nexport const first = 1;\n",
+    );
+    expectFailure(root, /packages\/validation\/src\/a-first\.ts/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

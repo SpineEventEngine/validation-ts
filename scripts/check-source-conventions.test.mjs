@@ -114,6 +114,35 @@ test("allows exactly one exported validate from validation.ts and documents func
   );
 });
 
+test("checks function-valued object properties with the property TSDoc", async () => {
+  await withFixture(
+    {
+      "packages/validation/src/objects.ts": `
+        /** Describes callable object properties. */
+        export const validCallbacks = {
+          /** Returns the supplied value. @param value Value to return. @returns The supplied value. */
+          callback: (value: string) => value,
+          /** Returns the supplied value. @param value Value to return. @returns The supplied value. */
+          expression: function (value: string) { return value; },
+        };
+        /** Describes invalid callable object properties. */
+        export const invalidCallbacks = {
+          /** Callback value. */
+          callback: (value: string) => value,
+          /** Returns a value. @returns A value. */
+          expression: function (value: string) { return value; },
+        };
+      `,
+    },
+    async (rootDir) => {
+      const result = await checkSourceConventions({ rootDir });
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-callable-summary").length, 1);
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-missing-param").length, 2);
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-missing-returns").length, 1);
+    },
+  );
+});
+
 test("requires the validation entry point to export validate exactly once", async () => {
   await withFixture(
     {

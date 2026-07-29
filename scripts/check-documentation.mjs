@@ -89,7 +89,7 @@ function hasShellOperator(command) {
       continue;
     }
     if (character === ";" || character === "|") return true;
-    if (character === "&" && command[index + 1] === "&") return true;
+    if (character === "&") return true;
   }
   return false;
 }
@@ -194,7 +194,9 @@ function checkSourceTsDoc(root, index, publicExports) {
   ];
   let publicImportCount = 0;
   const visit = (directory) => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )) {
       if (entry.name === "generated") continue;
       const path = resolve(directory, entry.name);
       if (entry.isDirectory()) visit(path);
