@@ -21,15 +21,14 @@ import type { ConstraintViolation } from "./generated/spine/validate/validation_
 import { FieldPathSchema } from "./generated/spine/base/field_path_pb.js";
 import { MessageFields, ViolationFactory, type ValidationContext } from "./validation-contract.js";
 
-/** Describes the purpose of the `LegacyFieldValidator` member. */
-type LegacyFieldValidator = <S extends DescMessage>(
+/** Validates every field exposed by a descriptor in one invocation. */
+type AllFieldsValidator = <S extends DescMessage>(
   schema: S,
   message: MessageShape<S>,
   violations: ConstraintViolation[],
 ) => void;
 
-/** The common internal contract for field-level validation adapters. */
-/** Describes the purpose of the `FieldValidator` member. */
+/** Defines the field-by-field contract used by the validation pass. */
 export interface FieldValidator {
   /** Validates one field during the ordered validation pass.
    * @param context Root type and path for produced violations.
@@ -50,15 +49,14 @@ export interface FieldValidator {
 }
 
 /**
- * Adapts an existing all-fields validator to the field-first orchestration
- * seam while normalizing its output through the shared violation envelope.
+ * Coordinates all-fields validators with the field-by-field validation pass.
  */
 export const ValidationOrchestration = {
   /** Adapts an all-fields validator to the field-by-field orchestration contract.
-   * @param legacy Validator that evaluates a descriptor's fields together.
-   * @returns A field validator that normalizes the legacy output.
+   * @param allFieldsValidator Validator that evaluates a descriptor's fields together.
+   * @returns A field validator that normalizes the validator's output.
    */
-  legacyFieldValidator(legacy: LegacyFieldValidator): FieldValidator {
+  adaptAllFieldsValidator(allFieldsValidator: AllFieldsValidator): FieldValidator {
     return {
       /** Validates only the current field through the all-fields implementation.
        * @param context Root type and path for normalized violations.
@@ -74,24 +72,24 @@ export const ValidationOrchestration = {
         field: DescField,
         violations: ConstraintViolation[],
       ) {
-        const legacyViolations: ConstraintViolation[] = [];
+        const allFieldsViolations: ConstraintViolation[] = [];
         const fields = [field] as typeof schema.fields;
         fields.find = schema.fields.find.bind(schema.fields);
         const fieldSchema = { ...schema, fields } as S;
-        legacy(fieldSchema, message, legacyViolations);
+        allFieldsValidator(fieldSchema, message, allFieldsViolations);
 
-        for (const legacyViolation of legacyViolations) {
-          const legacyMessage = legacyViolation.message;
+        for (const allFieldsViolation of allFieldsViolations) {
+          const allFieldsMessage = allFieldsViolation.message;
           const normalized = ViolationFactory.create(
             context.atField(field),
             field,
-            ValidationOrchestration.offendingValue(message, field, legacyViolation),
+            ValidationOrchestration.offendingValue(message, field, allFieldsViolation),
             {
-              defaultMessage: legacyMessage?.withPlaceholders,
-              placeholders: legacyMessage?.placeholderValue,
+              defaultMessage: allFieldsMessage?.withPlaceholders,
+              placeholders: allFieldsMessage?.placeholderValue,
             },
           );
-          const nestedPath = ValidationOrchestration.nestedFieldPath(field, legacyViolation);
+          const nestedPath = ValidationOrchestration.nestedFieldPath(field, allFieldsViolation);
           if (nestedPath.length > 0) {
             normalized.fieldPath = create(FieldPathSchema, {
               fieldName: [field.name, ...nestedPath],
@@ -105,26 +103,26 @@ export const ValidationOrchestration = {
 
   /** Normalizes and appends a message-level or oneof-level violation.
    * @param context Root type and path for the normalized violation.
-   * @param legacyViolation Existing violation to normalize.
+   * @param allFieldsViolation Existing violation to normalize.
    * @param violations Collection receiving the normalized violation.
    */
   appendMessageViolation(
     context: ValidationContext,
-    legacyViolation: ConstraintViolation,
+    allFieldsViolation: ConstraintViolation,
     violations: ConstraintViolation[],
   ): void {
-    const legacyMessage = legacyViolation.message;
+    const allFieldsMessage = allFieldsViolation.message;
     const normalized = ViolationFactory.create(context, undefined, undefined, {
-      defaultMessage: legacyMessage?.withPlaceholders,
-      placeholders: legacyMessage?.placeholderValue,
+      defaultMessage: allFieldsMessage?.withPlaceholders,
+      placeholders: allFieldsMessage?.placeholderValue,
     });
     violations.push(normalized);
   },
 
-  /** Locates the runtime value named by a legacy violation's nested path.
+  /** Locates the runtime value named by an all-fields violation's nested path.
    * @param message Candidate message holding the value.
    * @param field Top-level field named by the violation.
-   * @param violation Legacy violation supplying list or map path details.
+   * @param violation Violation supplying list or map path details.
    * @returns The offending nested value, when it can be located.
    */
   offendingValue(message: Message, field: DescField, violation: ConstraintViolation): unknown {

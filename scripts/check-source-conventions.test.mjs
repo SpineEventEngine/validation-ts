@@ -137,6 +137,29 @@ test("rejects generic and implementation-history TSDoc without banning domain te
   );
 });
 
+test("scans detached TSDoc blocks and reports duplicate declaration documentation", async () => {
+  await withFixture(
+    {
+      "packages/validation/src/detached.ts": `
+      /** Explains a validation result for readers. */
+      /** Describes the purpose of this declaration. */
+      /** Retains historical behavior for a configured rule. */
+      /** Identifies an accepted message. */
+      export interface AcceptedMessage {}
+    `,
+    },
+    async (rootDir) => {
+      const result = await checkSourceConventions({ rootDir });
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-filler-wording").length, 1);
+      assert.equal(rules(result).filter((rule) => rule === "tsdoc-forbidden-wording").length, 1);
+      assert.deepEqual(
+        rules(result).filter((rule) => rule === "tsdoc-duplicate"),
+        ["tsdoc-duplicate"],
+      );
+    },
+  );
+});
+
 test("reports overlong TypeScript names across source and test roots but not generated output", async () => {
   await withFixture(
     {

@@ -23,8 +23,7 @@ import { ValidationOptions } from "../options-registry.js";
 import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { NumericValues, type ResolvedBound } from "./numeric.js";
 
-/** Validates `(range)` for one field in orchestration order. */
-/** Owns `(range)` option validation. */
+/** Evaluates `(range)` interval declarations for numeric fields. */
 export const Range = {
   /** Adds a violation when a numeric field lies outside its `(range)` interval.
    * @param context Root type and path carried into created violations.

@@ -26,7 +26,7 @@ import { Presence } from "../presence.js";
 import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
-/** Describes the purpose of the `Requirement` member. */
+/** Represents an operand accepted by a message-level `(require)` declaration. */
 interface Requirement {
   /** Identifies the required field when the expression names a field. */
   readonly field?: DescField;

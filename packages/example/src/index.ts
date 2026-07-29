@@ -2,7 +2,7 @@
 import { Violations } from "@spine-event-engine/validation";
 import { ExampleScenarios } from "./scenarios.js";
 
-/** Describes the purpose of the `ConsoleOutput` member. */
+/** Renders each runnable scenario and its violations to the console. */
 const ConsoleOutput = {
   /** Prints each scenario violation in the same presentation used by the example.
    * @param violations Scenario violations to render, or an empty collection for a success message.

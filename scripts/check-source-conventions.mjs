@@ -13,8 +13,9 @@ const PROTO_ROOTS = [
 ];
 const EXCLUDED_DIRECTORY_NAMES = new Set(["coverage", "dist", "generated", "node_modules"]);
 const FORBIDDEN_TSDOC =
-  /\b(?:t-\d+|task|agent|workflow|chat|transcript|implementation[ -]history|implemented)\b/i;
+  /\b(?:t-\d+|task|agent|workflow|chat|transcript|implementation[ -]history|implemented|legacy|historical)\b/i;
 const FILLER_TSDOC = [
+  /\bdescribes the purpose of\b/i,
   /\bprocesses inputs for\b/i,
   /\bsupplies the [^\n]* input\b/i,
   /\breturns the computed result\b/i,
@@ -62,13 +63,17 @@ async function findFiles(rootDir, roots, suffix) {
   return files.sort();
 }
 
+/** Reads JSDoc blocks directly leading a declaration. */
+function leadingJsDocs(sourceFile, node) {
+  const ranges = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) ?? [];
+  return ranges
+    .filter(({ pos, end }) => sourceFile.text.slice(pos, end).startsWith("/**"))
+    .map((range) => ({ ...range, text: sourceFile.text.slice(range.pos, range.end) }));
+}
+
 /** Reads the last JSDoc block directly leading a declaration. */
 function leadingJsDoc(sourceFile, node) {
-  const ranges = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) ?? [];
-  const range = [...ranges]
-    .reverse()
-    .find(({ pos, end }) => sourceFile.text.slice(pos, end).startsWith("/**"));
-  return range ? sourceFile.text.slice(range.pos, range.end) : undefined;
+  return leadingJsDocs(sourceFile, node).at(-1)?.text;
 }
 
 /** Adds a normalized diagnostic. */
@@ -127,26 +132,6 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
       `Missing TSDoc for ${name}.`,
     );
     return;
-  }
-  if (FORBIDDEN_TSDOC.test(comment)) {
-    addFinding(
-      findings,
-      path,
-      sourceFile,
-      node.getStart(sourceFile),
-      "tsdoc-forbidden-wording",
-      `TSDoc for ${name} contains workflow or history wording.`,
-    );
-  }
-  if (FILLER_TSDOC.some((pattern) => pattern.test(comment))) {
-    addFinding(
-      findings,
-      path,
-      sourceFile,
-      node.getStart(sourceFile),
-      "tsdoc-filler-wording",
-      `TSDoc for ${name} uses generic or implementation-history wording.`,
-    );
   }
   if (!callable) return;
   const documentationText = comment.replace(/^\/\*\*|\*\/$/g, "");
@@ -215,6 +200,32 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
   }
 }
 
+/** Checks every TSDoc block, including blocks detached from a declaration. */
+function checkTsDocBlocks(findings, path, sourceFile) {
+  for (const match of sourceFile.text.matchAll(/\/\*\*[\s\S]*?\*\//g)) {
+    const comment = match[0];
+    const position = match.index;
+    if (FORBIDDEN_TSDOC.test(comment))
+      addFinding(
+        findings,
+        path,
+        sourceFile,
+        position,
+        "tsdoc-forbidden-wording",
+        "TSDoc contains workflow or history wording.",
+      );
+    if (FILLER_TSDOC.some((pattern) => pattern.test(comment)))
+      addFinding(
+        findings,
+        path,
+        sourceFile,
+        position,
+        "tsdoc-filler-wording",
+        "TSDoc uses generic or implementation-history wording.",
+      );
+  }
+}
+
 /** Checks named TypeScript identifiers against the semantic-word convention. */
 function checkName(findings, path, sourceFile, identifier) {
   if (!identifier || !ts.isIdentifier(identifier)) return;
@@ -234,6 +245,7 @@ function checkName(findings, path, sourceFile, identifier) {
 /** Checks TypeScript declarations in one source file. */
 function checkTypeScriptFile(findings, path, contents, productionSource) {
   const sourceFile = ts.createSourceFile(path, contents, ts.ScriptTarget.Latest, true);
+  if (productionSource) checkTsDocBlocks(findings, path, sourceFile);
   const visit = (node) => {
     const moduleScoped = node.parent === sourceFile;
     const callable = ts.isFunctionLike(node);
@@ -266,11 +278,26 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
       ts.isConstructorDeclaration(node) ||
       ts.isEnumMember(node) ||
       (isNamedObjectMember &&
+        !ts.isComputedPropertyName(node.name) &&
         (ts.isPropertyAssignment(node) ||
           ts.isShorthandPropertyAssignment(node) ||
           ts.isGetAccessorDeclaration(node) ||
           ts.isSetAccessorDeclaration(node)));
     if (productionSource && documentationDeclaration) {
+      const documentationTarget =
+        ts.isVariableDeclaration(node) && ts.isVariableStatement(node.parent.parent)
+          ? node.parent.parent
+          : node;
+      const docs = leadingJsDocs(sourceFile, documentationTarget);
+      if (docs.length > 1)
+        addFinding(
+          findings,
+          path,
+          sourceFile,
+          docs[1].pos,
+          "tsdoc-duplicate",
+          `Consecutive TSDoc blocks document ${named ?? "this declaration"}.`,
+        );
       checkDocumentation(
         findings,
         path,

@@ -35,8 +35,7 @@ import { ValidationOptions } from "../options-registry.js";
 import { MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
-/** Internal recursive validation seam, supplied by the validation orchestrator. */
-/** Describes the purpose of the `NestedValidator` member. */
+/** Validates a nested message with its accumulated root context and descriptor registry. */
 export type NestedValidator = <S extends DescMessage>(
   schema: S,
   message: MessageShape<S>,
@@ -46,7 +45,6 @@ export type NestedValidator = <S extends DescMessage>(
 
 /** Owns descriptor-defined recursive `(validate)` option processing. */
 export const NestedValidation = {
-  /** Validates one field in declaration order, preserving the root validation context. */
   /** Traverses nested messages selected by a `(validate)` field option.
    * @param context Root type and path for nested violations.
    * @param schema Descriptor containing the nested field.

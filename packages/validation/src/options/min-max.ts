@@ -27,8 +27,7 @@ import { ValidationOptions } from "../options-registry.js";
 import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { NumericValues } from "./numeric.js";
 
-/** Validates `(min)` and `(max)` for a single field in orchestration order. */
-/** Owns `(min)` and `(max)` option validation. */
+/** Evaluates `(min)` and `(max)` option bounds for numeric fields. */
 export const MinMax = {
   /** Checks the minimum and maximum bounds declared on one numeric field.
    * @param context Root type and path carried into created violations.
@@ -100,8 +99,7 @@ export const MinMax = {
             [`${name}.value`]: bound.display,
             [`${name}.operator`]:
               name === "min" ? (exclusive ? ">" : ">=") : exclusive ? "<" : "<=",
-            // Retained for already-authored custom messages; documented templates
-            // use the namespaced placeholders above.
+            // Supplies unnamespaced aliases alongside the documented placeholders.
             value: String(raw),
             other: bound.display,
           },

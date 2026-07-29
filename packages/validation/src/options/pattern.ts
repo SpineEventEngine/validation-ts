@@ -40,18 +40,9 @@ import { ValidationOptions } from "../options-registry.js";
 import { MessageFields } from "../validation-contract.js";
 import type { PatternOption } from "../generated/spine/options_pb.js";
 
-/**
- * Creates a constraint violation object for `(pattern)` validation failures.
- *
- * @param typeName The fully qualified message type name.
- * @param fieldName The name of the field that violated the constraint.
- * @param fieldValue The actual value of the field.
- * @param violationMessage The error message describing the violation.
- * @returns A `ConstraintViolation` object.
- */
 /** Owns descriptor-defined `(pattern)` validation and its private diagnostics. */
 export const Pattern = {
-  /** Creates the historical `(pattern)` violation envelope.
+  /** Creates the `(pattern)` violation representation for a failing field value.
    * @param typeName Type name reported by the violation.
    * @param fieldName Failing field name.
    * @param fieldValue String value that failed the expression.
@@ -83,14 +74,6 @@ export const Pattern = {
     });
   },
 
-  /**
-   * Validates a single string value against a regex pattern with modifiers.
-   *
-   * @param value The string value to validate.
-   * @param regex The regular expression pattern.
-   * @param patternOption The pattern option object with optional modifiers.
-   * @returns `true` if the value matches the pattern, `false` otherwise.
-   */
   /** Tests a string against a configured regular expression.
    * @param value Candidate string to test.
    * @param regex Compiled expression from the option.
@@ -135,17 +118,7 @@ export const Pattern = {
     }
   },
 
-  /**
-   * Validates the `(pattern)` option for string fields.
-   *
-   * This function checks if string field values match the specified regular expression pattern.
-   * Supports pattern modifiers like `case_insensitive`, `multiline`, `dot_all`, etc.
-   *
-   * @param schema The message schema containing field descriptors.
-   * @param message The message instance to validate.
-   * @param violations Array to collect constraint violations.
-   */
-  /** Applies legacy `(pattern)` validation across a message.
+  /** Applies `(pattern)` expressions to configured string fields in a message.
    * @param schema Descriptor containing pattern-configured fields.
    * @param message Candidate message supplying string values.
    * @param violations Collection receiving pattern diagnostics.

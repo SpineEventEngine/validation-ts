@@ -20,42 +20,32 @@ import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 import { MessageFields } from "../validation-contract.js";
 
-/** Describes the purpose of the `NumericValue` member. */
+/** Represents a parsed numeric option value as a JavaScript number or bigint. */
 export type NumericValue = number | bigint;
 
 const INTEGER = /^[+-]?\d+$/;
 const FLOAT = /^[+-]?(?:\d+\.\d*|\d*\.\d+)(?:[eE][+-]?\d+)?$/;
 const FLOAT_MAX = 3.4028234663852886e38;
 
-/** Describes the purpose of the `integerLimits` member. */
+/** Maps each integer scalar kind to its inclusive lower and upper limits. */
 const integerLimits: Readonly<Partial<Record<ScalarType, readonly [bigint, bigint]>>> = {
-  /** Describes the purpose of the `member` member. */
   [ScalarType.INT32]: [-2147483648n, 2147483647n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.SINT32]: [-2147483648n, 2147483647n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.SFIXED32]: [-2147483648n, 2147483647n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.UINT32]: [0n, 4294967295n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.FIXED32]: [0n, 4294967295n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.INT64]: [-9223372036854775808n, 9223372036854775807n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.SINT64]: [-9223372036854775808n, 9223372036854775807n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.SFIXED64]: [-9223372036854775808n, 9223372036854775807n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.UINT64]: [0n, 18446744073709551615n],
-  /** Describes the purpose of the `member` member. */
   [ScalarType.FIXED64]: [0n, 18446744073709551615n],
 };
 
-/** Describes the purpose of the `ResolvedBound` member. */
+/** Couples a comparison-ready numeric bound with its diagnostic representation. */
 export interface ResolvedBound {
-  /** Stores the parsed numeric bound used during comparison. */
+  /** Parsed bound used for numeric comparison. */
   value: NumericValue;
-  /** Describes the purpose of the `display` member. */
+  /** Literal or resolved bound text included in a diagnostic. */
   display: string;
 }
 

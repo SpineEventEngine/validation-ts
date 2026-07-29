@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-/** Stable codes for invalid validation-option declarations. */
-/** Describes the purpose of the `ValidationConfigurationErrorCode` member. */
+/** Classifies why a validation option declaration cannot be applied. */
 export type ValidationConfigurationErrorCode =
   | "UNSUPPORTED_OPTION_TARGET"
   | "INVALID_OPTION_VALUE"
   | "UNKNOWN_FIELD_REFERENCE"
   | "INVALID_FIELD_REFERENCE";
 
-/** Data exposed by a validation configuration error. */
-/** Describes the purpose of the `ValidationConfigurationErrorInit` member. */
+/** Identifies the invalid option declaration used to create a configuration error. */
 export interface ValidationConfigurationErrorInit {
-  /** Describes the purpose of the `code` member. */
+  /** Classification of the invalid declaration. */
   code: ValidationConfigurationErrorCode;
-  /** Describes the purpose of the `option` member. */
+  /** Canonical validation option name without Proto parentheses. */
   option: string;
-  /** Describes the purpose of the `typeName` member. */
+  /** Fully qualified Proto type declaring the option. */
   typeName: string;
-  /** Describes the purpose of the `fieldPath` member. */
+  /** Optional Proto field-name path locating the option declaration. */
   fieldPath?: readonly string[];
-  /** Describes the purpose of the `cause` member. */
+  /** Underlying reason supplied by option parsing or resolution. */
   cause?: unknown;
 }
 
@@ -42,17 +40,16 @@ export interface ValidationConfigurationErrorInit {
  *
  * The `option` value is the canonical option name without Proto parentheses.
  */
-/** Describes the purpose of the `ValidationConfigurationError` member. */
 export class ValidationConfigurationError extends Error {
-  /** Describes the purpose of the `code` member. */
+  /** Classification of the invalid declaration. */
   readonly code: ValidationConfigurationErrorCode;
-  /** Describes the purpose of the `option` member. */
+  /** Canonical validation option name without Proto parentheses. */
   readonly option: string;
-  /** Describes the purpose of the `typeName` member. */
+  /** Fully qualified Proto type declaring the option. */
   readonly typeName: string;
-  /** Describes the purpose of the `fieldPath` member. */
+  /** Optional Proto field-name path locating the option declaration. */
   readonly fieldPath?: readonly string[];
-  /** Describes the purpose of the `cause` member. */
+  /** Underlying reason supplied by option parsing or resolution. */
   readonly cause?: unknown;
 
   /** Creates an error that identifies an invalid validation-option declaration.

@@ -80,7 +80,7 @@ describe("validation contract kernel", () => {
     });
     const violations = [] as ReturnType<typeof ViolationFactory.create>[];
     const context = ValidationContext.create(RequiredFieldsSchema);
-    const adapter = ValidationOrchestration.legacyFieldValidator((_schema, _message, output) => {
+    const adapter = ValidationOrchestration.adaptAllFieldsValidator((_schema, _message, output) => {
       output.push(
         create(ConstraintViolationSchema, {
           fieldPath: { fieldName: ["tags", "0", "nested"] },
@@ -106,13 +106,15 @@ describe("validation contract kernel", () => {
     );
     expect(anyUnpack(violations[0].fieldValue!, StringValueSchema)?.value).toBe("duplicate");
 
-    const mapAdapter = ValidationOrchestration.legacyFieldValidator((_schema, _message, output) => {
-      output.push(
-        create(ConstraintViolationSchema, {
-          fieldPath: { fieldName: ["scores", "primary", "nested"] },
-        }),
-      );
-    });
+    const mapAdapter = ValidationOrchestration.adaptAllFieldsValidator(
+      (_schema, _message, output) => {
+        output.push(
+          create(ConstraintViolationSchema, {
+            fieldPath: { fieldName: ["scores", "primary", "nested"] },
+          }),
+        );
+      },
+    );
     mapAdapter.validate(
       context,
       RequiredFieldsSchema,

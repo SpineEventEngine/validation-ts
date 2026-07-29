@@ -63,7 +63,7 @@ const fieldValidators: readonly FieldValidator[] = [
       Required.validate(context, schema, message, field, violations);
     },
   },
-  ValidationOrchestration.legacyFieldValidator(Pattern.validate),
+  ValidationOrchestration.adaptAllFieldsValidator(Pattern.validate),
   {
     /** Applies `(min)` and `(max)` to the current field.
      * @param context Violation location for the validated message.
@@ -167,8 +167,8 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * Validators using the standard `ConstraintViolation` structure retain the root entry type, a complete path of
  * Proto field names, and a descriptor-packed offending value when one exists.
  * Their diagnostic is always present; an option without a custom or default
- * message produces an empty template string. `(pattern)` is the documented
- * historical pattern-specific envelope; see the package validation contract for details.
+ * message produces an empty template string. `(pattern)` diagnostics use its
+ * documented pattern-specific representation; see the package validation contract for details.
  *
  * Currently supported validation options:
  * - `(required)` — validates supported presence targets
@@ -268,17 +268,7 @@ const ValidationEngine = {
   },
 } as const;
 
-/**
- * Formats a `TemplateString` by replacing all placeholders with their values.
- *
- * Placeholders in the format `${key}` are replaced with corresponding values
- * from the `placeholderValue` map.
- *
- * @param template The template string with placeholders.
- * @returns Formatted string with placeholders replaced.
- *
- */
-/** Describes the purpose of the `TemplateStrings` member. */
+/** Formats diagnostic template strings by substituting their named placeholder values. */
 const TemplateStrings = {
   /** Replaces literal template placeholders with their supplied diagnostic values.
    * @param template Message template containing placeholder values.
@@ -294,9 +284,7 @@ const TemplateStrings = {
 };
 
 /**
- * Utility object for working with constraint violations.
- *
- * Provides helper methods to extract formatted information from `ConstraintViolation` objects.
+ * Formats public constraint violations for display and exposes their message and Proto field path.
  *
  * @example
  * ```typescript

@@ -30,11 +30,11 @@ import { ValidationOptions } from "../options-registry.js";
 import { ViolationFactory, MessageFields, ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
-/** Describes the purpose of the `EqualityClass` member. */
+/** Groups collection values that compare equal under a field descriptor. */
 interface EqualityClass {
-  /** Describes the purpose of the `representative` member. */
+  /** Value used to compare later members of this equality group. */
   representative: unknown;
-  /** Describes the purpose of the `count` member. */
+  /** Number of collection values in this equality group. */
   count: number;
 }
 

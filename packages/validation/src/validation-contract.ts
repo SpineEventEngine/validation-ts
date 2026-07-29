@@ -36,12 +36,11 @@ import {
 } from "./generated/spine/validate/validation_error_pb.js";
 import { TemplateStringSchema } from "./generated/spine/validate/error_message_pb.js";
 
-/** Shared root entry and current Proto-field path for validation. */
-/** Describes the purpose of the `ValidationContext` member. */
+/** Carries a validation root type and the Proto field path currently being evaluated. */
 export class ValidationContext {
-  /** Describes the purpose of the `rootTypeName` member. */
+  /** Fully qualified name of the message where validation began. */
   readonly rootTypeName: string;
-  /** Describes the purpose of the `fieldPath` member. */
+  /** Proto field names from the root message to the current location. */
   readonly fieldPath: readonly string[];
 
   /** Creates a context for a root message and its current nested field path.
@@ -70,8 +69,7 @@ export class ValidationContext {
   }
 }
 
-/** Reads one descriptor-named field from a generated message at the reflective seam. */
-/** Describes the purpose of the `MessageFields` member. */
+/** Reads descriptor-named properties from generated message instances. */
 export const MessageFields = {
   /** Reads a generated message property identified by its descriptor local name.
    * @param message Generated message to inspect.
@@ -83,14 +81,13 @@ export const MessageFields = {
   },
 };
 
-/** Inputs for a violation's present `TemplateString`. */
-/** Describes the purpose of the `ViolationMessage` member. */
+/** Supplies the message template and substitutions for a created violation. */
 export interface ViolationMessage {
-  /** Describes the purpose of the `customMessage` member. */
+  /** Option-specific message that takes precedence when it is nonempty. */
   customMessage?: string;
-  /** Describes the purpose of the `defaultMessage` member. */
+  /** Built-in option message used when no custom message is supplied. */
   defaultMessage?: string;
-  /** Describes the purpose of the `placeholders` member. */
+  /** Additional placeholder values merged into the generated diagnostic. */
   placeholders?: Readonly<Record<string, string>>;
 }
 
