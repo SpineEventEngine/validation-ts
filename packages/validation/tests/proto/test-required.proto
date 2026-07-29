@@ -27,61 +27,70 @@ syntax = "proto3";
 
 package spine.validation.testing.required_suite;
 
-// Test messages for the `(required)` and `(if_missing)` validation options.
-//
-// This file contains test cases for required field validation across different
-// field types (strings, numbers, messages, enums, repeated fields) and custom
-// error messages via the `(if_missing)` option.
-
 import "spine/options.proto";
-
-// Tests required field validation on various field types.
+// Fixture `RequiredFields` exercises `(required)`.
 message RequiredFields {
+    // Validates `name` with `(required) = true`.
     string name = 1 [(required) = true];
+    // Stores `age` for the `RequiredFields` fixture.
     int32 age = 2;
+    // Validates `address` with `(required) = true`.
     Address address = 3 [(required) = true];
+    // Validates `status` with `(required) = true`.
     Status status = 4 [(required) = true];
+    // Validates `tags` with `(required) = true`.
     repeated string tags = 5 [(required) = true];
+    // Validates `payload` with `(required) = true`.
     bytes payload = 6 [(required) = true];
+    // Validates `scores` with `(required) = true`.
     map<string, int32> scores = 7 [(required) = true];
 }
 
+// Deliberately tests invalid configuration `(required) = true`.
 message InvalidRequiredNumeric {
+    // Validates `age` with `(required) = true`.
     int32 age = 1 [(required) = true];
 }
 
+// Deliberately tests invalid configuration `(required) = true`.
 message InvalidRequiredBoolean {
+    // Validates `enabled` with `(required) = true`.
     bool enabled = 1 [(required) = true];
 }
-
-// Nested message for testing required message fields.
+// Fixture `Address` exercises the named validation scenario.
 message Address {
+    // Stores `street` for the `Address` fixture.
     string street = 1;
+    // Stores `city` for the `Address` fixture.
     string city = 2;
 }
-
-// Enum for testing required enum fields.
+// Enum `Status` supplies values for this fixture.
 enum Status {
+    // Represents `STATUS_UNSPECIFIED` in this fixture enum.
     STATUS_UNSPECIFIED = 0;
+    // Represents `STATUS_ACTIVE` in this fixture enum.
     STATUS_ACTIVE = 1;
+    // Represents `STATUS_INACTIVE` in this fixture enum.
     STATUS_INACTIVE = 2;
 }
-
-// Tests custom error messages via the `(if_missing)` option.
+// Fixture `CustomErrorMessages` exercises `(required)`.
 message CustomErrorMessages {
+    // Validates `username` with `(required) = true`.
     string username = 1 [
         (required) = true,
         (if_missing).error_msg = "Username is mandatory for account creation."
     ];
 
+    // Validates `email` with `(required) = true`.
     string email = 2 [
         (required) = true,
         (if_missing).error_msg = "Email address must be provided."
     ];
 }
-
-// Tests optional fields without required constraints.
+// Fixture `OptionalFields` exercises the named validation scenario.
 message OptionalFields {
+    // Stores `nickname` for the `OptionalFields` fixture.
     string nickname = 1;
+    // Stores `score` for the `OptionalFields` fixture.
     int32 score = 2;
 }

@@ -211,6 +211,26 @@ test("does not treat option assignments as Proto field declarations", async () =
   );
 });
 
+test("keeps sibling aggregate field options within their documented field", async () => {
+  await withFixture(
+    {
+      "packages/validation/proto/nested-options.proto": `
+      // Documents a field with aggregate validation options.
+      message NumericBounds {
+        // Documents the bounded value.
+        double value = 1 [
+          (min) = { value: "0.01", error_msg: "Literal { braces } stay quoted." },
+          (max) = { value: "1000000.0", exclusive: true }
+        ];
+      }
+    `,
+    },
+    async (rootDir) => {
+      assert.deepEqual(rules(await checkSourceConventions({ rootDir })), []);
+    },
+  );
+});
+
 test("does not associate a trailing Proto comment with the next declaration", async () => {
   await withFixture(
     {

@@ -380,6 +380,22 @@ function isLeadingProtoComment(contents, comment) {
 function checkProtoFile(findings, path, contents) {
   const sourceFile = ts.createSourceFile(path, contents, ts.ScriptTarget.Latest, true);
   const tokens = tokenizeProto(contents);
+  function statementEnd(start) {
+    const delimiters = [];
+    const closing = new Map([
+      [")", "("],
+      ["]", "["],
+      ["}", "{"],
+    ]);
+    for (let index = start; index < tokens.length; index += 1) {
+      const token = tokens[index].text;
+      if (["(", "[", "{"].includes(token)) delimiters.push(token);
+      else if (closing.has(token) && closing.get(token) === delimiters.at(-1)) delimiters.pop();
+      else if (token === ";" && delimiters.length === 0) return index;
+      else if (token === "}" && delimiters.length === 0) return index;
+    }
+    return tokens.length;
+  }
   function parseBody(start, context) {
     let index = start;
     let comment;
@@ -405,7 +421,7 @@ function checkProtoFile(findings, path, contents) {
         continue;
       }
       if (token.text === "option") {
-        while (index < tokens.length && tokens[index].text !== ";") index += 1;
+        index = statementEnd(index);
         comment = undefined;
         index += 1;
         continue;
@@ -415,9 +431,7 @@ function checkProtoFile(findings, path, contents) {
         token.text !== "option" &&
         (token.type === "identifier" || token.text === "map")
       ) {
-        let end = index;
-        while (end < tokens.length && tokens[end].text !== ";" && tokens[end].text !== "}")
-          end += 1;
+        const end = statementEnd(index);
         const equals = tokens.slice(index, end).findIndex((candidate) => candidate.text === "=");
         if (equals >= 0) {
           const beforeEquals = tokens
