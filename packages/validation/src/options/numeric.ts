@@ -18,7 +18,7 @@ import { create, isMessage, ScalarType } from "@bufbuild/protobuf";
 import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
-import { readField } from "../validation-contract.js";
+import { MessageFields } from "../validation-contract.js";
 
 export type NumericValue = number | bigint;
 
@@ -112,13 +112,13 @@ export function resolveBound(
       const referencedScalar = numericScalar(field);
       if (referencedScalar === undefined || field.fieldKind !== "scalar")
         throw configurationError("INVALID_FIELD_REFERENCE", option, schema.typeName, [target.name]);
-      const raw = readField(current, field);
+      const raw = MessageFields.read(current, field);
       const value = runtimeNumeric(raw ?? field.getDefaultValue(), referencedScalar);
       return { value, display: `${declaration} (${String(value)})` };
     }
     if (field.fieldKind !== "message")
       throw configurationError("INVALID_FIELD_REFERENCE", option, schema.typeName, [target.name]);
-    const nested = readField(current, field);
+    const nested = MessageFields.read(current, field);
     current = isMessage(nested, field.message) ? nested : create(field.message);
     descriptor = field.message;
   }

@@ -21,9 +21,9 @@ import type { DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { ChoiceOptionSchema, default_message } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { isOneofPresent } from "../presence.js";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { Presence } from "../presence.js";
+import { ViolationFactory, type ValidationContext } from "../validation-contract.js";
 
 function defaultMessage(): string | undefined {
   return getOption(ChoiceOptionSchema, default_message);
@@ -36,16 +36,16 @@ export function validateChoiceOptions(
   message: Message,
   violations: ConstraintViolation[],
 ): void {
-  const choiceOption = getRegisteredOption("choice");
+  const choiceOption = ValidationOptions.get("choice");
   if (!choiceOption) return;
 
   for (const oneof of schema.oneofs) {
     if (!hasOption(oneof, choiceOption)) continue;
     const option = getOption(oneof, choiceOption);
-    if (!option.required || isOneofPresent(oneof, message)) continue;
+    if (!option.required || Presence.isOneof(oneof, message)) continue;
 
     violations.push(
-      createConstraintViolation(context, undefined, undefined, {
+      ViolationFactory.create(context, undefined, undefined, {
         customMessage: option.errorMsg,
         defaultMessage: defaultMessage(),
         placeholders: { "group.path": oneof.name, "parent.type": context.rootTypeName },

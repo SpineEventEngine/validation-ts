@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { vi } from "vitest";
 
-import { setValidationClockForTesting } from "../src/clock.js";
+import { ValidationClock } from "../src/clock.js";
 import { validate } from "../src/index.js";
 import {
   InvalidWhenValueSchema,
@@ -10,11 +10,11 @@ import {
 } from "./generated/test-when_pb.js";
 
 describe("(when) collection and temporal contract", () => {
-  afterEach(() => setValidationClockForTesting());
+  afterEach(() => ValidationClock.set());
 
   it("skips singular descriptor defaults but evaluates default list and map elements once", () => {
     let reads = 0;
-    setValidationClockForTesting(() => {
+    ValidationClock.set(() => {
       reads++;
       return { seconds: 1_704_067_200n, nanos: 0 };
     });
@@ -49,7 +49,7 @@ describe("(when) collection and temporal contract", () => {
 
   it("reads the clock once per scalar and collection element", () => {
     let reads = 0;
-    setValidationClockForTesting(() => ({ seconds: (reads++, 1_704_067_200n), nanos: 0 }));
+    ValidationClock.set(() => ({ seconds: (reads++, 1_704_067_200n), nanos: 0 }));
     expect(
       validate(
         TimeValidationSchema,
@@ -127,7 +127,7 @@ describe("(when) collection and temporal contract", () => {
   });
 
   it("accepts JVM Timestamp bounds and rejects seconds outside them", () => {
-    setValidationClockForTesting(() => ({ seconds: 0n, nanos: 0 }));
+    ValidationClock.set(() => ({ seconds: 0n, nanos: 0 }));
     expect(
       validate(
         TimeValidationSchema,
@@ -154,7 +154,7 @@ describe("(when) collection and temporal contract", () => {
   it("uses Euclidean pre-epoch system clock division", () => {
     const now = vi.spyOn(Date, "now").mockReturnValue(-1);
     try {
-      setValidationClockForTesting();
+      ValidationClock.set();
       expect(
         validate(
           TimeValidationSchema,
@@ -167,7 +167,7 @@ describe("(when) collection and temporal contract", () => {
   });
 
   it("keeps when and nested validation leaf-only in validator order", () => {
-    setValidationClockForTesting(() => ({ seconds: 1_704_067_200n, nanos: 0 }));
+    ValidationClock.set(() => ({ seconds: 1_704_067_200n, nanos: 0 }));
     const message = create(NestedWhenEnvelopeSchema, {
       firstFuture: { seconds: 1n },
       nested: { future: { seconds: 1_800_000_000n }, label: "" },

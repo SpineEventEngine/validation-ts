@@ -5,14 +5,10 @@ import { Temporal } from "temporal-polyfill";
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message } from "../generated/spine/options_pb.js";
 import { Time, TimeOptionSchema } from "../generated/spine/time_options_pb.js";
-import { readValidationNow } from "../clock.js";
-import { getRegisteredOption } from "../options-registry.js";
+import { ValidationClock } from "../clock.js";
+import { ValidationOptions } from "../options-registry.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 
 const NANOSECONDS_PER_SECOND = 1_000_000_000n;
 const MIN_YEAR = -999_999_999;
@@ -44,7 +40,7 @@ export function validateWhenField(
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
-  const extension = getRegisteredOption("when");
+  const extension = ValidationOptions.get("when");
   if (!hasOption(field, extension)) return;
   const option = getOption(field, extension);
   if (option.in === Time.TIME_UNDEFINED) return;
@@ -54,7 +50,7 @@ export function validateWhenField(
   if (!supportedTypes.has(typeName))
     throw configurationError("UNSUPPORTED_OPTION_TARGET", schema, field);
   assertPlaceholders(option.errorMsg, schema, field);
-  const value = readField(message, field);
+  const value = MessageFields.read(message, field);
   if (
     field.fieldKind === "message" &&
     (!value || equals(field.message, value as never, create(field.message)))
@@ -62,12 +58,12 @@ export function validateWhenField(
     return;
   const values = collectionValues(field, value);
   for (const element of values) {
-    const now = toEpochNanoseconds(readValidationNow());
+    const now = toEpochNanoseconds(ValidationClock.read());
     const instant = toEpochNanoseconds(element, typeName);
     const valid = option.in === Time.PAST ? instant <= now : instant >= now;
     if (valid) continue;
     violations.push(
-      createConstraintViolation(context.atField(field), field, element, {
+      ViolationFactory.create(context.atField(field), field, element, {
         customMessage: option.errorMsg || undefined,
         defaultMessage: getOption(TimeOptionSchema, default_message) || undefined,
         placeholders: { "when.in": option.in === Time.PAST ? "past" : "future" },

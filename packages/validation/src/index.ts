@@ -32,19 +32,13 @@
  * @packageDocumentation
  */
 
-export { validate, formatViolations, Violations } from "./validation.js";
+export { validate, Violations } from "./validation.js";
 export {
   ValidationConfigurationError,
   type ValidationConfigurationErrorCode,
   type ValidationConfigurationErrorInit,
 } from "./validation-configuration-error.js";
 
-/**
- * Internal utility function for formatting template strings.
- * End-users typically don't need to use this directly. Use `Violations.formatMessage()` instead.
- * @internal
- */
-export { formatTemplateString } from "./validation.js";
 
 export type {
   ConstraintViolation,

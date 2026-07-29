@@ -46,21 +46,23 @@ export class ValidationContext {
     this.fieldPath = fieldPath;
   }
 
+  /** Creates the root context for a message descriptor. */
+  static create(schema: DescMessage): ValidationContext {
+    return new ValidationContext(schema.typeName);
+  }
+
   /** Extends the current path with one unqualified Proto field name. */
   atField(field: DescField): ValidationContext {
     return new ValidationContext(this.rootTypeName, [...this.fieldPath, field.name]);
   }
 }
 
-/** Creates a root validation context for one validation entry point. */
-export function createValidationContext(schema: DescMessage): ValidationContext {
-  return new ValidationContext(schema.typeName);
-}
-
 /** Reads one descriptor-named field from a generated message at the reflective seam. */
-export function readField(message: Message, field: Pick<DescField, "localName">): unknown {
-  return (message as unknown as Record<string, unknown>)[field.localName];
-}
+export const MessageFields = {
+  read(message: Message, field: Pick<DescField, "localName">): unknown {
+    return (message as unknown as Record<string, unknown>)[field.localName];
+  },
+};
 
 /** Inputs for a violation's present `TemplateString`. */
 export interface ViolationMessage {
@@ -69,155 +71,157 @@ export interface ViolationMessage {
   placeholders?: Readonly<Record<string, string>>;
 }
 
-/** Creates a shared violation envelope from a descriptor-aware field value. */
-export function createConstraintViolation(
-  context: ValidationContext,
-  field: DescField | undefined,
-  fieldValue: unknown,
-  message: ViolationMessage,
-): ConstraintViolation {
-  const hasFieldValue = field !== undefined && fieldValue !== undefined;
-  const placeholderValue: Record<string, string> = {
-    "message.type": context.rootTypeName,
-  };
+/** Creates shared violation envelopes from descriptor-aware field values. */
+export const ViolationFactory = {
+  create(
+    context: ValidationContext,
+    field: DescField | undefined,
+    fieldValue: unknown,
+    message: ViolationMessage,
+  ): ConstraintViolation {
+    const hasFieldValue = field !== undefined && fieldValue !== undefined;
+    const placeholderValue: Record<string, string> = {
+      "message.type": context.rootTypeName,
+    };
 
-  if (field !== undefined) {
-    Object.assign(placeholderValue, {
-      "parent.type": context.rootTypeName,
-      "field.path": context.fieldPath.join("."),
-      "field.type": fieldTypeName(field),
+    if (field !== undefined) {
+      Object.assign(placeholderValue, {
+        "parent.type": context.rootTypeName,
+        "field.path": context.fieldPath.join("."),
+        "field.type": ViolationFactory.fieldTypeName(field),
+      });
+    }
+
+    if (hasFieldValue) {
+      placeholderValue["field.value"] = ViolationFactory.formatFieldValue(fieldValue);
+    }
+
+    return create(ConstraintViolationSchema, {
+      typeName: context.rootTypeName,
+      fieldPath: create(FieldPathSchema, {
+        fieldName: [...context.fieldPath],
+      }),
+      fieldValue: hasFieldValue ? ViolationFactory.packFieldValue(field, fieldValue) : undefined,
+      message: create(TemplateStringSchema, {
+        withPlaceholders: message.customMessage || message.defaultMessage || "",
+        placeholderValue: {
+          ...placeholderValue,
+          ...message.placeholders,
+        },
+      }),
     });
-  }
+  },
 
-  if (hasFieldValue) {
-    placeholderValue["field.value"] = formatFieldValue(fieldValue);
-  }
+  packFieldValue(field: DescField, value: unknown) {
+    if (field.fieldKind === "message") return ViolationFactory.packMessage(field.message, value);
+    if (field.fieldKind === "enum") return ViolationFactory.packWrapper(Int32ValueSchema, value);
+    if (field.fieldKind === "scalar") return ViolationFactory.packScalar(field.scalar, value);
+    if (field.fieldKind === "list") {
+      if (field.listKind === "message") return ViolationFactory.packMessage(field.message, value);
+      if (field.listKind === "enum") return ViolationFactory.packWrapper(Int32ValueSchema, value);
+      return ViolationFactory.packScalar(field.scalar, value);
+    }
+    if (field.mapKind === "message") return ViolationFactory.packMessage(field.message, value);
+    if (field.mapKind === "enum") return ViolationFactory.packWrapper(Int32ValueSchema, value);
+    return ViolationFactory.packScalar(field.scalar, value);
+  },
 
-  return create(ConstraintViolationSchema, {
-    typeName: context.rootTypeName,
-    fieldPath: create(FieldPathSchema, {
-      fieldName: [...context.fieldPath],
-    }),
-    fieldValue: hasFieldValue ? packFieldValue(field, fieldValue) : undefined,
-    message: create(TemplateStringSchema, {
-      withPlaceholders: message.customMessage || message.defaultMessage || "",
-      placeholderValue: {
-        ...placeholderValue,
-        ...message.placeholders,
-      },
-    }),
-  });
-}
+  packScalar(scalar: ScalarType, value: unknown) {
+    switch (scalar) {
+      case ScalarType.DOUBLE:
+        return ViolationFactory.packWrapper(DoubleValueSchema, value);
+      case ScalarType.FLOAT:
+        return ViolationFactory.packWrapper(FloatValueSchema, value);
+      case ScalarType.INT64:
+      case ScalarType.SINT64:
+      case ScalarType.SFIXED64:
+        return ViolationFactory.packWrapper(Int64ValueSchema, value);
+      case ScalarType.UINT64:
+      case ScalarType.FIXED64:
+        return ViolationFactory.packWrapper(UInt64ValueSchema, value);
+      case ScalarType.INT32:
+      case ScalarType.SINT32:
+      case ScalarType.SFIXED32:
+        return ViolationFactory.packWrapper(Int32ValueSchema, value);
+      case ScalarType.UINT32:
+      case ScalarType.FIXED32:
+        return ViolationFactory.packWrapper(UInt32ValueSchema, value);
+      case ScalarType.BOOL:
+        return ViolationFactory.packWrapper(BoolValueSchema, value);
+      case ScalarType.BYTES:
+        return ViolationFactory.packWrapper(BytesValueSchema, value);
+      case ScalarType.STRING:
+        return ViolationFactory.packWrapper(StringValueSchema, value);
+    }
+  },
 
-function packFieldValue(field: DescField, value: unknown) {
-  if (field.fieldKind === "message") return packMessage(field.message, value);
-  if (field.fieldKind === "enum") return packWrapper(Int32ValueSchema, value);
-  if (field.fieldKind === "scalar") return packScalar(field.scalar, value);
-  if (field.fieldKind === "list") {
-    if (field.listKind === "message") return packMessage(field.message, value);
-    if (field.listKind === "enum") return packWrapper(Int32ValueSchema, value);
-    return packScalar(field.scalar, value);
-  }
-  if (field.mapKind === "message") return packMessage(field.message, value);
-  if (field.mapKind === "enum") return packWrapper(Int32ValueSchema, value);
-  return packScalar(field.scalar, value);
-}
+  packWrapper(schema: DescMessage, value: unknown) {
+    return anyPack(schema, create(schema, { value }));
+  },
 
-function packScalar(scalar: ScalarType, value: unknown) {
-  switch (scalar) {
-    case ScalarType.DOUBLE:
-      return packWrapper(DoubleValueSchema, value);
-    case ScalarType.FLOAT:
-      return packWrapper(FloatValueSchema, value);
-    case ScalarType.INT64:
-    case ScalarType.SINT64:
-    case ScalarType.SFIXED64:
-      return packWrapper(Int64ValueSchema, value);
-    case ScalarType.UINT64:
-    case ScalarType.FIXED64:
-      return packWrapper(UInt64ValueSchema, value);
-    case ScalarType.INT32:
-    case ScalarType.SINT32:
-    case ScalarType.SFIXED32:
-      return packWrapper(Int32ValueSchema, value);
-    case ScalarType.UINT32:
-    case ScalarType.FIXED32:
-      return packWrapper(UInt32ValueSchema, value);
-    case ScalarType.BOOL:
-      return packWrapper(BoolValueSchema, value);
-    case ScalarType.BYTES:
-      return packWrapper(BytesValueSchema, value);
-    case ScalarType.STRING:
-      return packWrapper(StringValueSchema, value);
-  }
-}
+  packMessage(schema: DescMessage, value: unknown) {
+    return anyPack(schema, value as never);
+  },
 
-function packWrapper(schema: DescMessage, value: unknown) {
-  return anyPack(schema, create(schema, { value }));
-}
+  fieldTypeName(field: DescField): string {
+    if (field.fieldKind === "message") return field.message.typeName;
+    if (field.fieldKind === "enum") return field.enum.typeName;
+    if (field.fieldKind === "scalar") return ViolationFactory.scalarProtoTypeName(field.scalar);
+    if (field.fieldKind === "list") {
+      if (field.listKind === "message") return field.message.typeName;
+      if (field.listKind === "enum") return field.enum.typeName;
+      return ViolationFactory.scalarProtoTypeName(field.scalar);
+    }
+    if (field.mapKind === "message") return field.message.typeName;
+    if (field.mapKind === "enum") return field.enum.typeName;
+    return ViolationFactory.scalarProtoTypeName(field.scalar);
+  },
 
-function packMessage(schema: DescMessage, value: unknown) {
-  return anyPack(schema, value as never);
-}
+  scalarProtoTypeName(scalar: ScalarType): string {
+    switch (scalar) {
+      case ScalarType.DOUBLE:
+        return "double";
+      case ScalarType.FLOAT:
+        return "float";
+      case ScalarType.INT64:
+        return "int64";
+      case ScalarType.UINT64:
+        return "uint64";
+      case ScalarType.INT32:
+        return "int32";
+      case ScalarType.FIXED64:
+        return "fixed64";
+      case ScalarType.FIXED32:
+        return "fixed32";
+      case ScalarType.BOOL:
+        return "bool";
+      case ScalarType.STRING:
+        return "string";
+      case ScalarType.BYTES:
+        return "bytes";
+      case ScalarType.UINT32:
+        return "uint32";
+      case ScalarType.SFIXED32:
+        return "sfixed32";
+      case ScalarType.SFIXED64:
+        return "sfixed64";
+      case ScalarType.SINT32:
+        return "sint32";
+      case ScalarType.SINT64:
+        return "sint64";
+    }
+  },
 
-function fieldTypeName(field: DescField): string {
-  if (field.fieldKind === "message") return field.message.typeName;
-  if (field.fieldKind === "enum") return field.enum.typeName;
-  if (field.fieldKind === "scalar") return scalarProtoTypeName(field.scalar);
-  if (field.fieldKind === "list") {
-    if (field.listKind === "message") return field.message.typeName;
-    if (field.listKind === "enum") return field.enum.typeName;
-    return scalarProtoTypeName(field.scalar);
-  }
-  if (field.mapKind === "message") return field.message.typeName;
-  if (field.mapKind === "enum") return field.enum.typeName;
-  return scalarProtoTypeName(field.scalar);
-}
-
-function scalarProtoTypeName(scalar: ScalarType): string {
-  switch (scalar) {
-    case ScalarType.DOUBLE:
-      return "double";
-    case ScalarType.FLOAT:
-      return "float";
-    case ScalarType.INT64:
-      return "int64";
-    case ScalarType.UINT64:
-      return "uint64";
-    case ScalarType.INT32:
-      return "int32";
-    case ScalarType.FIXED64:
-      return "fixed64";
-    case ScalarType.FIXED32:
-      return "fixed32";
-    case ScalarType.BOOL:
-      return "bool";
-    case ScalarType.STRING:
-      return "string";
-    case ScalarType.BYTES:
-      return "bytes";
-    case ScalarType.UINT32:
-      return "uint32";
-    case ScalarType.SFIXED32:
-      return "sfixed32";
-    case ScalarType.SFIXED64:
-      return "sfixed64";
-    case ScalarType.SINT32:
-      return "sint32";
-    case ScalarType.SINT64:
-      return "sint64";
-  }
-}
-
-function formatFieldValue(value: unknown): string {
-  if (value instanceof Uint8Array) {
-    return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
-  }
-  if (typeof value === "bigint") return value.toString();
-  if (typeof value === "object" && value !== null) {
-    return JSON.stringify(value, (_, nested) =>
-      typeof nested === "bigint" ? nested.toString() : nested,
-    );
-  }
-  return String(value);
-}
+  formatFieldValue(value: unknown): string {
+    if (value instanceof Uint8Array) {
+      return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    }
+    if (typeof value === "bigint") return value.toString();
+    if (typeof value === "object" && value !== null) {
+      return JSON.stringify(value, (_, nested) =>
+        typeof nested === "bigint" ? nested.toString() : nested,
+      );
+    }
+    return String(value);
+  },
+} as const;

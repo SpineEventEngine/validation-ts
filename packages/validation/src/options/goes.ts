@@ -21,13 +21,9 @@ import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, GoesOptionSchema } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { isPresent, supportsPresence } from "../presence.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { Presence } from "../presence.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 function defaultMessage(): string | undefined {
@@ -42,10 +38,10 @@ export function validateGoesField(
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
-  const goesOption = getRegisteredOption("goes");
+  const goesOption = ValidationOptions.get("goes");
   if (!goesOption || !hasOption(field, goesOption)) return;
 
-  if (!supportsPresence(field)) {
+  if (!Presence.supports(field)) {
     throw new ValidationConfigurationError({
       code: "UNSUPPORTED_OPTION_TARGET",
       option: "goes",
@@ -73,7 +69,7 @@ export function validateGoesField(
       fieldPath: [field.name],
     });
   }
-  if (!supportsPresence(companion)) {
+  if (!Presence.supports(companion)) {
     throw new ValidationConfigurationError({
       code: "INVALID_FIELD_REFERENCE",
       option: "goes",
@@ -82,11 +78,12 @@ export function validateGoesField(
     });
   }
 
-  const value = readField(message, field);
-  if (!isPresent(field, value) || isPresent(companion, readField(message, companion))) return;
+  const value = MessageFields.read(message, field);
+  if (!Presence.is(field, value) || Presence.is(companion, MessageFields.read(message, companion)))
+    return;
 
   violations.push(
-    createConstraintViolation(context.atField(field), field, value, {
+    ViolationFactory.create(context.atField(field), field, value, {
       customMessage: option.errorMsg,
       defaultMessage: defaultMessage(),
       placeholders: { "goes.companion": companion.name },

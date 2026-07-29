@@ -36,8 +36,8 @@ import type { ConstraintViolation } from "../generated/spine/validate/validation
 import { ConstraintViolationSchema } from "../generated/spine/validate/validation_error_pb.js";
 import { FieldPathSchema } from "../generated/spine/base/field_path_pb.js";
 import { TemplateStringSchema } from "../generated/spine/validate/error_message_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { readField } from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { MessageFields } from "../validation-contract.js";
 import type { PatternOption } from "../generated/spine/options_pb.js";
 
 /**
@@ -135,7 +135,7 @@ export function validatePatternFields<S extends DescMessage>(
   message: Message,
   violations: ConstraintViolation[],
 ): void {
-  const patternOption = getRegisteredOption("pattern");
+  const patternOption = ValidationOptions.get("pattern");
 
   if (!patternOption) {
     return;
@@ -151,7 +151,7 @@ export function validatePatternFields<S extends DescMessage>(
     const errorMsg =
       patternValue.errorMsg || `The string must match the regular expression \`${regex}\`.`;
 
-    const fieldValue = readField(message, field);
+    const fieldValue = MessageFields.read(message, field);
 
     if (field.fieldKind === "list") {
       if (Array.isArray(fieldValue)) {

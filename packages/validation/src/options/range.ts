@@ -19,12 +19,8 @@ import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, RangeOptionSchema } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import {
   assertNumericTarget,
   compareNumeric,
@@ -42,12 +38,12 @@ export function validateRangeField(
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
-  const extension = getRegisteredOption("range");
+  const extension = ValidationOptions.get("range");
   if (!extension || !hasOption(field, extension)) return;
   const option = getOption(field, extension);
   const scalar = assertNumericTarget("range", schema, field);
   const parsed = parseRange(option.value, scalar, schema, message, field);
-  const fieldValue = readField(message, field);
+  const fieldValue = MessageFields.read(message, field);
   const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
   if (!Array.isArray(values)) return;
   for (const raw of values) {
@@ -58,7 +54,7 @@ export function validateRangeField(
     const validUpper = parsed.upperInclusive ? upperComparison <= 0 : upperComparison < 0;
     if (!isNaNNumeric(value) && validLower && validUpper) continue;
     violations.push(
-      createConstraintViolation(context.atField(field), field, raw, {
+      ViolationFactory.create(context.atField(field), field, raw, {
         customMessage: option.errorMsg || undefined,
         defaultMessage: getOption(RangeOptionSchema, default_message),
         placeholders: {

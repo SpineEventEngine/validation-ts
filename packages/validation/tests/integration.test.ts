@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { validate, formatViolations } from "../src/index.js";
+import { validate, Violations } from "../src/index.js";
 
 import { UserSchema, Role, GetUserResponseSchema } from "./generated/integration-user_pb.js";
 import { AccountSchema, AccountType } from "./generated/integration-account_pb.js";
@@ -83,7 +83,7 @@ describe("Integration Tests", () => {
     });
 
     const violations = validate(UserSchema, invalidUser);
-    const formatted = formatViolations(violations);
+    const formatted = Violations.formatAll(violations);
 
     expect(formatted).toContain("spine.validation.testing.integration.User.name");
     expect(formatted).toContain("spine.validation.testing.integration.User.email");
@@ -504,7 +504,7 @@ describe("Integration Tests", () => {
       });
 
       const violations = validate(GetUserResponseSchema, invalidResponse);
-      const formatted = formatViolations(violations);
+      const formatted = Violations.formatAll(violations);
 
       // Should contain nested field paths.
       expect(formatted).toContain("user");
@@ -645,7 +645,7 @@ describe("Integration Tests", () => {
       });
 
       const violations = validate(ScheduledEventSchema, invalid);
-      const formatted = formatViolations(violations);
+      const formatted = Violations.formatAll(violations);
 
       expect(formatted).toContain("time");
       expect(formatted).toContain("date");

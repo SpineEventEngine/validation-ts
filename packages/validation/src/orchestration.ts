@@ -19,11 +19,7 @@ import type { DescField, DescMessage, Message, MessageShape, Registry } from "@b
 
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb.js";
 import { FieldPathSchema } from "./generated/spine/base/field_path_pb.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "./validation-contract.js";
+import { MessageFields, ViolationFactory, type ValidationContext } from "./validation-contract.js";
 
 type LegacyFieldValidator = <S extends DescMessage>(
   schema: S,
@@ -47,81 +43,79 @@ export interface FieldValidator {
  * Adapts an existing all-fields validator to the field-first orchestration
  * seam while normalizing its output through the shared violation envelope.
  */
-export function legacyFieldValidator(legacy: LegacyFieldValidator): FieldValidator {
-  return {
-    validate<S extends DescMessage>(
-      context: ValidationContext,
-      schema: S,
-      message: MessageShape<S>,
-      field: DescField,
-      violations: ConstraintViolation[],
-    ) {
-      const legacyViolations: ConstraintViolation[] = [];
-      const fields = [field] as typeof schema.fields;
-      fields.find = schema.fields.find.bind(schema.fields);
-      const fieldSchema = { ...schema, fields } as S;
-      legacy(fieldSchema, message, legacyViolations);
+export const ValidationOrchestration = {
+  legacyFieldValidator(legacy: LegacyFieldValidator): FieldValidator {
+    return {
+      validate<S extends DescMessage>(
+        context: ValidationContext,
+        schema: S,
+        message: MessageShape<S>,
+        field: DescField,
+        violations: ConstraintViolation[],
+      ) {
+        const legacyViolations: ConstraintViolation[] = [];
+        const fields = [field] as typeof schema.fields;
+        fields.find = schema.fields.find.bind(schema.fields);
+        const fieldSchema = { ...schema, fields } as S;
+        legacy(fieldSchema, message, legacyViolations);
 
-      for (const legacyViolation of legacyViolations) {
-        const legacyMessage = legacyViolation.message;
-        const normalized = createConstraintViolation(
-          context.atField(field),
-          field,
-          offendingValue(message, field, legacyViolation),
-          {
-            defaultMessage: legacyMessage?.withPlaceholders,
-            placeholders: legacyMessage?.placeholderValue,
-          },
-        );
-        const nestedPath = nestedFieldPath(field, legacyViolation);
-        if (nestedPath.length > 0) {
-          normalized.fieldPath = create(FieldPathSchema, {
-            fieldName: [field.name, ...nestedPath],
-          });
+        for (const legacyViolation of legacyViolations) {
+          const legacyMessage = legacyViolation.message;
+          const normalized = ViolationFactory.create(
+            context.atField(field),
+            field,
+            ValidationOrchestration.offendingValue(message, field, legacyViolation),
+            {
+              defaultMessage: legacyMessage?.withPlaceholders,
+              placeholders: legacyMessage?.placeholderValue,
+            },
+          );
+          const nestedPath = ValidationOrchestration.nestedFieldPath(field, legacyViolation);
+          if (nestedPath.length > 0) {
+            normalized.fieldPath = create(FieldPathSchema, {
+              fieldName: [field.name, ...nestedPath],
+            });
+          }
+          violations.push(normalized);
         }
-        violations.push(normalized);
-      }
-    },
-  };
-}
+      },
+    };
+  },
 
-/** Normalizes a message-level or oneof-level legacy violation. */
-export function appendMessageViolation(
-  context: ValidationContext,
-  legacyViolation: ConstraintViolation,
-  violations: ConstraintViolation[],
-): void {
-  const legacyMessage = legacyViolation.message;
-  const normalized = createConstraintViolation(context, undefined, undefined, {
-    defaultMessage: legacyMessage?.withPlaceholders,
-    placeholders: legacyMessage?.placeholderValue,
-  });
-  violations.push(normalized);
-}
+  /** Normalizes a message-level or oneof-level legacy violation. */
+  appendMessageViolation(
+    context: ValidationContext,
+    legacyViolation: ConstraintViolation,
+    violations: ConstraintViolation[],
+  ): void {
+    const legacyMessage = legacyViolation.message;
+    const normalized = ViolationFactory.create(context, undefined, undefined, {
+      defaultMessage: legacyMessage?.withPlaceholders,
+      placeholders: legacyMessage?.placeholderValue,
+    });
+    violations.push(normalized);
+  },
 
-function offendingValue(
-  message: Message,
-  field: DescField,
-  violation: ConstraintViolation,
-): unknown {
-  const value = readField(message, field);
-  const path = violation.fieldPath?.fieldName ?? [];
+  offendingValue(message: Message, field: DescField, violation: ConstraintViolation): unknown {
+    const value = MessageFields.read(message, field);
+    const path = violation.fieldPath?.fieldName ?? [];
 
-  if (field.fieldKind === "list") {
-    if (!Array.isArray(value)) return undefined;
-    const bracketedIndex = path[0]?.match(new RegExp(`^${field.name}\\[(\\d+)]$`));
-    if (bracketedIndex) return value[Number(bracketedIndex[1])];
-    if (path.length >= 2) return value[Number(path[1])];
-    return undefined;
-  }
-  if (field.fieldKind === "map" && value && typeof value === "object")
-    return Object.entries(value).find(([key]) => key === path[1])?.[1];
-  return value;
-}
+    if (field.fieldKind === "list") {
+      if (!Array.isArray(value)) return undefined;
+      const bracketedIndex = path[0]?.match(new RegExp(`^${field.name}\\[(\\d+)]$`));
+      if (bracketedIndex) return value[Number(bracketedIndex[1])];
+      if (path.length >= 2) return value[Number(path[1])];
+      return undefined;
+    }
+    if (field.fieldKind === "map" && value && typeof value === "object")
+      return Object.entries(value).find(([key]) => key === path[1])?.[1];
+    return value;
+  },
 
-function nestedFieldPath(field: DescField, violation: ConstraintViolation): string[] {
-  const path = violation.fieldPath?.fieldName ?? [];
-  if (path.length <= 1 || path[0] !== field.name) return [];
-  if (field.fieldKind === "list" || field.fieldKind === "map") return path.slice(2);
-  return path.slice(1);
-}
+  nestedFieldPath(field: DescField, violation: ConstraintViolation): string[] {
+    const path = violation.fieldPath?.fieldName ?? [];
+    if (path.length <= 1 || path[0] !== field.name) return [];
+    if (field.fieldKind === "list" || field.fieldKind === "map") return path.slice(2);
+    return path.slice(1);
+  },
+} as const;

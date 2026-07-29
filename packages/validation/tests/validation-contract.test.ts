@@ -21,9 +21,9 @@ import {
   Int32ValueSchema,
   StringValueSchema,
 } from "@bufbuild/protobuf/wkt";
-import { formatTemplateString, validate, ValidationConfigurationError } from "../src/index.js";
-import { createConstraintViolation, createValidationContext } from "../src/validation-contract.js";
-import { appendMessageViolation, legacyFieldValidator } from "../src/orchestration.js";
+import { validate, ValidationConfigurationError, Violations } from "../src/index.js";
+import { ValidationOrchestration } from "../src/orchestration.js";
+import { ValidationContext, ViolationFactory } from "../src/validation-contract.js";
 import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb.js";
 import { TemplateStringSchema } from "../src/generated/spine/validate/error_message_pb.js";
 import { AddressSchema, RequiredFieldsSchema, Status } from "./generated/test-required_pb.js";
@@ -60,15 +60,15 @@ describe("ValidationConfigurationError", () => {
 describe("validation contract kernel", () => {
   it("formats only literal placeholder tokens and preserves dollar-valued replacements", () => {
     expect(
-      formatTemplateString(
-        create(TemplateStringSchema, {
+      Violations.formatMessage({
+        message: create(TemplateStringSchema, {
           withPlaceholders: "${field.value}; ${fieldXvalue}; ${field.value.extra}; ${other}",
           placeholderValue: {
             "field.value": "$& $1 $$",
             other: "done",
           },
         }),
-      ),
+      } as never),
     ).toBe("$& $1 $$; ${fieldXvalue}; ${field.value.extra}; done");
   });
 
@@ -78,9 +78,9 @@ describe("validation contract kernel", () => {
       tags: ["duplicate"],
       scores: { primary: 7 },
     });
-    const violations = [] as ReturnType<typeof createConstraintViolation>[];
-    const context = createValidationContext(RequiredFieldsSchema);
-    const adapter = legacyFieldValidator((_schema, _message, output) => {
+    const violations = [] as ReturnType<typeof ViolationFactory.create>[];
+    const context = ValidationContext.create(RequiredFieldsSchema);
+    const adapter = ValidationOrchestration.legacyFieldValidator((_schema, _message, output) => {
       output.push(
         create(ConstraintViolationSchema, {
           fieldPath: { fieldName: ["tags", "0", "nested"] },
@@ -106,7 +106,7 @@ describe("validation contract kernel", () => {
     );
     expect(anyUnpack(violations[0].fieldValue!, StringValueSchema)?.value).toBe("duplicate");
 
-    const mapAdapter = legacyFieldValidator((_schema, _message, output) => {
+    const mapAdapter = ValidationOrchestration.legacyFieldValidator((_schema, _message, output) => {
       output.push(
         create(ConstraintViolationSchema, {
           fieldPath: { fieldName: ["scores", "primary", "nested"] },
@@ -126,9 +126,9 @@ describe("validation contract kernel", () => {
   });
 
   it("normalizes legacy message-level diagnostics without inventing a field value", () => {
-    const violations = [] as ReturnType<typeof createConstraintViolation>[];
-    appendMessageViolation(
-      createValidationContext(RequiredFieldsSchema),
+    const violations = [] as ReturnType<typeof ViolationFactory.create>[];
+    ValidationOrchestration.appendMessageViolation(
+      ValidationContext.create(RequiredFieldsSchema),
       create(ConstraintViolationSchema, {
         message: { withPlaceholders: "Legacy message diagnostic." },
       }),
@@ -143,8 +143,8 @@ describe("validation contract kernel", () => {
 
   it("keeps the root type and Proto field path while packing a primitive value", () => {
     const field = RequiredFieldsSchema.field.name;
-    const context = createValidationContext(RequiredFieldsSchema).atField(field);
-    const violation = createConstraintViolation(context, field, "not-empty", {
+    const context = ValidationContext.create(RequiredFieldsSchema).atField(field);
+    const violation = ViolationFactory.create(context, field, "not-empty", {
       defaultMessage: "Default `${parent.type}.${field.path}`: `${field.value}`.",
     });
 
@@ -166,27 +166,27 @@ describe("validation contract kernel", () => {
   });
 
   it("packs bytes, enum, message, and repeated-element values by descriptor", () => {
-    const context = createValidationContext(RequiredFieldsSchema);
-    const bytesViolation = createConstraintViolation(
+    const context = ValidationContext.create(RequiredFieldsSchema);
+    const bytesViolation = ViolationFactory.create(
       context.atField(RequiredFieldsSchema.field.payload),
       RequiredFieldsSchema.field.payload,
       new Uint8Array([0xde, 0xad]),
       {},
     );
-    const enumViolation = createConstraintViolation(
+    const enumViolation = ViolationFactory.create(
       context.atField(RequiredFieldsSchema.field.status),
       RequiredFieldsSchema.field.status,
       Status.ACTIVE,
       {},
     );
     const address = create(AddressSchema, { street: "Main", city: "Lisbon" });
-    const messageViolation = createConstraintViolation(
+    const messageViolation = ViolationFactory.create(
       context.atField(RequiredFieldsSchema.field.address),
       RequiredFieldsSchema.field.address,
       address,
       {},
     );
-    const elementViolation = createConstraintViolation(
+    const elementViolation = ViolationFactory.create(
       context.atField(RequiredFieldsSchema.field.tags),
       RequiredFieldsSchema.field.tags,
       "duplicate-tag",
@@ -202,30 +202,30 @@ describe("validation contract kernel", () => {
   });
 
   it("resolves custom, default, and empty template strings", () => {
-    const context = createValidationContext(RequiredFieldsSchema).atField(
+    const context = ValidationContext.create(RequiredFieldsSchema).atField(
       RequiredFieldsSchema.field.name,
     );
 
     expect(
-      createConstraintViolation(context, RequiredFieldsSchema.field.name, "value", {
+      ViolationFactory.create(context, RequiredFieldsSchema.field.name, "value", {
         customMessage: "Custom diagnostic.",
         defaultMessage: "Default diagnostic.",
       }).message?.withPlaceholders,
     ).toBe("Custom diagnostic.");
     expect(
-      createConstraintViolation(context, RequiredFieldsSchema.field.name, "value", {
+      ViolationFactory.create(context, RequiredFieldsSchema.field.name, "value", {
         defaultMessage: "Default diagnostic.",
       }).message?.withPlaceholders,
     ).toBe("Default diagnostic.");
     expect(
-      createConstraintViolation(context, RequiredFieldsSchema.field.name, "value", {}).message
+      ViolationFactory.create(context, RequiredFieldsSchema.field.name, "value", {}).message
         ?.withPlaceholders,
     ).toBe("");
   });
 
   it("creates a message-level violation without a field value", () => {
-    const context = createValidationContext(RequiredFieldsSchema);
-    const violation = createConstraintViolation(context, undefined, undefined, {
+    const context = ValidationContext.create(RequiredFieldsSchema);
+    const violation = ViolationFactory.create(context, undefined, undefined, {
       defaultMessage: "`${message.type}` has incompatible fields.",
     });
 
@@ -241,26 +241,21 @@ describe("validation contract kernel", () => {
   });
 
   it("keeps field metadata placeholders when no concrete field value exists", () => {
-    const context = createValidationContext(RequiredFieldsSchema).atField(
+    const context = ValidationContext.create(RequiredFieldsSchema).atField(
       RequiredFieldsSchema.field.name,
     );
-    const violation = createConstraintViolation(
-      context,
-      RequiredFieldsSchema.field.name,
-      undefined,
-      {
-        defaultMessage: "No value for `${field.path}`.",
-      },
-    );
+    const violation = ViolationFactory.create(context, RequiredFieldsSchema.field.name, undefined, {
+      defaultMessage: "No value for `${field.path}`.",
+    });
 
-    const listViolation = createConstraintViolation(
-      createValidationContext(RequiredFieldsSchema).atField(RequiredFieldsSchema.field.tags),
+    const listViolation = ViolationFactory.create(
+      ValidationContext.create(RequiredFieldsSchema).atField(RequiredFieldsSchema.field.tags),
       RequiredFieldsSchema.field.tags,
       undefined,
       {},
     );
-    const mapViolation = createConstraintViolation(
-      createValidationContext(RequiredFieldsSchema).atField(RequiredFieldsSchema.field.scores),
+    const mapViolation = ViolationFactory.create(
+      ValidationContext.create(RequiredFieldsSchema).atField(RequiredFieldsSchema.field.scores),
       RequiredFieldsSchema.field.scores,
       undefined,
       {},

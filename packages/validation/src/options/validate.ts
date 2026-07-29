@@ -31,8 +31,8 @@ import type { DescField, DescMessage, Message, MessageShape, Registry } from "@b
 import { anyUnpack } from "@bufbuild/protobuf/wkt";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { readField, type ValidationContext } from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 /** Internal recursive validation seam, supplied by the validation orchestrator. */
@@ -53,7 +53,7 @@ export function validateNestedField(
   registry: Registry,
   validateNested: NestedValidator,
 ): void {
-  const option = getRegisteredOption("validate");
+  const option = ValidationOptions.get("validate");
   if (!option || !hasOption(field, option) || !getOption(field, option)) return;
 
   const nestedSchema = messageSchema(field);
@@ -66,7 +66,7 @@ export function validateNestedField(
     });
   }
 
-  const value = readField(message, field);
+  const value = MessageFields.read(message, field);
   const nestedContext = context.atField(field);
   if (field.fieldKind === "message") {
     if (value === undefined || value === null || isDefault(nestedSchema, value)) return;

@@ -23,12 +23,8 @@ import {
   MaxOptionSchema,
   MinOptionSchema,
 } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import {
   assertNumericTarget,
   compareNumeric,
@@ -57,14 +53,14 @@ function validateBound(
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
-  const extension = getRegisteredOption(name);
+  const extension = ValidationOptions.get(name);
   if (!extension || !hasOption(field, extension)) return;
   const option = getOption(field, extension);
   const scalar = assertNumericTarget(name, schema, field);
   const declaration = option.value;
   const bound = resolveBound(declaration, scalar, name, schema, message, field);
   const exclusive = "exclusive" in option && option.exclusive;
-  const fieldValue = readField(message, field);
+  const fieldValue = MessageFields.read(message, field);
   const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
   if (!Array.isArray(values)) return;
   for (const raw of values) {
@@ -86,7 +82,7 @@ function validateBound(
     );
     const customMessage = option.errorMsg || undefined;
     violations.push(
-      createConstraintViolation(context.atField(field), field, raw, {
+      ViolationFactory.create(context.atField(field), field, raw, {
         customMessage,
         defaultMessage,
         placeholders: {

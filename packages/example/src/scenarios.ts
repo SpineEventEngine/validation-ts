@@ -17,10 +17,11 @@ export interface ExampleScenarioResult {
 }
 
 /** Runs generated-schema scenarios used by the console adapter and tests. */
-export function runExampleScenarios(): ExampleScenarioResult[] {
-  return [
-    result("missing user values", UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
-    result(
+export const ExampleScenarios = {
+  run(): ExampleScenarioResult[] {
+    return [
+    ExampleScenarios.result("missing user values", UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
+    ExampleScenarios.result(
       "duplicate user tags",
       UserSchema,
       create(UserSchema, {
@@ -31,7 +32,7 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
         tags: ["typescript", "typescript"],
       }),
     ),
-    result(
+    ExampleScenarios.result(
       "invalid user email pattern",
       UserSchema,
       create(UserSchema, {
@@ -41,7 +42,7 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
         role: Role.USER,
       }),
     ),
-    result(
+    ExampleScenarios.result(
       "past and future time constraints",
       UserSchema,
       create(UserSchema, {
@@ -53,7 +54,7 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
         expiresAt: { seconds: 4_102_444_800n },
       }),
     ),
-    result(
+    ExampleScenarios.result(
       "violated past and future time constraints",
       UserSchema,
       create(UserSchema, {
@@ -65,12 +66,12 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
         expiresAt: { seconds: 1n },
       }),
     ),
-    result(
+    ExampleScenarios.result(
       "product at its exact minimum price",
       ProductSchema,
       create(ProductSchema, { id: "prod-1", name: "Keyboard", price: 0.01 }),
     ),
-    result(
+    ExampleScenarios.result(
       "nested product category leaf violations",
       ProductSchema,
       create(ProductSchema, {
@@ -80,21 +81,21 @@ export function runExampleScenarios(): ExampleScenarioResult[] {
         category: { id: 0, name: "", context: "present" },
       }),
     ),
-    result(
+    ExampleScenarios.result(
       "known Any payload leaf violations",
       ProductEnvelopeSchema,
       create(ProductEnvelopeSchema, {
         payload: anyPack(UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
       }),
     ),
-  ];
-}
+    ];
+  },
 
-function result<T extends Message>(
+  result<T extends Message>(
   name: string,
   schema: GenMessage<T>,
   message: T,
-): ExampleScenarioResult {
+  ): ExampleScenarioResult {
   const violations = validate(schema, message);
   return {
     name,
@@ -103,4 +104,5 @@ function result<T extends Message>(
     fieldPaths: violations.map((violation) => violation.fieldPath?.fieldName.join(".") ?? ""),
     violations,
   };
-}
+  },
+};

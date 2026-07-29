@@ -21,13 +21,9 @@ import type { DescField, DescMessage, DescOneof, Message } from "@bufbuild/proto
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, RequireOptionSchema } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { isOneofPresent, isPresent, supportsPresence } from "../presence.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { Presence } from "../presence.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 type Requirement = { readonly field?: DescField; readonly oneof?: DescOneof };
@@ -66,7 +62,7 @@ function resolveRequirement(token: string, schema: DescMessage): Requirement {
 
   const field = schema.fields.find((candidate) => candidate.name === token);
   if (field !== undefined) {
-    if (!supportsPresence(field)) {
+    if (!Presence.supports(field)) {
       throw new ValidationConfigurationError({
         code: "INVALID_FIELD_REFERENCE",
         option: "require",
@@ -90,9 +86,9 @@ function resolveRequirement(token: string, schema: DescMessage): Requirement {
 
 function requirementIsPresent(requirement: Requirement, message: Message): boolean {
   if (requirement.field !== undefined) {
-    return isPresent(requirement.field, readField(message, requirement.field));
+    return Presence.is(requirement.field, MessageFields.read(message, requirement.field));
   }
-  return isOneofPresent(requirement.oneof as DescOneof, message);
+  return Presence.isOneof(requirement.oneof as DescOneof, message);
 }
 
 /** Validates a `(require)` option once for the message validation entry. */
@@ -102,7 +98,7 @@ export function validateRequireOption(
   message: Message,
   violations: ConstraintViolation[],
 ): void {
-  const requireOption = getRegisteredOption("requireFields");
+  const requireOption = ValidationOptions.get("requireFields");
   const options = schema.proto.options;
   if (!options || !hasExtension(options, requireOption)) return;
 
@@ -116,7 +112,7 @@ export function validateRequireOption(
   }
 
   violations.push(
-    createConstraintViolation(context, undefined, undefined, {
+    ViolationFactory.create(context, undefined, undefined, {
       customMessage: require.errorMsg,
       defaultMessage: requireDefaultMessage(),
       placeholders: { "require.fields": expression },

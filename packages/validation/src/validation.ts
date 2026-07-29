@@ -47,8 +47,8 @@ import { validateDistinctField } from "./options/distinct.js";
 import { validateNestedField } from "./options/validate.js";
 import { validateGoesField } from "./options/goes.js";
 import { validateChoiceOptions } from "./options/choice.js";
-import { legacyFieldValidator, type FieldValidator } from "./orchestration.js";
-import { createValidationContext } from "./validation-contract.js";
+import { ValidationOrchestration, type FieldValidator } from "./orchestration.js";
+import { ValidationContext } from "./validation-contract.js";
 
 const fieldValidators: readonly FieldValidator[] = [
   {
@@ -56,7 +56,7 @@ const fieldValidators: readonly FieldValidator[] = [
       validateRequiredField(context, schema, message, field, violations);
     },
   },
-  legacyFieldValidator(validatePatternFields),
+  ValidationOrchestration.legacyFieldValidator(validatePatternFields),
   {
     validate(context, schema, message, field, violations) {
       validateMinMaxField(context, schema, message, field, violations);
@@ -79,7 +79,15 @@ const fieldValidators: readonly FieldValidator[] = [
   },
   {
     validate(context, schema, message, field, violations, registry) {
-      validateNestedField(context, schema, message, field, violations, registry, validateInternal);
+      validateNestedField(
+        context,
+        schema,
+        message,
+        field,
+        violations,
+        registry,
+        ValidationEngine.validateInternal,
+      );
     },
   },
   {
@@ -146,52 +154,54 @@ export function validate<S extends DescMessage>(
   schema: S,
   message: NoInfer<MessageShape<S>>,
 ): ConstraintViolation[] {
-  return validateInternal(
+  return ValidationEngine.validateInternal(
     schema,
     message,
-    createValidationContext(schema),
-    createRootRegistry(schema),
+    ValidationContext.create(schema),
+    ValidationEngine.createRootRegistry(schema),
   );
 }
 
-/** Validates a nested message while preserving its original entry context and registry. */
-function validateInternal<S extends DescMessage>(
-  schema: S,
-  message: MessageShape<S>,
-  context: ReturnType<typeof createValidationContext>,
-  registry: Registry,
-): ConstraintViolation[] {
-  const violations: ConstraintViolation[] = [];
+/** Coordinates internal traversal while preserving context and registry state. */
+const ValidationEngine = {
+  validateInternal<S extends DescMessage>(
+    schema: S,
+    message: MessageShape<S>,
+    context: ValidationContext,
+    registry: Registry,
+  ): ConstraintViolation[] {
+    const violations: ConstraintViolation[] = [];
 
-  validateRequireOption(context, schema, message, violations);
+    validateRequireOption(context, schema, message, violations);
 
-  for (const field of schema.fields) {
-    for (const validator of fieldValidators) {
-      validator.validate(context, schema, message, field, violations, registry);
+    for (const field of schema.fields) {
+      for (const validator of fieldValidators) {
+        validator.validate(context, schema, message, field, violations, registry);
+      }
     }
-  }
 
-  validateChoiceOptions(context, schema, message, violations);
+    validateChoiceOptions(context, schema, message, violations);
 
-  return violations;
-}
+    return violations;
+  },
 
-function createRootRegistry(schema: DescMessage): Registry {
-  return createRegistry(...dependencyClosure(schema.file));
-}
+  createRootRegistry(schema: DescMessage): Registry {
+    return createRegistry(...ValidationEngine.dependencyClosure(schema.file));
+  },
 
-function dependencyClosure(root: DescFile): DescFile[] {
-  const files: DescFile[] = [];
-  const visited = new Set<string>();
-  const visit = (file: DescFile): void => {
-    if (visited.has(file.name)) return;
-    visited.add(file.name);
-    files.push(file);
-    for (const dependency of file.dependencies) visit(dependency);
-  };
-  visit(root);
-  return files;
-}
+  dependencyClosure(root: DescFile): DescFile[] {
+    const files: DescFile[] = [];
+    const visited = new Set<string>();
+    const visit = (file: DescFile): void => {
+      if (visited.has(file.name)) return;
+      visited.add(file.name);
+      files.push(file);
+      for (const dependency of file.dependencies) visit(dependency);
+    };
+    visit(root);
+    return files;
+  },
+} as const;
 
 /**
  * Formats a `TemplateString` by replacing all placeholders with their values.
@@ -203,13 +213,15 @@ function dependencyClosure(root: DescFile): DescFile[] {
  * @returns Formatted string with placeholders replaced.
  *
  */
-export function formatTemplateString(template: TemplateString): string {
-  let result = template.withPlaceholders;
-  for (const [key, value] of Object.entries(template.placeholderValue)) {
-    result = result.split(`\${${key}}`).join(value);
-  }
-  return result;
-}
+const TemplateStrings = {
+  format(template: TemplateString): string {
+    let result = template.withPlaceholders;
+    for (const [key, value] of Object.entries(template.placeholderValue)) {
+      result = result.split(`\${${key}}`).join(value);
+    }
+    return result;
+  },
+};
 
 /**
  * Formats an array of constraint violations into a human-readable string.
@@ -233,19 +245,6 @@ export function formatTemplateString(template: TemplateString): string {
  * // 2. example.User.email: A value must be set.
  * ```
  */
-export function formatViolations(violations: ConstraintViolation[]): string {
-  if (violations.length === 0) {
-    return "No violations";
-  }
-
-  return violations
-    .map((v, index) => {
-      const fieldPath = v.fieldPath?.fieldName.join(".") || "unknown";
-      const message = v.message ? formatTemplateString(v.message) : "Validation failed";
-      return `${index + 1}. ${v.typeName}.${fieldPath}: ${message}`;
-    })
-    .join("\n");
-}
 
 /**
  * Utility object for working with constraint violations.
@@ -268,6 +267,18 @@ export function formatViolations(violations: ConstraintViolation[]): string {
  * ```
  */
 export const Violations = {
+  formatAll(violations: ConstraintViolation[]): string {
+    if (violations.length === 0) return "No violations";
+    return violations
+      .map((violation, index) => {
+        const fieldPath = violation.fieldPath?.fieldName.join(".") || "unknown";
+        const message = violation.message
+          ? TemplateStrings.format(violation.message)
+          : "Validation failed";
+        return `${index + 1}. ${violation.typeName}.${fieldPath}: ${message}`;
+      })
+      .join("\n");
+  },
   /**
    * Returns the formatted error message from a violation with all placeholders replaced.
    *
@@ -287,7 +298,7 @@ export const Violations = {
    * ```
    */
   formatMessage(violation: ConstraintViolation): string {
-    return violation.message ? formatTemplateString(violation.message) : "Validation failed";
+    return violation.message ? TemplateStrings.format(violation.message) : "Validation failed";
   },
 
   /**

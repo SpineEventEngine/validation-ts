@@ -87,6 +87,8 @@ type OptionRegistry = typeof optionRegistry;
  * @returns The registered option extension.
  * @internal
  */
-export function getRegisteredOption<N extends OptionName>(name: N): OptionRegistry[N] {
-  return optionRegistry[name];
-}
+export const ValidationOptions = {
+  get<N extends OptionName>(name: N): OptionRegistry[N] {
+    return optionRegistry[name];
+  },
+};

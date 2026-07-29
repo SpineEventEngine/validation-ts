@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { anyUnpack } from "@bufbuild/protobuf/wkt";
 
-import { setValidationClockForTesting } from "../src/clock.js";
+import { ValidationClock } from "../src/clock.js";
 import { validate } from "../src/index.js";
 import {
   InvalidWhenPlaceholderSchema,
@@ -13,8 +13,8 @@ import { TimestampSchema } from "@bufbuild/protobuf/wkt";
 const now = { seconds: 1_704_067_200n, nanos: 0 }; // 2024-01-01T00:00:00Z
 
 describe("(when) time validation", () => {
-  beforeEach(() => setValidationClockForTesting(() => now));
-  afterEach(() => setValidationClockForTesting());
+  beforeEach(() => ValidationClock.set(() => now));
+  afterEach(() => ValidationClock.set());
 
   it("treats equality with now as valid for both bounds and disables TIME_UNDEFINED", () => {
     const message = create(TimeValidationSchema, {
@@ -77,15 +77,15 @@ describe("(when) time validation", () => {
         zone: { value: "America/New_York" },
       },
     });
-    setValidationClockForTesting(() => ({ seconds: 1_710_055_800n, nanos: 0 })); // 07:30Z
+    ValidationClock.set(() => ({ seconds: 1_710_055_800n, nanos: 0 })); // 07:30Z
     expect(validate(TimeValidationSchema, gap)).toEqual([]);
-    setValidationClockForTesting(() => ({ seconds: 1_710_055_799n, nanos: 999_999_999 }));
+    ValidationClock.set(() => ({ seconds: 1_710_055_799n, nanos: 999_999_999 }));
     expect(validate(TimeValidationSchema, gap).map((v) => v.fieldPath?.fieldName)).toEqual([
       ["past_zoned_date_time"],
     ]);
-    setValidationClockForTesting(() => ({ seconds: 1_730_611_800n, nanos: 0 })); // 05:30Z
+    ValidationClock.set(() => ({ seconds: 1_730_611_800n, nanos: 0 })); // 05:30Z
     expect(validate(TimeValidationSchema, overlap)).toEqual([]);
-    setValidationClockForTesting(() => ({ seconds: 1_730_611_799n, nanos: 999_999_999 }));
+    ValidationClock.set(() => ({ seconds: 1_730_611_799n, nanos: 999_999_999 }));
     expect(validate(TimeValidationSchema, overlap).map((v) => v.fieldPath?.fieldName)).toEqual([
       ["past_zoned_date_time"],
     ]);
@@ -153,7 +153,7 @@ describe("(when) time validation", () => {
   });
 
   it("uses the system clock after test injection is reset", () => {
-    setValidationClockForTesting();
+    ValidationClock.set();
     expect(
       validate(TimeValidationSchema, temporalMessage({ pastTimestamp: { seconds: 0n } })),
     ).toEqual([]);

@@ -26,8 +26,8 @@ import {
   IfHasDuplicatesOptionSchema,
   type IfHasDuplicatesOption,
 } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { createConstraintViolation, readField, ValidationContext } from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { ViolationFactory, MessageFields, ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 interface EqualityClass {
@@ -43,7 +43,7 @@ export function validateDistinctField(
   field: DescField,
   violations: ConstraintViolation[],
 ): void {
-  const extension = getRegisteredOption("distinct");
+  const extension = ValidationOptions.get("distinct");
   if (!extension || !hasOption(field, extension)) return;
   if (getOption(field, extension) !== true) return;
   if (field.fieldKind !== "list" && field.fieldKind !== "map") {
@@ -55,7 +55,7 @@ export function validateDistinctField(
     });
   }
 
-  const collection = readField(message, field);
+  const collection = MessageFields.read(message, field);
   const values = collectionValues(field, collection);
   if (values.length < 2) return;
 
@@ -75,7 +75,7 @@ export function validateDistinctField(
   for (const duplicate of classes) {
     if (duplicate.count < 2) continue;
     violations.push(
-      createConstraintViolation(context.atField(field), field, duplicate.representative, {
+      ViolationFactory.create(context.atField(field), field, duplicate.representative, {
         customMessage: custom?.errorMsg || undefined,
         defaultMessage: getOption(IfHasDuplicatesOptionSchema, default_message),
         placeholders: {
@@ -120,7 +120,7 @@ function valuesAreEqual(field: DescField, left: unknown, right: unknown): boolea
 }
 
 function distinctDiagnostic(field: DescField): IfHasDuplicatesOption | undefined {
-  const extension = getRegisteredOption("if_has_duplicates");
+  const extension = ValidationOptions.get("if_has_duplicates");
   return hasOption(field, extension) ? getOption(field, extension) : undefined;
 }
 
