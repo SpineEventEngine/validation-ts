@@ -102,24 +102,27 @@ Approved plan: Human instruction to address the remaining
 | Verify-script presence check                                | Passed: root `verify` invokes `pnpm test:workflow-pnpm-action-setup`.                   |
 | `git diff --check`                                          | Passed; workflow diff contains exactly the three approved major-tag substitutions.      |
 | Independent `pnpm verify`                                   | Passed: six workflow-policy tests, 17 files / 319 tests, and every canonical gate.      |
+| Review-correction focused guard                             | Passed: 9/9 cases, including block-scalar, flow-mapping, and comment boundaries.        |
 
 Coverage: 94.71% statements, 91.51% branches, 99.19% functions, and 95.96%
 lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer                  | Disposition | Evidence                                                   |
-| ----------------------- | ------------------------- | ----------- | ---------------------------------------------------------- |
-| Style/maintainability   | `/root/t0008_style`       | Pending     |                                                            |
-| Documentation           | N/A                       | Pending     | No maintained user/package documentation contract changes. |
-| TypeScript/API          | N/A                       | Pending     | No package source, declarations, exports, or API changes.  |
-| Performance/reliability | `/root/t0008_reliability` | Pending     |                                                            |
-| Security                | `/root/t0008_security`    | Pending     |                                                            |
+| Concern                 | Reviewer                  | Disposition       | Evidence                                                         |
+| ----------------------- | ------------------------- | ----------------- | ---------------------------------------------------------------- |
+| Style/maintainability   | `/root/t0008_style`       | Re-review pending | P2 block-scalar false positive corrected; re-review is required. |
+| Documentation           | N/A                       | Pending           | No maintained user/package documentation contract changes.       |
+| TypeScript/API          | N/A                       | Pending           | No package source, declarations, exports, or API changes.        |
+| Performance/reliability | `/root/t0008_reliability` | Pending           |                                                                  |
+| Security                | `/root/t0008_security`    | Re-review pending | P2 flow-mapping bypass corrected; re-review is required.         |
 
 ## Findings
 
-| ID  | Severity | Accepted? | Resolution |
-| --- | -------- | --------- | ---------- |
+| ID    | Severity    | Accepted? | Resolution                                                                                                                                                   |
+| ----- | ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| T8-R1 | P2 style    | Yes       | The line regex matched `uses:` text inside YAML literal/folded scalar bodies. Replaced it with an indentation-aware extractor; corrected, re-review pending. |
+| T8-R2 | P2 security | Yes       | The line regex omitted `uses:` fields in YAML flow mappings, including after another key. Added top-level flow-map extraction; corrected, re-review pending. |
 
 ## Implementation Self-Review
 

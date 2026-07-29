@@ -5,7 +5,88 @@ import { extname, join, resolve } from "node:path";
 import test from "node:test";
 
 const pnpmActionSetup = "pnpm/action-setup";
-const uses = /^\s*(?:-\s*)?uses:\s*(?:["']([^"']+)["']|([^\s#]+))/gm;
+
+function withoutYamlComment(line) {
+  let quote;
+  for (let index = 0; index < line.length; index++) {
+    const character = line[index];
+    if (quote) {
+      if (character === quote) quote = undefined;
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === "#") {
+      return line.slice(0, index);
+    }
+  }
+  return line;
+}
+
+function indentation(line) {
+  return line.match(/^[ \t]*/)[0].length;
+}
+
+function isBlockScalarHeader(line) {
+  return /^[ \t]*(?:-\s+)?[^#:\s][^:]*:\s*[>|][+-]?\d?[+-]?\s*$/.test(line);
+}
+
+function yamlScalarValue(value) {
+  const match = value.match(/^\s*(?:"([^"]*)"|'([^']*)'|([^\s#]+))\s*$/);
+  return match?.[1] ?? match?.[2] ?? match?.[3];
+}
+
+function flowDepthBefore(source, end) {
+  let depth = 0;
+  let quote;
+  for (let index = 0; index < end; index++) {
+    const character = source[index];
+    if (quote) {
+      if (character === quote) quote = undefined;
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === "{") {
+      depth++;
+    } else if (character === "}") {
+      depth--;
+    }
+  }
+  return depth;
+}
+
+function usesValuesInFlowMapping(source) {
+  const references = [];
+  const flowUses = /([,{])\s*uses\s*:\s*(?:"([^"]*)"|'([^']*)'|([^,\s}]+))/g;
+  for (const match of source.matchAll(flowUses)) {
+    const depth = flowDepthBefore(source, match.index);
+    const delimiter = match[1];
+    if ((delimiter === "{" && depth === 0) || (delimiter === "," && depth === 1))
+      references.push(match[2] ?? match[3] ?? match[4]);
+  }
+  return references;
+}
+
+function actionSetupReferences(source) {
+  const references = [];
+  let blockScalarIndent;
+  for (const rawLine of source.split(/\r?\n/)) {
+    if (blockScalarIndent !== undefined) {
+      if (rawLine.trim().length === 0) continue;
+      if (indentation(rawLine) > blockScalarIndent) continue;
+      blockScalarIndent = undefined;
+    }
+
+    const line = withoutYamlComment(rawLine);
+    if (isBlockScalarHeader(line)) {
+      blockScalarIndent = indentation(rawLine);
+      continue;
+    }
+
+    const blockUses = line.match(/^\s*(?:-\s*)?uses\s*:\s*(.+)$/);
+    const blockValue = blockUses && yamlScalarValue(blockUses[1]);
+    if (blockValue) references.push(blockValue);
+    references.push(...usesValuesInFlowMapping(line));
+  }
+  return references.filter((value) => value.startsWith(pnpmActionSetup));
+}
 
 function findWorkflowFiles(root) {
   const workflows = join(root, ".github", "workflows");
@@ -23,11 +104,7 @@ function assertPnpmActionSetupV6({ root }) {
   const references = [];
   for (const workflow of findWorkflowFiles(root)) {
     const source = readFileSync(workflow, "utf8");
-    uses.lastIndex = 0;
-    for (const match of source.matchAll(uses)) {
-      const value = match[1] ?? match[2];
-      if (value.startsWith(pnpmActionSetup)) references.push({ value, workflow });
-    }
+    for (const value of actionSetupReferences(source)) references.push({ value, workflow });
   }
 
   if (references.length === 0) throw new Error("No pnpm/action-setup references found");
@@ -80,6 +157,48 @@ test("rejects a bare pnpm action-setup reference alongside v6", () => {
       "steps:\n  - uses: pnpm/action-setup@v6\n  - uses: pnpm/action-setup\n",
     );
     assert.throws(() => assertPnpmActionSetupV6({ root }), /pnpm\/action-setup@v6/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("ignores pnpm action-setup text in a literal run block", () => {
+  const root = createFixture();
+  try {
+    writeWorkflow(
+      root,
+      "verify.yml",
+      "steps:\n  - uses: pnpm/action-setup@v6\n  - run: |2-\n      - uses: pnpm/action-setup@v4\n",
+    );
+    assert.doesNotThrow(() => assertPnpmActionSetupV6({ root }));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a non-v6 flow-mapping action field after another key", () => {
+  const root = createFixture();
+  try {
+    writeWorkflow(
+      root,
+      "verify.yml",
+      "steps:\n  - uses: pnpm/action-setup@v6\n  - { name: Activate pnpm, uses: pnpm/action-setup@v4, with: { version: 11.9.0 } }\n",
+    );
+    assert.throws(() => assertPnpmActionSetupV6({ root }), /pnpm\/action-setup@v6/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("ignores pnpm action-setup text in comments", () => {
+  const root = createFixture();
+  try {
+    writeWorkflow(
+      root,
+      "verify.yml",
+      "steps:\n  - uses: pnpm/action-setup@v6\n  # - uses: pnpm/action-setup@v4\n",
+    );
+    assert.doesNotThrow(() => assertPnpmActionSetupV6({ root }));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
