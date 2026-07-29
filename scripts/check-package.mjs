@@ -57,7 +57,12 @@ try {
   }
 
   const forbidden = [...paths].filter(
-    (path) => path.startsWith("src/") || path.startsWith("tests/") || path.startsWith("coverage/"),
+    (path) =>
+      path.startsWith("src/") ||
+      path.startsWith("tests/") ||
+      path.startsWith("coverage/") ||
+      path === "docs" ||
+      path.startsWith("docs/"),
   );
   if (forbidden.length > 0) {
     throw new Error(`Packed package contains forbidden paths: ${forbidden.join(", ")}`);
@@ -87,8 +92,23 @@ try {
     smokePath,
     [
       'import * as validation from "@spine-event-engine/validation";',
-      'for (const name of ["validate", "formatViolations", "Violations"]) {',
-      "    if (!(name in validation)) throw new Error(`Missing export: ${name}`);",
+      'for (const name of ["validate", "ValidationConfigurationError"]) {',
+      '    if (typeof validation[name] !== "function") {',
+      "        throw new Error(`Expected callable runtime export: ${name}`);",
+      "    }",
+      "}",
+      'if (typeof validation.Violations !== "object" || validation.Violations === null) {',
+      '    throw new Error("Expected runtime export Violations to be an object");',
+      "}",
+      'for (const name of ["formatAll", "formatMessage", "failurePath"]) {',
+      '    if (typeof validation.Violations[name] !== "function") {',
+      "        throw new Error(`Expected Violations.${name} to be callable`);",
+      "    }",
+      "}",
+      'for (const name of ["formatViolations", "formatTemplateString"]) {',
+      "    if (name in validation) {",
+      "        throw new Error(`Removed runtime export is present: ${name}`);",
+      "    }",
       "}",
       'console.log("Consumer loaded the packed ESM API.");',
       "",
