@@ -96,6 +96,20 @@ Approved plan: Human instruction to address the remaining
   The guard now uses the maintained `yaml@2.9.0` package as a direct root
   test-only dependency, parsing each workflow semantically and walking exact
   `uses` keys recursively; the pre-existing lock resolution is reused.
+- Semantic scope is restricted to GitHub Actions action locations only:
+  `jobs.<job_id>.uses` for reusable-workflow jobs and
+  `jobs.<job_id>.steps[*].uses` for step actions. Other keys named `uses`, such
+  as `env.uses`, are not action references and must not affect this policy.
+- Dependency evidence: Node has no built-in YAML parser, and the custom scanner
+  was rejected as provably incomplete. `yaml@2.9.0` is the direct test-only
+  contract: official source is https://github.com/eemeli/yaml/tree/v2.9.0;
+  registry metadata checked 2026-07-29 identifies 2.9.0 as current, modified
+  2026-05-11, with Node >=14.6 support. It exports bundled declarations at
+  `./dist/index.d.ts` and is compatible with this Node 24 ESM workspace.
+  The transitive `js-yaml@4.3.0` is not root-declared, lacks a bundled-types
+  export in its installed manifest, and promoting it would create a direct
+  contract without reducing the graph; it is therefore weaker TypeScript
+  tooling. `yaml@2.9.0` already enters the lock graph through Vite.
 - No material human questions remain.
 
 ## Verification
@@ -111,6 +125,7 @@ Approved plan: Human instruction to address the remaining
 | Independent `pnpm verify`                                   | Passed: six workflow-policy tests, 17 files / 319 tests, and every canonical gate.      |
 | Review-correction focused guard                             | Passed: 9/9 cases, including block-scalar, flow-mapping, and comment boundaries.        |
 | Frozen install and semantic-parser focused guard            | Passed: `pnpm install --frozen-lockfile`; 14/14 guard cases.                            |
+| Action-location scope focused guard                         | Passed: 16/16 cases; `env.uses` ignored while job/step action refs are enforced.        |
 
 Coverage: 94.71% statements, 91.51% branches, 99.19% functions, and 95.96%
 lines.
@@ -127,11 +142,13 @@ lines.
 
 ## Findings
 
-| ID    | Severity       | Accepted? | Resolution                                                                                                                                                                                                                                                |
-| ----- | -------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| T8-R1 | P2 style       | Yes       | The line regex matched `uses:` text inside YAML literal/folded scalar bodies. Semantic YAML parsing now treats those bodies as scalar values; corrected, re-review pending.                                                                               |
-| T8-R2 | P2 security    | Yes       | The line regex omitted `uses:` fields in YAML flow mappings, including after another key. Recursive semantic traversal now finds every exact `uses` key; corrected, re-review pending.                                                                    |
-| T8-R3 | P2 correctness | Yes       | Re-review rejected the partial lexical extractor: quoted keys, multiline/nested flow maps, and quoted scalar boundaries remained incomplete. Replaced with semantic `yaml@2.9.0` parsing and recursive exact-key traversal; corrected, re-review pending. |
+| ID    | Severity               | Accepted? | Resolution                                                                                                                                                                                                                                                   |
+| ----- | ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| T8-R1 | P2 style               | Yes       | The line regex matched `uses:` text inside YAML literal/folded scalar bodies. Semantic YAML parsing now treats those bodies as scalar values; corrected, re-review pending.                                                                                  |
+| T8-R2 | P2 security            | Yes       | The line regex omitted `uses:` fields in YAML flow mappings, including after another key. Semantic parser support at step locations finds them; corrected, re-review pending.                                                                                |
+| T8-R3 | P2 correctness         | Yes       | Re-review rejected the partial lexical extractor: quoted keys, multiline/nested flow maps, and quoted scalar boundaries remained incomplete. Replaced with semantic `yaml@2.9.0` parsing; corrected, re-review pending.                                      |
+| T8-R4 | P2 correctness         | Yes       | Recursive semantic traversal falsely treated unrelated values such as `env.uses` as actions. Restricted inspection to `jobs.*.uses` and `jobs.*.steps[*].uses`; corrected, re-review pending.                                                                |
+| T8-R5 | P2 dependency evidence | Yes       | Node has no YAML parser; custom scanning was rejected, and transitive `js-yaml` is a weaker undeclared/untyped direct contract. Direct test-only `yaml@2.9.0` provides maintained Node 24 ESM support and bundled declarations; accepted, re-review pending. |
 
 ## Implementation Self-Review
 
@@ -145,9 +162,9 @@ lines.
 - The fixture-backed Node test discovers both workflow extensions, quoted and
   unquoted `uses:` values, rejects every non-`v6` pnpm setup reference, and fails
   closed when workflows or pnpm setup references are absent.
-- The semantic parser is direct test-only tooling; it recursively walks parsed
-  values with a `WeakSet`, reports malformed YAML with its workflow path, and
-  reuses the already locked `yaml@2.9.0` graph node.
+- The semantic parser is direct test-only tooling; it reports malformed YAML
+  with its workflow path, examines only reusable-job and step action `uses`
+  fields, and reuses the already locked `yaml@2.9.0` graph node.
 
 ## Integration
 
