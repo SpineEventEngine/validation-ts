@@ -26,7 +26,7 @@ function assertPnpmActionSetupV6({ root }) {
     uses.lastIndex = 0;
     for (const match of source.matchAll(uses)) {
       const value = match[1] ?? match[2];
-      if (value.startsWith(`${pnpmActionSetup}@`)) references.push({ value, workflow });
+      if (value.startsWith(pnpmActionSetup)) references.push({ value, workflow });
     }
   }
 
@@ -65,6 +65,20 @@ test("rejects every pnpm action-setup reference other than v6", () => {
   const root = createFixture();
   try {
     writeWorkflow(root, "verify.yml", 'steps:\n  - uses: "pnpm/action-setup@v4"\n');
+    assert.throws(() => assertPnpmActionSetupV6({ root }), /pnpm\/action-setup@v6/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a bare pnpm action-setup reference alongside v6", () => {
+  const root = createFixture();
+  try {
+    writeWorkflow(
+      root,
+      "verify.yml",
+      "steps:\n  - uses: pnpm/action-setup@v6\n  - uses: pnpm/action-setup\n",
+    );
     assert.throws(() => assertPnpmActionSetupV6({ root }), /pnpm\/action-setup@v6/);
   } finally {
     rmSync(root, { recursive: true, force: true });
