@@ -30,6 +30,8 @@ package example.testing;
 
 import "spine/options.proto";
 
+// Deliberately applies `(required)` to an unsupported scalar target.
 message InvalidRequiredTarget {
+    // Is the int32 field that makes the required-option configuration invalid.
     int32 quantity = 1 [(required) = true];
 }

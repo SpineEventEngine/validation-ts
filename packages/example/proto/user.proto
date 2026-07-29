@@ -31,38 +31,56 @@ import "spine/options.proto";
 import "spine/time_options.proto";
 import "google/protobuf/timestamp.proto";
 
+// Represents a user exposed by the example account API.
 message User {
+    // Stores the positive user identifier.
     int32 id = 1 [(min).value = "1"];
 
+    // Stores the required display name with the accepted character pattern.
     string name = 2 [(required) = true,
                      (pattern).regex = "^[A-Za-z][A-Za-z0-9 ]{1,49}$",
                      (pattern).error_msg = "Name must start with a letter and be 2-50 characters."];
 
+    // Stores the required email address with basic format validation.
     string email = 3 [(required) = true,
                       (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
                       (pattern).error_msg = "Email must be valid."];
 
+    // Assigns the user's access role.
     Role role = 4;
 
+    // Lists unique labels associated with the user.
     repeated string tags = 5 [(distinct) = true,
                               (if_has_duplicates).error_msg = "Tags must be unique; duplicates: `${field.duplicates}`."];
 
+    // Records an issuance time that must be in the past.
     google.protobuf.Timestamp issued_at = 6 [(when).in = PAST];
+    // Records an expiration time that must be in the future.
     google.protobuf.Timestamp expires_at = 7 [(when).in = FUTURE];
 }
 
+// Defines access roles available to example users.
 enum Role {
+    // Represents an unspecified role when none has been assigned.
     ROLE_UNSPECIFIED = 0;
+    // Grants ordinary user permissions.
     ROLE_USER = 1;
+    // Grants administrative permissions.
     ROLE_ADMIN = 2;
+    // Grants moderation permissions.
     ROLE_MODERATOR = 3;
 }
 
+// Requests a single user by identifier.
 message GetUserRequest {
+    // Supplies the positive identifier of the requested user.
     int32 user_id = 1 [(min).value = "1"];
 }
 
+// Returns the requested user and whether it was found.
 message GetUserResponse {
+    // Carries the nested user record for validation.
     User user = 1 [(validate) = true];
+    // Indicates whether a matching user exists.
     bool found = 2;
 }

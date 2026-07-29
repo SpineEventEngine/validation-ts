@@ -27,45 +27,49 @@ syntax = "proto3";
 
 package spine.validation.testing.integration;
 
-// Integration test messages demonstrating validation in a complete user management API.
-//
-// This file showcases how multiple validation options work together in real-world
-// scenarios including required fields, pattern validation, distinct values, and
-// nested message validation.
+// Fixtures for user-management validation across request and response records.
 
 import "spine/options.proto";
 
-// User message representing a user entity with validation constraints.
+// Exercises a user record with required, pattern, and distinct constraints.
 message User {
     option (require).fields = "email";
 
+    // Supplies the positive user identifier.
     int32 id = 1 [(min).value = "1"];
-    // Must start with a letter and be 2-50 characters (letters, numbers, spaces allowed).
+    // Requires a 2-to-50 character name beginning with a letter.
     string name = 2 [
         (required) = true,
         (pattern).regex = "^[A-Za-z][A-Za-z0-9 ]{1,49}$",
         (pattern).error_msg = "Name must start with a letter and be 2-50 characters. Provided: `{value}`."
     ];
-    // Must be a valid email address (basic format validation).
+    // Requires an email address and verifies its basic format.
     string email = 3 [
         (required) = true,
         (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
         (pattern).error_msg = "Email must be valid. Provided: `{value}`."
     ];
+    // Requires the user's role selection.
     Role role = 4 [(required) = true];
+    // Requires all user tags to be unique.
     repeated string tags = 5 [(distinct) = true];
 }
 
-// Role enumeration.
+// Defines roles used by the user-management fixture.
 enum Role {
+    // Marks a user with no role selected.
     ROLE_UNSPECIFIED = 0;
+    // Selects the ordinary user role.
     ROLE_USER = 1;
+    // Selects the administrative role.
     ROLE_ADMIN = 2;
+    // Selects the moderation role.
     ROLE_MODERATOR = 3;
 }
 
-// Request message for getting a user.
+// Requests one user by a required positive identifier.
 message GetUserRequest {
+    // Requires the identifier of the requested user.
     int32 user_id = 1 [
         (required) = true,
         (min).value = "1",
@@ -73,11 +77,13 @@ message GetUserRequest {
     ];
 }
 
-// Response message for getting a user.
+// Returns the requested user together with its lookup result.
 message GetUserResponse {
+    // Carries a nested user record that must validate.
     User user = 1 [
         (validate) = true,
         (if_invalid).error_msg = "User data is invalid."
     ];
+    // Indicates whether the requested user was found.
     bool found = 2;
 }

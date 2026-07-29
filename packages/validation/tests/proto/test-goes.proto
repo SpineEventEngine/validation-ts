@@ -27,128 +27,172 @@ syntax = "proto3";
 
 package spine.validation.testing.goes_suite;
 
-// Test messages for the `(goes)` field dependency validation option.
-//
-// This file contains test cases for the `(goes)` constraint that enforces field
-// dependencies. A field with `(goes).with = "other_field"` can only be set if
-// the referenced field is also set.
+// Fixtures for `(goes)` dependencies between companion fields.
 
 import "spine/options.proto";
 
-// Tests basic goes constraint.
+// Requires an event time to be accompanied by an event date.
 message ScheduledEvent {
+    // Requires a name for the scheduled event.
     string event_name = 1 [(required) = true];
+    // Supplies the event date required by a provided time.
     string date = 2;
+    // Supplies an event time only when a date is present.
     string time = 3 [(goes).with = "date"];
 }
 
-// Tests custom error message via `(goes).error_msg`.
+// Verifies a custom error message for an unmet shipping dependency.
 message ShippingDetails {
+    // Supplies the shipping destination.
     string address = 1;
+    // Allows tracking details only when an address is present.
     string tracking_number = 2 [
         (goes).with = "address",
         (goes).error_msg = "Tracking number requires a shipping address: {value}."
     ];
 }
 
-// Tests mutual dependencies (bidirectional).
+// Requires text and highlight colors to be supplied together.
 message ColorSettings {
+    // Allows text color only with a highlight color.
     string text_color = 1 [(goes).with = "highlight_color"];
+    // Allows highlight color only with a text color.
     string highlight_color = 2 [(goes).with = "text_color"];
 }
 
-// Tests multiple independent goes constraints.
+// Exercises a chain of dependencies in card payment data.
 message PaymentInfo {
+    // Names the cardholder.
     string cardholder_name = 1;
+    // Allows a card number only when the cardholder is present.
     string card_number = 2 [(goes).with = "cardholder_name"];
+    // Allows a CVV only when a card number is present.
     string cvv = 3 [(goes).with = "card_number"];
+    // Stores the card expiration month without a dependency.
     int32 expiry_month = 4;
 }
 
-// Tests goes constraint on different field types.
+// Provides independent field types for companion-target configuration tests.
 message ProfileSettings {
+    // Supplies the profile username target.
     string username = 1;
+    // Supplies the numeric display identifier target.
     int32 display_id = 2;
+    // Supplies the boolean verification target.
     bool is_verified = 3;
+    // Supplies the floating-point rating target.
     double rating = 4;
 }
 
+// Deliberately points `(goes)` from an int32 field to a string companion.
 message InvalidGoesTarget {
+    // Is the string companion used by the invalid target-type fixture.
     string username = 1;
+    // Is the incompatible int32 field carrying the `(goes)` option.
     int32 display_id = 2 [(goes).with = "username"];
 }
 
+// Deliberately references a missing `(goes)` companion field.
 message InvalidGoesUnknownCompanion {
+    // Is the field whose `(goes)` option names the absent companion.
     string value = 1 [(goes).with = "missing"];
 }
 
+// Deliberately uses a numeric companion for a string `(goes)` field.
 message InvalidGoesNumericCompanion {
+    // Is the string field with the incompatible numeric companion.
     string value = 1 [(goes).with = "number"];
+    // Is the numeric companion that makes the configuration invalid.
     int32 number = 2;
 }
 
-// Tests goes constraint on message field type.
+// Verifies a message-valued field's dependency on a title.
 message DocumentMetadata {
+    // Supplies the document title required by metadata.
     string title = 1;
+    // Supplies creation metadata only when a title is present.
     Timestamp created_at = 2 [(goes).with = "title"];
 }
 
+// Represents the timestamp payload used by document metadata.
 message Timestamp {
+    // Stores whole seconds since the epoch.
     int64 seconds = 1;
+    // Stores nanoseconds within the current second.
     int32 nanos = 2;
 }
 
-// Tests goes combined with pattern constraints.
+// Combines account-format validation with a recovery-contact dependency.
 message SecureAccount {
-    // Must be 3-20 characters containing only letters, numbers, and underscores.
+    // Requires a 3-to-20 character username using letters, numbers, or underscores.
     string username = 1 [(required) = true, (pattern).regex = "^[a-zA-Z0-9_]{3,20}$"];
-    // Must be at least 8 characters long.
+    // Requires a password of at least eight characters.
     string password = 2 [
         (required) = true,
         (pattern).regex = "^.{8,}$"
     ];
-    // If provided, must be a valid email address (basic format validation).
+    // Validates the optional recovery email's basic format.
     string recovery_email = 3 [(pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"];
+    // Allows a recovery phone only when a recovery email is present.
     string recovery_phone = 4 [(goes).with = "recovery_email"];
 }
 
-// Tests message without goes constraint.
+// Verifies fields without `(goes)` impose no companion requirement.
 message SimpleConfig {
+    // Holds the primary configuration setting.
     string primary_option = 1;
+    // Holds the independent secondary configuration setting.
     string secondary_option = 2;
 }
 
-// Tests goes constraint with enum field.
+// Verifies a string configuration's dependency on an enum selection.
 message FeatureFlags {
+    // Selects the feature level required by custom configuration.
     FeatureLevel level = 1;
+    // Allows custom configuration only when a feature level is selected.
     string custom_config = 2 [(goes).with = "level"];
 }
 
+// Defines feature levels used by the enum-companion fixture.
 enum FeatureLevel {
+    // Represents an unselected feature level.
     FEATURE_LEVEL_UNSPECIFIED = 0;
+    // Selects the basic feature tier.
     FEATURE_LEVEL_BASIC = 1;
+    // Selects the advanced feature tier.
     FEATURE_LEVEL_ADVANCED = 2;
+    // Selects the premium feature tier.
     FEATURE_LEVEL_PREMIUM = 3;
 }
 
-// Tests chain dependencies.
+// Exercises report fields with chained `(goes)` requirements.
 message ReportGeneration {
+    // Selects the report type required by dependent fields.
     string report_type = 1;
+    // Allows an output format only when a report type is selected.
     string output_format = 2 [(goes).with = "report_type"];
+    // Allows an email recipient only when a report type is selected.
     string email_recipient = 3 [(goes).with = "report_type"];
+    // Allows a schedule only when an output format is selected.
     string schedule = 4 [(goes).with = "output_format"];
 }
 
-// Tests goes constraint on optional fields.
+// Verifies optional URL settings with a path-to-base dependency.
 message OptionalSettings {
+    // Supplies the base URL required by a provided path.
     string base_url = 1;
+    // Supplies an independent optional port.
     int32 port = 2;
+    // Allows a path only when a base URL is present.
     string path = 3 [(goes).with = "base_url"];
 }
 
-// Tests goes combined with min/max/range constraints.
+// Combines basic numeric constraints with independent configuration fields.
 message AdvancedConfig {
+    // Names the advanced configuration.
     string config_name = 1;
+    // Limits maximum connections to one through 1,000.
     int32 max_connections = 2 [(range).value = "[1..1000]"];
+    // Requires a timeout of at least one tenth of a second.
     double timeout_seconds = 3 [(min).value = "0.1"];
 }
