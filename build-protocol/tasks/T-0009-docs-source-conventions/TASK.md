@@ -1,6 +1,6 @@
 # T-0009: Restore Package Guidance And Source Conventions
 
-Status: Ready for integration
+Status: Complete
 Classification: High-risk
 Baseline: `1f39ab5d910a240d04283ada489b8f044c307475`
 Branch: `task/T-0009-docs-source-conventions`
@@ -172,3 +172,23 @@ Final coverage: 94.86% statements, 91.68% branches, 99.19% functions, and
 | Consolidated review corrections | Accepted P1/P2 findings corrected: package guidance names the nested required/distinct message options and TypeScript prerequisite; source and documentation checkers reject the reviewed bypasses deterministically; installed-consumer smoke compiles the tarball public types. Corrections were sent to focused re-review. | RED/GREEN fixture runs: `node --test scripts/check-source-conventions.test.mjs` and `node scripts/check-documentation.test.mjs`; the canonical `pnpm verify` passed, including the installed-tarball runtime and TypeScript smoke. Coverage: 94.86% statements, 91.68% branches, 99.19% functions, and 96.12% lines.                                                                    |
 | Re-review correction follow-up  | Added object-literal callable coverage, unquoted background-operator rejection, deterministic source-TSDoc traversal, and distinct `GenMessage` schema/message smoke types. The affected lanes were sent to final narrow re-review.                                                                                           | `node --test scripts/check-source-conventions.test.mjs`; `node scripts/check-documentation.test.mjs`; `pnpm source:check`; `pnpm docs:check`; `pnpm typecheck`; `pnpm lint`; `pnpm format:check`; `pnpm test:validation`; `pnpm test:example`; `git diff --check`; `pnpm git:check` passed. The first package attempt hit registry DNS; the final network-enabled package check passed. |
 | Final review and gate           | Every accepted finding was corrected and re-reviewed clean; the installed tarball's declaration/runtime smoke and canonical gate passed with network access.                                                                                                                                                                  | `pnpm package:check` packed 112 files and verified the installed consumer; final `pnpm verify` passed 320 tests and every canonical gate.                                                                                                                                                                                                                                               |
+
+## Integration
+
+- Task commit:
+  `2373a86a5dfe47b620411f7e7e3082d66a58a752`.
+- Task branch was pushed to `origin`, then merged into `dev` as
+  `4bd013c5b981c2fc91d4d0d2b3d9e11db5515ccd`.
+- Post-merge `pnpm install --frozen-lockfile` and `pnpm verify` passed after
+  removing obsolete generated output from the former top-level TypeDoc path.
+  The gate passed all 320 tests, package/declaration smoke checks, and every
+  coverage threshold.
+- Remote refs after the integration push placed `origin/dev` at the merge and
+  left `origin/master` unchanged at
+  `24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- Remote Actions:
+  [Verify #36](https://github.com/SpineEventEngine/validation-ts/actions/runs/30469858265)
+  completed successfully for the exact merge commit.
+- The clean merged worktree was removed, and the integrated local and remote
+  task branches were deleted. The user-owned untracked `.pnpm-store/` and
+  `validation-ts.code-workspace` remain untouched.
