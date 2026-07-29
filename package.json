@@ -40,6 +40,7 @@
   "license": "Apache-2.0",
   "description": "TypeScript validation library for Protobuf messages with Spine validation options",
   "devDependencies": {
+    "@bufbuild/protobuf": "2.13.0",
     "@eslint/js": "9.39.1",
     "eslint": "9.39.1",
     "eslint-config-prettier": "10.1.8",

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -154,5 +154,13 @@ function expectFailure(root, expression) {
   }
 }
 
-assert.ok(checkDocumentation({ root: join(import.meta.dirname, "..") }).length > 0);
+const workspaceRoot = join(import.meta.dirname, "..");
+const workspaceManifest = JSON.parse(readFileSync(join(workspaceRoot, "package.json"), "utf8"));
+
+assert.equal(
+  workspaceManifest.devDependencies["@bufbuild/protobuf"],
+  "2.13.0",
+  "root documentation tooling must directly own @bufbuild/protobuf",
+);
+assert.ok(checkDocumentation({ root: workspaceRoot }).length > 0);
 console.log("Documentation checker regression tests passed.");
