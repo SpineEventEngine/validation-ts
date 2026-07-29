@@ -38,13 +38,13 @@ import type { ConstraintViolation } from "./generated/spine/validate/validation_
 import type { TemplateString } from "./generated/spine/validate/error_message_pb.js";
 
 import { Required } from "./options/required.js";
-import { validatePatternFields } from "./options/pattern.js";
+import { Pattern } from "./options/pattern.js";
 import { Require } from "./options/required-field.js";
 import { MinMax } from "./options/min-max.js";
 import { Range } from "./options/range.js";
-import { validateWhenField } from "./options/when.js";
-import { validateDistinctField } from "./options/distinct.js";
-import { validateNestedField } from "./options/validate.js";
+import { When } from "./options/when.js";
+import { Distinct } from "./options/distinct.js";
+import { NestedValidation } from "./options/validate.js";
 import { Goes } from "./options/goes.js";
 import { Choice } from "./options/choice.js";
 import { ValidationOrchestration, type FieldValidator } from "./orchestration.js";
@@ -56,7 +56,7 @@ const fieldValidators: readonly FieldValidator[] = [
       Required.validate(context, schema, message, field, violations);
     },
   },
-  ValidationOrchestration.legacyFieldValidator(validatePatternFields),
+  ValidationOrchestration.legacyFieldValidator(Pattern.validate),
   {
     validate(context, schema, message, field, violations) {
       MinMax.validate(context, schema, message, field, violations);
@@ -69,17 +69,17 @@ const fieldValidators: readonly FieldValidator[] = [
   },
   {
     validate(context, schema, message, field, violations) {
-      validateWhenField(context, schema, message, field, violations);
+      When.validate(context, schema, message, field, violations);
     },
   },
   {
     validate(context, schema, message, field, violations) {
-      validateDistinctField(context, schema, message, field, violations);
+      Distinct.validate(context, schema, message, field, violations);
     },
   },
   {
     validate(context, schema, message, field, violations, registry) {
-      validateNestedField(
+      NestedValidation.validate(
         context,
         schema,
         message,

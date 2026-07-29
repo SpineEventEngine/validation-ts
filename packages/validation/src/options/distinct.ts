@@ -35,111 +35,111 @@ interface EqualityClass {
   count: number;
 }
 
-/** Validates `(distinct)` for one field in deterministic orchestration order. */
-export function validateDistinctField(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  field: DescField,
-  violations: ConstraintViolation[],
-): void {
-  const extension = ValidationOptions.get("distinct");
-  if (!extension || !hasOption(field, extension)) return;
-  if (getOption(field, extension) !== true) return;
-  if (field.fieldKind !== "list" && field.fieldKind !== "map") {
-    throw new ValidationConfigurationError({
-      code: "UNSUPPORTED_OPTION_TARGET",
-      option: "distinct",
-      typeName: schema.typeName,
-      fieldPath: [field.name],
-    });
-  }
-
-  const collection = MessageFields.read(message, field);
-  const values = collectionValues(field, collection);
-  if (values.length < 2) return;
-
-  const classes: EqualityClass[] = [];
-  for (const value of values) {
-    const existing = classes.find((candidate) =>
-      valuesAreEqual(field, candidate.representative, value),
-    );
-    if (existing) {
-      existing.count++;
-    } else {
-      classes.push({ representative: value, count: 1 });
+/** Owns descriptor-defined `(distinct)` validation and its private formatting helpers. */
+export const Distinct = {
+  /** Validates `(distinct)` for one field in deterministic orchestration order. */
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    field: DescField,
+    violations: ConstraintViolation[],
+  ): void {
+    const extension = ValidationOptions.get("distinct");
+    if (!extension || !hasOption(field, extension)) return;
+    if (getOption(field, extension) !== true) return;
+    if (field.fieldKind !== "list" && field.fieldKind !== "map") {
+      throw new ValidationConfigurationError({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "distinct",
+        typeName: schema.typeName,
+        fieldPath: [field.name],
+      });
     }
-  }
 
-  const custom = distinctDiagnostic(field);
-  for (const duplicate of classes) {
-    if (duplicate.count < 2) continue;
-    violations.push(
-      ViolationFactory.create(context.atField(field), field, duplicate.representative, {
-        customMessage: custom?.errorMsg || undefined,
-        defaultMessage: getOption(IfHasDuplicatesOptionSchema, default_message),
-        placeholders: {
-          "field.value": formatCollection(collection),
-          "field.duplicates": formatCollection([duplicate.representative]),
-        },
-      }),
-    );
-  }
-}
+    const collection = MessageFields.read(message, field);
+    const values = Distinct.collectionValues(field, collection);
+    if (values.length < 2) return;
 
-/** Retained for internal callers that validate all fields outside orchestration. */
-export function validateDistinctFields(
-  schema: DescMessage,
-  message: Message,
-  violations: ConstraintViolation[],
-): void {
-  const context = new ValidationContext(schema.typeName);
-  for (const field of schema.fields)
-    validateDistinctField(context, schema, message, field, violations);
-}
+    const classes: EqualityClass[] = [];
+    for (const value of values) {
+      const existing = classes.find((candidate) =>
+        Distinct.valuesAreEqual(field, candidate.representative, value),
+      );
+      if (existing) {
+        existing.count++;
+      } else {
+        classes.push({ representative: value, count: 1 });
+      }
+    }
 
-function collectionValues(field: DescField, collection: unknown): unknown[] {
-  if (field.fieldKind === "list") return Array.isArray(collection) ? collection : [];
-  if (collection === null || typeof collection !== "object") return [];
-  return Object.values(collection);
-}
+    const custom = Distinct.diagnostic(field);
+    for (const duplicate of classes) {
+      if (duplicate.count < 2) continue;
+      violations.push(
+        ViolationFactory.create(context.atField(field), field, duplicate.representative, {
+          customMessage: custom?.errorMsg || undefined,
+          defaultMessage: getOption(IfHasDuplicatesOptionSchema, default_message),
+          placeholders: {
+            "field.value": Distinct.formatCollection(collection),
+            "field.duplicates": Distinct.formatCollection([duplicate.representative]),
+          },
+        }),
+      );
+    }
+  },
 
-function valuesAreEqual(field: DescField, left: unknown, right: unknown): boolean {
-  if (field.fieldKind === "list") {
-    if (field.listKind === "scalar")
+  /** Validates every field for internal callers outside orchestration. */
+  validateAll(schema: DescMessage, message: Message, violations: ConstraintViolation[]): void {
+    const context = new ValidationContext(schema.typeName);
+    for (const field of schema.fields)
+      Distinct.validate(context, schema, message, field, violations);
+  },
+
+  collectionValues(field: DescField, collection: unknown): unknown[] {
+    if (field.fieldKind === "list") return Array.isArray(collection) ? collection : [];
+    if (collection === null || typeof collection !== "object") return [];
+    return Object.values(collection);
+  },
+
+  valuesAreEqual(field: DescField, left: unknown, right: unknown): boolean {
+    if (field.fieldKind === "list") {
+      if (field.listKind === "scalar")
+        return scalarEquals(field.scalar, left as never, right as never);
+      if (field.listKind === "enum") return Number(left) === Number(right);
+      return equals(field.message, left as never, right as never);
+    }
+    if (field.fieldKind !== "map") {
+      throw new Error("distinct values must come from a repeated or map field");
+    }
+    if (field.mapKind === "scalar")
       return scalarEquals(field.scalar, left as never, right as never);
-    if (field.listKind === "enum") return Number(left) === Number(right);
+    if (field.mapKind === "enum") return Number(left) === Number(right);
     return equals(field.message, left as never, right as never);
-  }
-  if (field.fieldKind !== "map") {
-    throw new Error("distinct values must come from a repeated or map field");
-  }
-  if (field.mapKind === "scalar") return scalarEquals(field.scalar, left as never, right as never);
-  if (field.mapKind === "enum") return Number(left) === Number(right);
-  return equals(field.message, left as never, right as never);
-}
+  },
 
-function distinctDiagnostic(field: DescField): IfHasDuplicatesOption | undefined {
-  const extension = ValidationOptions.get("if_has_duplicates");
-  return hasOption(field, extension) ? getOption(field, extension) : undefined;
-}
+  diagnostic(field: DescField): IfHasDuplicatesOption | undefined {
+    const extension = ValidationOptions.get("if_has_duplicates");
+    return hasOption(field, extension) ? getOption(field, extension) : undefined;
+  },
 
-function formatCollection(value: unknown): string {
-  return formatValue(value);
-}
+  formatCollection(value: unknown): string {
+    return Distinct.formatValue(value);
+  },
 
-function formatValue(value: unknown): string {
-  if (value instanceof Uint8Array) return bytesToHex(value);
-  if (typeof value === "bigint") return value.toString();
-  if (Array.isArray(value)) return `[${value.map(formatValue).join(", ")}]`;
-  if (value !== null && typeof value === "object") {
-    return `{${Object.entries(value)
-      .map(([key, nested]) => `${key}=${formatValue(nested)}`)
-      .join(", ")}}`;
-  }
-  return String(value);
-}
+  formatValue(value: unknown): string {
+    if (value instanceof Uint8Array) return Distinct.bytesToHex(value);
+    if (typeof value === "bigint") return value.toString();
+    if (Array.isArray(value)) return `[${value.map(Distinct.formatValue).join(", ")}]`;
+    if (value !== null && typeof value === "object") {
+      return `{${Object.entries(value)
+        .map(([key, nested]) => `${key}=${Distinct.formatValue(nested)}`)
+        .join(", ")}}`;
+    }
+    return String(value);
+  },
 
-function bytesToHex(value: Uint8Array): string {
-  return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+  bytesToHex(value: Uint8Array): string {
+    return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  },
+} as const;

@@ -43,94 +43,119 @@ export type NestedValidator = <S extends DescMessage>(
   registry: Registry,
 ) => ConstraintViolation[];
 
-/** Validates one field in declaration order, preserving the root validation context. */
-export function validateNestedField(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  field: DescField,
-  violations: ConstraintViolation[],
-  registry: Registry,
-  validateNested: NestedValidator,
-): void {
-  const option = ValidationOptions.get("validate");
-  if (!option || !hasOption(field, option) || !getOption(field, option)) return;
+/** Owns descriptor-defined recursive `(validate)` option processing. */
+export const NestedValidation = {
+  /** Validates one field in declaration order, preserving the root validation context. */
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    field: DescField,
+    violations: ConstraintViolation[],
+    registry: Registry,
+    validateNested: NestedValidator,
+  ): void {
+    const option = ValidationOptions.get("validate");
+    if (!option || !hasOption(field, option) || !getOption(field, option)) return;
 
-  const nestedSchema = messageSchema(field);
-  if (!nestedSchema) {
-    throw new ValidationConfigurationError({
-      code: "UNSUPPORTED_OPTION_TARGET",
-      option: "validate",
-      typeName: schema.typeName,
-      fieldPath: [field.name],
-    });
-  }
+    const nestedSchema = NestedValidation.messageSchema(field);
+    if (!nestedSchema) {
+      throw new ValidationConfigurationError({
+        code: "UNSUPPORTED_OPTION_TARGET",
+        option: "validate",
+        typeName: schema.typeName,
+        fieldPath: [field.name],
+      });
+    }
 
-  const value = MessageFields.read(message, field);
-  const nestedContext = context.atField(field);
-  if (field.fieldKind === "message") {
-    if (value === undefined || value === null || isDefault(nestedSchema, value)) return;
-    appendNested(nestedSchema, value, nestedContext, registry, violations, validateNested);
-    return;
-  }
+    const value = MessageFields.read(message, field);
+    const nestedContext = context.atField(field);
+    if (field.fieldKind === "message") {
+      if (value === undefined || value === null || NestedValidation.isDefault(nestedSchema, value))
+        return;
+      NestedValidation.append(
+        nestedSchema,
+        value,
+        nestedContext,
+        registry,
+        violations,
+        validateNested,
+      );
+      return;
+    }
 
-  if (field.fieldKind === "list") {
-    if (!Array.isArray(value)) return;
-    for (const element of value)
-      appendNested(nestedSchema, element, nestedContext, registry, violations, validateNested);
-    return;
-  }
+    if (field.fieldKind === "list") {
+      if (!Array.isArray(value)) return;
+      for (const element of value)
+        NestedValidation.append(
+          nestedSchema,
+          element,
+          nestedContext,
+          registry,
+          violations,
+          validateNested,
+        );
+      return;
+    }
 
-  if (value === null || typeof value !== "object") return;
-  for (const element of Object.values(value)) {
-    appendNested(nestedSchema, element, nestedContext, registry, violations, validateNested);
-  }
-}
+    if (value === null || typeof value !== "object") return;
+    for (const element of Object.values(value)) {
+      NestedValidation.append(
+        nestedSchema,
+        element,
+        nestedContext,
+        registry,
+        violations,
+        validateNested,
+      );
+    }
+  },
 
-function messageSchema(field: DescField): DescMessage | undefined {
-  if (field.fieldKind === "message") return field.message;
-  if (field.fieldKind === "list" && field.listKind === "message") return field.message;
-  if (field.fieldKind === "map" && field.mapKind === "message") return field.message;
-  return undefined;
-}
+  messageSchema(field: DescField): DescMessage | undefined {
+    if (field.fieldKind === "message") return field.message;
+    if (field.fieldKind === "list" && field.listKind === "message") return field.message;
+    if (field.fieldKind === "map" && field.mapKind === "message") return field.message;
+    return undefined;
+  },
 
-function isDefault(schema: DescMessage, value: unknown): boolean {
-  return equals(schema, value as never, create(schema));
-}
+  isDefault(schema: DescMessage, value: unknown): boolean {
+    return equals(schema, value as never, create(schema));
+  },
 
-function appendNested(
-  schema: DescMessage,
-  value: unknown,
-  context: ValidationContext,
-  registry: Registry,
-  violations: ConstraintViolation[],
-  validateNested: NestedValidator,
-): void {
-  if (schema.typeName === "google.protobuf.Any") {
-    appendPackedAny(value, context, registry, violations, validateNested);
-    return;
-  }
-  if (!isMessage(value, schema)) return;
-  violations.push(...validateNested(schema, value, context, registry));
-}
+  append(
+    schema: DescMessage,
+    value: unknown,
+    context: ValidationContext,
+    registry: Registry,
+    violations: ConstraintViolation[],
+    validateNested: NestedValidator,
+  ): void {
+    if (schema.typeName === "google.protobuf.Any") {
+      NestedValidation.appendPackedAny(value, context, registry, violations, validateNested);
+      return;
+    }
+    if (!isMessage(value, schema)) return;
+    violations.push(...validateNested(schema, value, context, registry));
+  },
 
-function appendPackedAny(
-  value: unknown,
-  context: ValidationContext,
-  registry: Registry,
-  violations: ConstraintViolation[],
-  validateNested: NestedValidator,
-): void {
-  if (!value || typeof value !== "object") return;
-  let unpacked;
-  try {
-    unpacked = anyUnpack(value as Parameters<typeof anyUnpack>[0], registry);
-  } catch {
-    // A malformed or unrecognized type URL cannot be unpacked and is valid by contract.
-    return;
-  }
-  if (!unpacked) return;
-  const schema = registry.getMessage(unpacked.$typeName);
-  if (schema && isMessage(unpacked, schema))
-    violations.push(...validateNested(schema, unpacked, context, registry));
-}
+  appendPackedAny(
+    value: unknown,
+    context: ValidationContext,
+    registry: Registry,
+    violations: ConstraintViolation[],
+    validateNested: NestedValidator,
+  ): void {
+    if (!value || typeof value !== "object") return;
+    let unpacked;
+    try {
+      unpacked = anyUnpack(value as Parameters<typeof anyUnpack>[0], registry);
+    } catch {
+      // A malformed or unrecognized type URL cannot be unpacked and is valid by contract.
+      return;
+    }
+    if (!unpacked) return;
+    const schema = registry.getMessage(unpacked.$typeName);
+    if (schema && isMessage(unpacked, schema))
+      violations.push(...validateNested(schema, unpacked, context, registry));
+  },
+} as const;

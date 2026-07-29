@@ -49,130 +49,140 @@ import type { PatternOption } from "../generated/spine/options_pb.js";
  * @param violationMessage The error message describing the violation.
  * @returns A `ConstraintViolation` object.
  */
-function createViolation(
-  typeName: string,
-  fieldName: string,
-  fieldValue: unknown,
-  violationMessage: string,
-): ConstraintViolation {
-  return create(ConstraintViolationSchema, {
-    typeName,
-    fieldPath: create(FieldPathSchema, {
-      fieldName: [fieldName],
-    }),
-    fieldValue: undefined,
-    message: create(TemplateStringSchema, {
-      withPlaceholders: violationMessage,
-      placeholderValue: {
-        field: fieldName,
-        value: String(fieldValue ?? ""),
-      },
-    }),
-    msgFormat: "",
-    param: [],
-    violation: [],
-  });
-}
+/** Owns descriptor-defined `(pattern)` validation and its private diagnostics. */
+export const Pattern = {
+  createViolation(
+    typeName: string,
+    fieldName: string,
+    fieldValue: unknown,
+    violationMessage: string,
+  ): ConstraintViolation {
+    return create(ConstraintViolationSchema, {
+      typeName,
+      fieldPath: create(FieldPathSchema, {
+        fieldName: [fieldName],
+      }),
+      fieldValue: undefined,
+      message: create(TemplateStringSchema, {
+        withPlaceholders: violationMessage,
+        placeholderValue: {
+          field: fieldName,
+          value: String(fieldValue ?? ""),
+        },
+      }),
+      msgFormat: "",
+      param: [],
+      violation: [],
+    });
+  },
 
-/**
- * Validates a single string value against a regex pattern with modifiers.
- *
- * @param value The string value to validate.
- * @param regex The regular expression pattern.
- * @param patternOption The pattern option object with optional modifiers.
- * @returns `true` if the value matches the pattern, `false` otherwise.
- */
-function validatePatternValue(value: string, regex: string, patternOption: PatternOption): boolean {
-  if (typeof value !== "string") {
-    return false;
-  }
-
-  try {
-    let flags = "";
-    const modifier = patternOption.modifier;
-
-    if (modifier) {
-      if (modifier.caseInsensitive) {
-        flags += "i";
-      }
-      if (modifier.multiline) {
-        flags += "m";
-      }
-      if (modifier.dotAll) {
-        flags += "s";
-      }
-      if (modifier.unicode) {
-        flags += "u";
-      }
+  /**
+   * Validates a single string value against a regex pattern with modifiers.
+   *
+   * @param value The string value to validate.
+   * @param regex The regular expression pattern.
+   * @param patternOption The pattern option object with optional modifiers.
+   * @returns `true` if the value matches the pattern, `false` otherwise.
+   */
+  validateValue(value: string, regex: string, patternOption: PatternOption): boolean {
+    if (typeof value !== "string") {
+      return false;
     }
 
-    const pattern = new RegExp(regex, flags);
-    const partialMatch = modifier?.partialMatch || false;
+    try {
+      let flags = "";
+      const modifier = patternOption.modifier;
 
-    if (partialMatch) {
-      return pattern.test(value);
-    } else {
-      return pattern.test(value);
+      if (modifier) {
+        if (modifier.caseInsensitive) {
+          flags += "i";
+        }
+        if (modifier.multiline) {
+          flags += "m";
+        }
+        if (modifier.dotAll) {
+          flags += "s";
+        }
+        if (modifier.unicode) {
+          flags += "u";
+        }
+      }
+
+      const pattern = new RegExp(regex, flags);
+      const partialMatch = modifier?.partialMatch || false;
+
+      if (partialMatch) {
+        return pattern.test(value);
+      } else {
+        return pattern.test(value);
+      }
+    } catch (error) {
+      console.error(`Invalid regex pattern: ${regex}`, error);
+      return false;
     }
-  } catch (error) {
-    console.error(`Invalid regex pattern: ${regex}`, error);
-    return false;
-  }
-}
+  },
 
-/**
- * Validates the `(pattern)` option for string fields.
- *
- * This function checks if string field values match the specified regular expression pattern.
- * Supports pattern modifiers like `case_insensitive`, `multiline`, `dot_all`, etc.
- *
- * @param schema The message schema containing field descriptors.
- * @param message The message instance to validate.
- * @param violations Array to collect constraint violations.
- */
-export function validatePatternFields<S extends DescMessage>(
-  schema: S,
-  message: Message,
-  violations: ConstraintViolation[],
-): void {
-  const patternOption = ValidationOptions.get("pattern");
+  /**
+   * Validates the `(pattern)` option for string fields.
+   *
+   * This function checks if string field values match the specified regular expression pattern.
+   * Supports pattern modifiers like `case_insensitive`, `multiline`, `dot_all`, etc.
+   *
+   * @param schema The message schema containing field descriptors.
+   * @param message The message instance to validate.
+   * @param violations Array to collect constraint violations.
+   */
+  validate<S extends DescMessage>(
+    schema: S,
+    message: Message,
+    violations: ConstraintViolation[],
+  ): void {
+    const patternOption = ValidationOptions.get("pattern");
 
-  if (!patternOption) {
-    return;
-  }
-
-  for (const field of schema.fields) {
-    if (!hasOption(field, patternOption)) {
-      continue;
+    if (!patternOption) {
+      return;
     }
 
-    const patternValue = getOption(field, patternOption);
-    const regex = patternValue.regex;
-    const errorMsg =
-      patternValue.errorMsg || `The string must match the regular expression \`${regex}\`.`;
+    for (const field of schema.fields) {
+      if (!hasOption(field, patternOption)) {
+        continue;
+      }
 
-    const fieldValue = MessageFields.read(message, field);
+      const patternValue = getOption(field, patternOption);
+      const regex = patternValue.regex;
+      const errorMsg =
+        patternValue.errorMsg || `The string must match the regular expression \`${regex}\`.`;
 
-    if (field.fieldKind === "list") {
-      if (Array.isArray(fieldValue)) {
-        for (let i = 0; i < fieldValue.length; i++) {
-          const itemValue = fieldValue[i];
-          if (
-            typeof itemValue === "string" &&
-            !validatePatternValue(itemValue, regex, patternValue)
-          ) {
+      const fieldValue = MessageFields.read(message, field);
+
+      if (field.fieldKind === "list") {
+        if (Array.isArray(fieldValue)) {
+          for (let i = 0; i < fieldValue.length; i++) {
+            const itemValue = fieldValue[i];
+            if (
+              typeof itemValue === "string" &&
+              !Pattern.validateValue(itemValue, regex, patternValue)
+            ) {
+              violations.push(
+                Pattern.createViolation(
+                  schema.typeName,
+                  `${field.name}[${i}]`,
+                  itemValue,
+                  errorMsg,
+                ),
+              );
+            }
+          }
+        }
+      } else if (field.fieldKind === "scalar" && field.scalar === ScalarType.STRING) {
+        if (typeof fieldValue === "string" && fieldValue !== "") {
+          if (!Pattern.validateValue(fieldValue, regex, patternValue)) {
             violations.push(
-              createViolation(schema.typeName, `${field.name}[${i}]`, itemValue, errorMsg),
+              Pattern.createViolation(schema.typeName, field.name, fieldValue, errorMsg),
             );
           }
         }
       }
-    } else if (field.fieldKind === "scalar" && field.scalar === ScalarType.STRING) {
-      if (typeof fieldValue === "string" && fieldValue !== "") {
-        if (!validatePatternValue(fieldValue, regex, patternValue)) {
-          violations.push(createViolation(schema.typeName, field.name, fieldValue, errorMsg));
-        }
-      }
     }
-  }
-}
+  },
+} as const;

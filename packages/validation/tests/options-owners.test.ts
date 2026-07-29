@@ -15,12 +15,16 @@
  */
 
 import { Choice } from "../src/options/choice.js";
+import { Distinct } from "../src/options/distinct.js";
 import { Goes } from "../src/options/goes.js";
 import { MinMax } from "../src/options/min-max.js";
 import { NumericValues } from "../src/options/numeric.js";
+import { Pattern } from "../src/options/pattern.js";
 import { Range } from "../src/options/range.js";
 import { Require } from "../src/options/required-field.js";
 import { Required } from "../src/options/required.js";
+import { NestedValidation } from "../src/options/validate.js";
+import { When } from "../src/options/when.js";
 
 describe("option owners", () => {
   it("exposes each option implementation through its cohesive owner", () => {
@@ -31,5 +35,9 @@ describe("option owners", () => {
     expect(Goes.validate).toBeTypeOf("function");
     expect(Choice.validate).toBeTypeOf("function");
     expect(Require.validate).toBeTypeOf("function");
+    expect(Distinct.validate).toBeTypeOf("function");
+    expect(Pattern.validate).toBeTypeOf("function");
+    expect(NestedValidation.validate).toBeTypeOf("function");
+    expect(When.validate).toBeTypeOf("function");
   });
 });
