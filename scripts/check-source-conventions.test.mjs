@@ -48,6 +48,12 @@ test("accepts documented TypeScript declarations and allowed function forms", as
       }
       /** Describes a named object. */
       export const namedObject = {
+        /** Describes a data property. */
+        label: "value",
+        /** Returns an accessor value. @returns Returns the label. */
+        get summary() { return this.label; },
+        /** Sets an accessor value. @param value Describes the label. */
+        set summary(value: string) { this.label = value; },
         /** Returns a value. @param value Describes the value. @returns Returns the value. */
         method(value: string) { return value; },
       };
@@ -85,14 +91,24 @@ test("reports TypeScript documentation, standalone functions, and forbidden prod
       }
       /** Makes a value. @param missing Describes another parameter. @returns Returns a value. */
       export function documented(value: string): string { return value; }
+      /** Returns a value. @param value @returns */
+      export function emptyTagDescriptions(value: string): string { return value; }
+      /** Describes an object. */
+      export const undocumentedObject = {
+        data: "value",
+        get value() { return this.data; },
+        set value(next: string) { this.data = next; },
+      };
     `,
     },
     async (rootDir) => {
       const result = await checkSourceConventions({ rootDir });
       assert.ok(rules(result).includes("tsdoc-forbidden-wording"));
       assert.ok(rules(result).includes("tsdoc-missing-param"));
-      assert.ok(rules(result).filter((rule) => rule === "tsdoc-missing").length >= 3);
-      assert.equal(rules(result).filter((rule) => rule === "ts-standalone-function").length, 2);
+      assert.ok(rules(result).includes("tsdoc-missing-param-description"));
+      assert.ok(rules(result).includes("tsdoc-missing-returns-description"));
+      assert.ok(rules(result).filter((rule) => rule === "tsdoc-missing").length >= 6);
+      assert.equal(rules(result).filter((rule) => rule === "ts-standalone-function").length, 3);
     },
   );
 });
@@ -191,6 +207,27 @@ test("does not treat option assignments as Proto field declarations", async () =
     },
     async (rootDir) => {
       assert.deepEqual(rules(await checkSourceConventions({ rootDir })), []);
+    },
+  );
+});
+
+test("does not associate a trailing Proto comment with the next declaration", async () => {
+  await withFixture(
+    {
+      "packages/validation/proto/trailing.proto": `
+      syntax = "proto3";
+      // Documents the message.
+      message TrailingComment {
+        // Documents the first field.
+        string first = 1; // This is not documentation for the next field.
+        string second = 2;
+      }
+    `,
+    },
+    async (rootDir) => {
+      const result = await checkSourceConventions({ rootDir });
+      assert.deepEqual(rules(result), ["proto-missing-comment"]);
+      assert.match(result.output, /second/);
     },
   );
 });

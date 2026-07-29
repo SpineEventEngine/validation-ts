@@ -126,8 +126,8 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
     );
   }
   if (!callable) return;
-  const description = comment
-    .replace(/^\/\*\*|\*\/$/g, "")
+  const documentationText = comment.replace(/^\/\*\*|\*\/$/g, "");
+  const description = documentationText
     .split("\n")
     .map((line) => line.replace(/^\s*\*?\s?/, "").trim())
     .find((line) => line && !line.startsWith("@"));
@@ -142,11 +142,13 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
       `TSDoc summary for ${name} must start with a third-person verb.`,
     );
   }
-  const documentedParameters = new Set(
-    [...comment.matchAll(/@param\s+(?:\{[^}]*\}\s+)?([\w$]+)/g)].map((match) => match[1]),
+  const parameterTags = new Map(
+    [...documentationText.matchAll(/@param\s+(?:\{[^}]*\}\s+)?([\w$]+)([^\r\n@]*)/g)].map(
+      (match) => [match[1], match[2].trim()],
+    ),
   );
   for (const parameter of node.parameters ?? []) {
-    if (ts.isIdentifier(parameter.name) && !documentedParameters.has(parameter.name.text)) {
+    if (ts.isIdentifier(parameter.name) && !parameterTags.has(parameter.name.text)) {
       addFinding(
         findings,
         path,
@@ -155,17 +157,38 @@ function checkDocumentation(findings, path, sourceFile, node, callable = false) 
         "tsdoc-missing-param",
         `Missing @param for ${parameter.name.text}.`,
       );
+    } else if (ts.isIdentifier(parameter.name) && !parameterTags.get(parameter.name.text)) {
+      addFinding(
+        findings,
+        path,
+        sourceFile,
+        parameter.getStart(sourceFile),
+        "tsdoc-missing-param-description",
+        `Missing @param description for ${parameter.name.text}.`,
+      );
     }
   }
-  if (hasNonVoidReturn(node) && !/@returns?\b/.test(comment)) {
-    addFinding(
-      findings,
-      path,
-      sourceFile,
-      node.getStart(sourceFile),
-      "tsdoc-missing-returns",
-      `Missing @returns for ${name}.`,
-    );
+  if (hasNonVoidReturn(node)) {
+    const returns = documentationText.match(/@returns?\b([^\r\n@]*)/);
+    if (!returns) {
+      addFinding(
+        findings,
+        path,
+        sourceFile,
+        node.getStart(sourceFile),
+        "tsdoc-missing-returns",
+        `Missing @returns for ${name}.`,
+      );
+    } else if (!returns[1].trim()) {
+      addFinding(
+        findings,
+        path,
+        sourceFile,
+        node.getStart(sourceFile),
+        "tsdoc-missing-returns-description",
+        `Missing @returns description for ${name}.`,
+      );
+    }
   }
 }
 
@@ -199,6 +222,12 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
       node.initializer &&
       ts.isObjectLiteralExpression(node.initializer) &&
       node.parent.parent.parent === sourceFile;
+    const isNamedObjectMember =
+      node.parent &&
+      ts.isObjectLiteralExpression(node.parent) &&
+      ts.isVariableDeclaration(node.parent.parent) &&
+      node.parent.parent.initializer === node.parent &&
+      node.parent.parent.parent.parent.parent === sourceFile;
     const documentationDeclaration =
       (moduleScoped &&
         (ts.isFunctionDeclaration(node) ||
@@ -212,7 +241,12 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
       ts.isPropertyDeclaration(node) ||
       ts.isPropertySignature(node) ||
       ts.isConstructorDeclaration(node) ||
-      ts.isEnumMember(node);
+      ts.isEnumMember(node) ||
+      (isNamedObjectMember &&
+        (ts.isPropertyAssignment(node) ||
+          ts.isShorthandPropertyAssignment(node) ||
+          ts.isGetAccessorDeclaration(node) ||
+          ts.isSetAccessorDeclaration(node)));
     if (productionSource && documentationDeclaration) {
       checkDocumentation(
         findings,
@@ -222,7 +256,9 @@ function checkTypeScriptFile(findings, path, contents, productionSource) {
         callable ||
           ts.isConstructorDeclaration(node) ||
           ts.isMethodDeclaration(node) ||
-          ts.isMethodSignature(node),
+          ts.isMethodSignature(node) ||
+          ts.isGetAccessorDeclaration(node) ||
+          ts.isSetAccessorDeclaration(node),
       );
     }
 
@@ -334,6 +370,12 @@ function checkProtoDeclaration(findings, path, sourceFile, token, comment) {
     );
 }
 
+/** Determines whether a Proto comment begins its own documentation line. */
+function isLeadingProtoComment(contents, comment) {
+  const lineStart = contents.lastIndexOf("\n", comment.position) + 1;
+  return contents.slice(lineStart, comment.position).trim().length === 0;
+}
+
 /** Checks project-owned Proto declarations using the small declaration tokenizer. */
 function checkProtoFile(findings, path, contents) {
   const sourceFile = ts.createSourceFile(path, contents, ts.ScriptTarget.Latest, true);
@@ -344,7 +386,7 @@ function checkProtoFile(findings, path, contents) {
     while (index < tokens.length && tokens[index].text !== "}") {
       const token = tokens[index];
       if (token.type === "comment") {
-        comment = token;
+        comment = isLeadingProtoComment(contents, token) ? token : undefined;
         index += 1;
         continue;
       }
