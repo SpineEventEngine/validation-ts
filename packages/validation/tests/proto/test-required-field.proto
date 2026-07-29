@@ -32,116 +32,116 @@ import "spine/options.proto";
 message UserIdentifier {
     option (require).fields = "id | email";
 
-    // Stores `id` for the `UserIdentifier` fixture.
+    // Supplies the first alternative required identifier.
     string id = 1;
-    // Stores `email` for the `UserIdentifier` fixture.
+    // Supplies the second alternative required identifier.
     string email = 2;
 }
 // Fixture `ContactInfo` exercises `(require)`.
 message ContactInfo {
     option (require).fields = "phone & country_code";
 
-    // Stores `phone` for the `ContactInfo` fixture.
+    // Supplies the required phone conjunct.
     string phone = 1;
-    // Stores `country_code` for the `ContactInfo` fixture.
+    // Supplies the required country-code conjunct.
     string country_code = 2;
 }
 // Fixture `PersonName` exercises `(require)`.
 message PersonName {
     option (require).fields = "given_name | honorific_prefix & family_name";
 
-    // Stores `honorific_prefix` for the `PersonName` fixture.
+    // Supplies the prefix operand in the secondary name group.
     string honorific_prefix = 1;
-    // Stores `given_name` for the `PersonName` fixture.
+    // Supplies the standalone given-name alternative.
     string given_name = 2;
-    // Stores `middle_name` for the `PersonName` fixture.
+    // Supplies an unconstrained middle-name control.
     string middle_name = 3;
-    // Stores `family_name` for the `PersonName` fixture.
+    // Supplies the family-name operand paired with the prefix.
     string family_name = 4;
-    // Stores `honorific_suffix` for the `PersonName` fixture.
+    // Supplies an unconstrained honorific-suffix control.
     string honorific_suffix = 5;
 }
 // Fixture `PaymentMethod` exercises `(require)`.
 message PaymentMethod {
     option (require).fields = "credit_card | bank_account | paypal_email";
 
-    // Stores `credit_card` for the `PaymentMethod` fixture.
+    // Supplies the credit-card alternative.
     string credit_card = 1;
-    // Stores `bank_account` for the `PaymentMethod` fixture.
+    // Supplies the bank-account alternative.
     string bank_account = 2;
-    // Stores `paypal_email` for the `PaymentMethod` fixture.
+    // Supplies the PayPal-email alternative.
     string paypal_email = 3;
 }
 // Fixture `ShippingAddress` exercises `(require)`.
 message ShippingAddress {
     option (require).fields = "street & city & postal_code & country";
 
-    // Stores `street` for the `ShippingAddress` fixture.
+    // Supplies the required street operand.
     string street = 1;
-    // Stores `city` for the `ShippingAddress` fixture.
+    // Supplies the required city operand.
     string city = 2;
-    // Stores `postal_code` for the `ShippingAddress` fixture.
+    // Supplies the required postal-code operand.
     string postal_code = 3;
-    // Stores `country` for the `ShippingAddress` fixture.
+    // Supplies the required country operand.
     string country = 4;
-    // Stores `state` for the `ShippingAddress` fixture.
+    // Supplies an optional state control outside the required group.
     string state = 5;
 }
 // Fixture `AccountCreation` exercises `(require)`.
 message AccountCreation {
     option (require).fields = "username & password | oauth_token";
 
-    // Stores `username` for the `AccountCreation` fixture.
+    // Supplies the username conjunct in the credential alternative.
     string username = 1;
-    // Stores `password` for the `AccountCreation` fixture.
+    // Supplies the password conjunct in the credential alternative.
     string password = 2;
-    // Stores `oauth_token` for the `AccountCreation` fixture.
+    // Supplies the OAuth-token alternative.
     string oauth_token = 3;
 }
-// Fixture `OptionalData` exercises the named validation scenario.
+// Provides controls omitted from every `(require)` expression.
 message OptionalData {
-    // Stores `field1` for the `OptionalData` fixture.
+    // Supplies the first unconstrained optional control.
     string field1 = 1;
-    // Stores `field2` for the `OptionalData` fixture.
+    // Supplies the second unconstrained optional control.
     string field2 = 2;
-    // Stores `field3` for the `OptionalData` fixture.
+    // Supplies the numeric unconstrained optional control.
     int32 field3 = 3;
 }
 
 // Deliberately tests invalid configuration `(require).fields = "number"`.
 message InvalidRequireDirectNumeric {
     option (require).fields = "number";
-    // Stores `number` for the `InvalidRequireDirectNumeric` fixture.
+    // Is the unsupported numeric operand named by `(require).fields`.
     int32 number = 1;
 }
 
 // Deliberately tests invalid configuration `(require).fields = "(name)"`.
 message InvalidRequireParentheses {
     option (require).fields = "(name)";
-    // Stores `name` for the `InvalidRequireParentheses` fixture.
+    // Is the operand wrapped by the unsupported parenthesized expression.
     string name = 1;
 }
 
 // Deliberately tests invalid configuration `(require).fields = "missing"`.
 message InvalidRequireUnknown {
     option (require).fields = "missing";
-    // Stores `name` for the `InvalidRequireUnknown` fixture.
+    // Provides the available field while `missing` remains unresolved.
     string name = 1;
 }
 
 // Deliberately tests invalid configuration `(require).fields = "name && other"`.
 message InvalidRequireGrammar {
     option (require).fields = "name && other";
-    // Stores `name` for the `InvalidRequireGrammar` fixture.
+    // Supplies the left operand around the invalid doubled ampersand.
     string name = 1;
-    // Stores `other` for the `InvalidRequireGrammar` fixture.
+    // Supplies the right operand around the invalid doubled ampersand.
     string other = 2;
 }
 
 // Deliberately tests invalid configuration `(require).fields = "enabled"`.
 message InvalidRequireBoolean {
     option (require).fields = "enabled";
-    // Stores `enabled` for the `InvalidRequireBoolean` fixture.
+    // Is the unsupported boolean operand named by `(require).fields`.
     bool enabled = 1;
 }
 
@@ -190,9 +190,9 @@ message RequireOneof {
 
     // Selects the `selection` alternative for this fixture.
     oneof selection {
-        // Stores `numeric_value` for the `RequireOneof` fixture.
+        // Supplies the numeric member of the required oneof selection.
         int32 numeric_value = 1;
-        // Stores `boolean_value` for the `RequireOneof` fixture.
+        // Supplies the boolean member of the required oneof selection.
         bool boolean_value = 2;
     }
 }

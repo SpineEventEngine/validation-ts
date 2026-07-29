@@ -151,14 +151,14 @@ message InvalidRangeTarget {
     string value = 1 [(range).value = "[0..1]"];
 }
 
-// Fixture `RangeBounds` exercises the named validation scenario.
+// Supplies the named upper bound used by a range expression.
 message RangeBounds {
-    // Stores `upper` for the `RangeBounds` fixture.
+    // Provides the upper endpoint referenced by `limits.upper`.
     int32 upper = 1;
 }
 // Fixture `RangeTextReferences` exercises `(range)`.
 message RangeTextReferences {
-    // Stores `limits` for the `RangeTextReferences` fixture.
+    // Provides the range-bound object used by the textual reference.
     RangeBounds limits = 1;
     // Validates `value` with `(range).value = "[ -1 .. limits.upper ]"`.
     int32 value = 2 [(range).value = "[ -1 .. limits.upper ]"];

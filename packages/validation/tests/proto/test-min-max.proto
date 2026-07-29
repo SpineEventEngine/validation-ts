@@ -55,33 +55,33 @@ message MinMaxRange {
     // Validates `percentage` with `(min).value = "0"`, `(max).value = "100"`.
     int32 percentage = 3 [(min).value = "0", (max).value = "100"];
 }
-// Fixture `ExclusiveBounds` exercises the named validation scenario.
+// Tests strictly exclusive numeric lower and upper bounds.
 message ExclusiveBounds {
-    // Stores `positive_value` for the `ExclusiveBounds` fixture.
+    // Requires a value strictly greater than zero.
     double positive_value = 1 [(min) = {
         value: "0.0",
         exclusive: true
     }];
-    // Stores `temperature_kelvin` for the `ExclusiveBounds` fixture.
+    // Requires a positive Kelvin temperature with a custom failure message.
     double temperature_kelvin = 2 [(min) = {
         value: "0.0",
         exclusive: true,
         error_msg: "Temperature cannot reach {other}K, but provided {value}."
     }];
-    // Stores `below_limit` for the `ExclusiveBounds` fixture.
+    // Requires a value strictly below 100.
     int32 below_limit = 3 [(max) = {
         value: "100",
         exclusive: true
     }];
 }
-// Fixture `CustomErrorMessages` exercises the named validation scenario.
+// Tests custom error messages for minimum and maximum bounds.
 message CustomErrorMessages {
-    // Stores `age` for the `CustomErrorMessages` fixture.
+    // Enforces an adult-age lower bound with a custom message.
     int32 age = 1 [(min) = {
         value: "18",
         error_msg: "Must be at least {other} years old. Provided: {value}."
     }];
-    // Stores `balance` for the `CustomErrorMessages` fixture.
+    // Enforces custom lower and upper balance messages.
     double balance = 2 [(min) = {
         value: "0.01",
         error_msg: "Balance must be at least ${other}. Current: ${value}."
@@ -118,7 +118,7 @@ message RepeatedMinMax {
 message CombinedConstraints {
     // Validates `product_id` with `(min).value = "1"`.
     int32 product_id = 1 [(min).value = "1"];
-    // Stores `price` for the `CombinedConstraints` fixture.
+    // Enforces the custom minimum price of 0.01.
     double price = 2 [
         (min) = {
             value: "0.01",
@@ -166,17 +166,17 @@ message InvalidMinTarget {
     string value = 1 [(min).value = "1"];
 }
 
-// Fixture `NumericLimits` exercises the named validation scenario.
+// Supplies numeric bounds used by reference-based minimum and maximum checks.
 message NumericLimits {
-    // Stores `lower` for the `NumericLimits` fixture.
+    // Supplies the referenced signed lower bound.
     int64 lower = 1;
-    // Stores `upper` for the `NumericLimits` fixture.
+    // Supplies the referenced floating-point upper bound.
     double upper = 2;
 }
 
 // Fixture `NumericReferences` exercises `(min)`, `(max)`.
 message NumericReferences {
-    // Stores `limits` for the `NumericReferences` fixture.
+    // Supplies the object containing named numeric bounds.
     NumericLimits limits = 1;
     // Validates `actual` with `(min).value = "limits.lower"`.
     int64 actual = 2 [(min).value = "limits.lower"];
@@ -214,9 +214,9 @@ message NumericScalarMatrix {
 
 // Fixture `CrossTypeReferences` exercises `(min)`, `(max)`.
 message CrossTypeReferences {
-    // Stores `double_bound` for the `CrossTypeReferences` fixture.
+    // Supplies the double-valued lower-bound reference.
     double double_bound = 1;
-    // Stores `int64_bound` for the `CrossTypeReferences` fixture.
+    // Supplies the 64-bit upper-bound reference.
     int64 int64_bound = 2;
     // Validates `integer_value` with `(min).value = "double_bound"`.
     int64 integer_value = 3 [(min).value = "double_bound"];

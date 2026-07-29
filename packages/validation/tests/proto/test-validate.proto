@@ -51,7 +51,7 @@ message Address {
 }
 // Fixture `OrderWithCustomError` exercises `(validate)`.
 message OrderWithCustomError {
-    // Stores `order_id` for the `OrderWithCustomError` fixture.
+    // Supplies the order identifier outside nested validation.
     int32 order_id = 1;
     // Validates `customer` with `(validate) = true`.
     Customer customer = 2 [
@@ -124,7 +124,7 @@ message ProfileWithOptionalData {
 
 // Fixture `OptionalData` exercises `(min)`.
 message OptionalData {
-    // Stores `bio` for the `OptionalData` fixture.
+    // Supplies optional biography text beside the bounded follower count.
     string bio = 1;
     // Validates `followers` with `(min).value = "0"`.
     int32 followers = 2 [(min).value = "0"];
@@ -133,7 +133,7 @@ message OptionalData {
 message PersonWithoutValidation {
     // Validates `name` with `(required) = true`.
     string name = 1 [(required) = true];
-    // Stores `address` for the `PersonWithoutValidation` fixture.
+    // Supplies an address control that intentionally skips nested validation.
     Address address = 2;
 }
 // Fixture `ProductOrder` exercises `(min)`, `(validate)`, `(required)`.
@@ -168,7 +168,7 @@ message ProductDetails {
 message Review {
     // Validates `rating` with `(range).value = "[1..5]"`.
     int32 rating = 1 [(range).value = "[1..5]"];
-    // Stores `comment` for the `Review` fixture.
+    // Supplies free-form review text outside the rating constraint.
     string comment = 2;
 }
 
@@ -187,9 +187,9 @@ message ContainerWithEmptyMessage {
     EmptyValidated empty = 2 [(validate) = true];
 }
 
-// Fixture `EmptyValidated` exercises the named validation scenario.
+// Provides a recursively validated child with no validation options.
 message EmptyValidated {
-    // Stores `note` for the `EmptyValidated` fixture.
+    // Supplies unconstrained text in the empty validated child.
     string note = 1;
 }
 // Fixture `ProjectWithTasks` exercises `(required)`, `(validate)`, `(distinct)`.
@@ -241,18 +241,18 @@ message ValidateDisabled {
     Leaf leaf = 1 [(validate) = false];
 }
 
-// Fixture `ValidateUnsupportedTarget` exercises `(validate)`.
+// Deliberately applies `(validate)` to an unsupported string target.
 message ValidateUnsupportedTarget {
-    // Validates `value` with `(validate) = true`.
+    // Is the unsupported string target for `(validate)`.
     string value = 1 [(validate) = true];
 }
 
 // Fixture `RequireLeaf` exercises `(require)`.
 message RequireLeaf {
     option (require).fields = "value";
-    // Stores `value` for the `RequireLeaf` fixture.
+    // Supplies the `(require).fields` operand named `value`.
     string value = 1;
-    // Stores `marker` for the `RequireLeaf` fixture.
+    // Supplies a non-required marker control.
     string marker = 2;
 }
 
@@ -261,10 +261,10 @@ message ChoiceLeaf {
     // Selects the `selection` alternative for this fixture.
     oneof selection {
         option (choice).required = true;
-        // Stores `value` for the `ChoiceLeaf` fixture.
+        // Supplies the selected oneof value required by `(choice)`.
         string value = 1;
     }
-    // Stores `marker` for the `ChoiceLeaf` fixture.
+    // Supplies a marker outside the required oneof choice.
     string marker = 2;
 }
 

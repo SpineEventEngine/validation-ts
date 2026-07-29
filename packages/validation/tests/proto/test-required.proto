@@ -32,7 +32,7 @@ import "spine/options.proto";
 message RequiredFields {
     // Validates `name` with `(required) = true`.
     string name = 1 [(required) = true];
-    // Stores `age` for the `RequiredFields` fixture.
+    // Provides an optional scalar control beside required fields.
     int32 age = 2;
     // Validates `address` with `(required) = true`.
     Address address = 3 [(required) = true];
@@ -46,22 +46,22 @@ message RequiredFields {
     map<string, int32> scores = 7 [(required) = true];
 }
 
-// Deliberately tests invalid configuration `(required) = true`.
+// Deliberately applies `(required)` to an unsupported int32 target.
 message InvalidRequiredNumeric {
-    // Validates `age` with `(required) = true`.
+    // Is the unsupported int32 target for `(required)`.
     int32 age = 1 [(required) = true];
 }
 
-// Deliberately tests invalid configuration `(required) = true`.
+// Deliberately applies `(required)` to an unsupported bool target.
 message InvalidRequiredBoolean {
-    // Validates `enabled` with `(required) = true`.
+    // Is the unsupported bool target for `(required)`.
     bool enabled = 1 [(required) = true];
 }
-// Fixture `Address` exercises the named validation scenario.
+// Provides nested address input for the required-message case.
 message Address {
-    // Stores `street` for the `Address` fixture.
+    // Supplies the unconstrained street component of the address.
     string street = 1;
-    // Stores `city` for the `Address` fixture.
+    // Supplies the unconstrained city component of the address.
     string city = 2;
 }
 // Enum `Status` supplies values for this fixture.
@@ -87,10 +87,10 @@ message CustomErrorMessages {
         (if_missing).error_msg = "Email address must be provided."
     ];
 }
-// Fixture `OptionalFields` exercises the named validation scenario.
+// Provides fields that remain optional without `(required)`.
 message OptionalFields {
-    // Stores `nickname` for the `OptionalFields` fixture.
+    // Supplies an optional text control.
     string nickname = 1;
-    // Stores `score` for the `OptionalFields` fixture.
+    // Supplies an optional numeric control.
     int32 score = 2;
 }
