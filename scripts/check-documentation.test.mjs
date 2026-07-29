@@ -9,6 +9,7 @@ function createFixture() {
   const root = mkdtempSync(join(tmpdir(), "validation-docs-"));
   mkdirSync(join(root, "docs"));
   mkdirSync(join(root, "packages", "validation", "src"), { recursive: true });
+  mkdirSync(join(root, "packages", "validation", "docs"), { recursive: true });
   mkdirSync(join(root, "packages", "example", "proto"), { recursive: true });
   writeFileSync(
     join(root, "packages", "validation", "src", "index.ts"),
@@ -26,6 +27,7 @@ function createFixture() {
     join(root, "packages", "validation", "src", "validation.ts"),
     "/** Current ${field.path}. */\n",
   );
+  writeFileSync(join(root, "packages", "validation", "README.md"), "# Package\n");
   writeFileSync(join(root, "docs", "target.md"), "# Target\n");
   writeFileSync(join(root, "packages", "example", "proto", "user.proto"), 'syntax = "proto3";\n');
   writeFileSync(
@@ -37,6 +39,10 @@ function createFixture() {
 
 function writeReadme(root, content) {
   writeFileSync(join(root, "README.md"), content);
+}
+
+function withPublicImport(content) {
+  return `${content}\n\n\`\`\`typescript\nimport { aliasedValue } from "@spine-event-engine/validation";\nconsole.log(aliasedValue);\n\`\`\``;
 }
 
 function expectFailure(root, expression) {
@@ -57,7 +63,7 @@ function expectFailure(root, expression) {
         "```",
       ].join("\n"),
     );
-    assert.equal(checkDocumentation({ root }).length, 2);
+    assert.equal(checkDocumentation({ root }).length, 3);
 
     writeFileSync(
       join(root, "packages", "validation", "src", "validation.ts"),
@@ -89,7 +95,7 @@ function expectFailure(root, expression) {
       root,
       '```typescript\nimport { aliasedValue } from "@spine-event-engine/validation";\nconsole.log(aliasedValue);\n```',
     );
-    assert.equal(checkDocumentation({ root }).length, 2);
+    assert.equal(checkDocumentation({ root }).length, 3);
 
     writeFileSync(
       join(root, "packages", "validation", "src", "validation.ts"),
@@ -123,7 +129,7 @@ function expectFailure(root, expression) {
       root,
       '```typescript\nimport { aliasedValue, type PublicType as PublicAlias } from "@spine-event-engine/validation";\nconst valid: PublicAlias = {} as PublicAlias;\nconsole.log(aliasedValue, valid);\n```',
     );
-    assert.equal(checkDocumentation({ root }).length, 2);
+    assert.equal(checkDocumentation({ root }).length, 3);
 
     writeReadme(
       root,
@@ -139,6 +145,63 @@ function expectFailure(root, expression) {
 
     writeReadme(root, "[missing](docs/missing.md)");
     expectFailure(root, /Broken local link docs\/missing.md/);
+
+    writeReadme(
+      root,
+      withPublicImport(
+        [
+          "```sh",
+          "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf",
+          "pnpm add @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf",
+          "```",
+        ].join("\n"),
+      ),
+    );
+    expectFailure(root, /exactly one executable command/);
+
+    writeReadme(
+      root,
+      withPublicImport(
+        [
+          "## Install",
+          "```sh",
+          "pnpm add @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf",
+          "```",
+        ].join("\n"),
+      ),
+    );
+    expectFailure(root, /separately labelled alternative/);
+
+    writeReadme(
+      root,
+      withPublicImport(
+        [
+          "## Install",
+          "```sh",
+          "pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf",
+          "```",
+          "## Alternative: exact preview",
+          "```sh",
+          "pnpm add @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf",
+          "```",
+        ].join("\n"),
+      ),
+    );
+    writeFileSync(
+      join(root, "packages", "validation", "docs", "architecture.md"),
+      "# Architecture\n",
+    );
+    expectFailure(root, /link back to the package README/);
+    writeFileSync(
+      join(root, "packages", "validation", "docs", "architecture.md"),
+      "# Architecture\n\nSee the [package guide](../README.md).\n",
+    );
+
+    writeReadme(
+      root,
+      withPublicImport("A historical implementation task is not reader documentation."),
+    );
+    expectFailure(root, /Prohibited historical workflow language/);
 
     writeReadme(root, "{field}");
     expectFailure(root, /Stale unnamespaced placeholder/);

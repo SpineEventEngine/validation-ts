@@ -2,7 +2,7 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["packages/validation/src/index.ts"],
   "tsconfig": "packages/validation/tsconfig.json",
-  "out": "docs/api/reference",
+  "out": "packages/validation/docs/api/reference",
   "exclude": ["**/dist/**", "**/coverage/**", "**/*.test.ts"],
   "cleanOutputDir": true,
   "highlightLanguages": ["bash", "js", "json", "protobuf", "typescript", "yaml"],

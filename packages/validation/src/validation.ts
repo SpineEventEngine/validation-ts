@@ -175,7 +175,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * Proto field names, and a descriptor-packed offending value when one exists.
  * Their diagnostic is always present; an option without a custom or default
  * message produces an empty template string. `(pattern)` is the documented
- * legacy exception; see [the pattern section](../../../docs/validation-contract.md#implemented-options).
+ * legacy exception; see [the pattern section](../docs/validation-contract.md#implemented-options).
  *
  * Currently supported validation options:
  * - `(required)` — validates supported presence targets
@@ -195,7 +195,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  *
  * @example
  * ```typescript
- * import { formatViolations, validate } from '@spine-event-engine/validation';
+ * import { validate, Violations } from '@spine-event-engine/validation';
  * import { UserSchema } from './generated/user_pb.js';
  * import { create } from '@bufbuild/protobuf';
  *
@@ -203,7 +203,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * const violations = validate(UserSchema, user);
  *
  * if (violations.length > 0) {
- *     console.log('Validation failed:', formatViolations(violations));
+ *     console.log('Validation failed:', Violations.formatAll(violations));
  * }
  * ```
  */
@@ -306,29 +306,6 @@ const TemplateStrings = {
 };
 
 /**
- * Formats an array of constraint violations into a human-readable string.
- *
- * Each violation is formatted as: `<index>. <typeName>.<fieldPath>: <message>`
- *
- * @param violations Array of constraint violations to format.
- * @returns Formatted string describing all violations, or "No violations" if empty.
- *
- * @example
- * ```typescript
- * import { create } from '@bufbuild/protobuf';
- * import { formatViolations, validate } from '@spine-event-engine/validation';
- * import { UserSchema } from './generated/user_pb.js';
- *
- * const user = create(UserSchema, { name: '', email: '' });
- * const violations = validate(UserSchema, user);
- * console.log(formatViolations(violations));
- * // Output:
- * // 1. example.User.name: A value must be set.
- * // 2. example.User.email: A value must be set.
- * ```
- */
-
-/**
  * Utility object for working with constraint violations.
  *
  * Provides helper methods to extract formatted information from `ConstraintViolation` objects.
@@ -349,9 +326,23 @@ const TemplateStrings = {
  * ```
  */
 export const Violations = {
-  /** Processes inputs for `formatAll`.
-   * @param violations Supplies the violations input.
-   * @returns Returns the computed result.
+  /**
+   * Formats an array of constraint violations into a human-readable string.
+   *
+   * Each violation is formatted as `<index>. <typeName>.<fieldPath>: <message>`.
+   *
+   * @param violations The constraint violations to format.
+   * @returns A formatted list, or `"No violations"` for an empty collection.
+   *
+   * @example
+   * ```typescript
+   * import { create } from '@bufbuild/protobuf';
+   * import { validate, Violations } from '@spine-event-engine/validation';
+   * import { UserSchema } from './generated/user_pb.js';
+   *
+   * const user = create(UserSchema, { name: '', email: '' });
+   * console.log(Violations.formatAll(validate(UserSchema, user)));
+   * ```
    */
   formatAll(violations: ConstraintViolation[]): string {
     if (violations.length === 0) return "No violations";

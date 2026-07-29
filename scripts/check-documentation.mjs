@@ -15,7 +15,12 @@ const stalePlaceholder =
   /(?:\$\{(?:value|other|field|regex)\}|(?<!\$)\{(?:value|other|field|regex)\})/;
 const localLink = /\[[^\]]*\]\(([^)#]+)(?:#[^)]+)?\)/g;
 const typeScriptFence = /```(?:ts|typescript)\s*\r?\n([\s\S]*?)```/gi;
+const shellFence = /```(?:bash|sh|shell)\s*\r?\n([\s\S]*?)```/gi;
 const publicPackage = "@spine-event-engine/validation";
+const previewInstall = /(?:pnpm|npm)\s+(?:add|install)\s+[^\n]*@spine-event-engine\/validation@/;
+const exactPreview = /@spine-event-engine\/validation@\d+\.\d+\.\d+-snapshot\.\d+/;
+const historicalWorkflowLanguage =
+  /\b(?:implementation[- ]history|chat(?:\s+transcript)?|task(?:\s+(?:record|log|branch|history))?)\b/i;
 
 /** Returns maintained Markdown files, excluding generated TypeDoc and task-history records. */
 export function findMaintainedMarkdown(root) {
@@ -28,9 +33,85 @@ export function findMaintainedMarkdown(root) {
       else if (extname(entry.name) === ".md") markdown.push(path);
     }
   };
-  visit(resolve(root, "docs"));
-  visit(resolve(root, "packages"));
+  for (const directory of [resolve(root, "docs"), resolve(root, "packages")]) {
+    if (existsSync(directory)) visit(directory);
+  }
   return markdown;
+}
+
+function executableLines(fence) {
+  return fence.split(/\r?\n/).filter((line) => line.trim() && !line.trim().startsWith("#"));
+}
+
+function checkPreviewInstallSequences(content, file) {
+  for (const match of content.matchAll(shellFence)) {
+    const fence = match[1];
+    if (!previewInstall.test(fence)) continue;
+    const commands = executableLines(fence);
+    if (commands.length !== 1)
+      throw new Error(
+        `Quick-install sequence in ${file} must contain exactly one executable command`,
+      );
+    if (exactPreview.test(fence)) {
+      const beforeFence = content.slice(0, match.index);
+      const headings = [...beforeFence.matchAll(/^#{1,6}\s+(.+)$/gm)];
+      const precedingHeading = headings.at(-1)?.[1] ?? "";
+      if (!/alternative/i.test(precedingHeading))
+        throw new Error(
+          `Exact preview install in ${file} must be in a separately labelled alternative section`,
+        );
+    }
+  }
+}
+
+function checkPackageDocumentationLinks(root) {
+  const docs = resolve(root, "packages/validation/docs");
+  if (!existsSync(docs)) return;
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (extname(entry.name) === ".md") {
+        const content = readFileSync(path, "utf8");
+        if (!/\]\(\.\.\/README\.md(?:#[^)]+)?\)/.test(content))
+          throw new Error(`Package documentation ${path} must link back to the package README`);
+      }
+    }
+  };
+  visit(docs);
+}
+
+function checkSourceTsDoc(root, index, publicExports) {
+  const sourceRoots = [
+    resolve(root, "packages/validation/src"),
+    resolve(root, "packages/example/src"),
+  ];
+  let publicImportCount = 0;
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.name === "generated") continue;
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (extname(entry.name) === ".ts") {
+        const source = readFileSync(path, "utf8");
+        for (const comment of source.matchAll(/\/\*\*([\s\S]*?)\*\//g)) {
+          if (historicalWorkflowLanguage.test(comment[1]))
+            throw new Error(`Prohibited historical workflow language in ${path}`);
+        }
+        publicImportCount += checkTypeScriptFences(
+          tsDocTypeScriptFences(source),
+          path,
+          root,
+          index,
+          publicExports,
+        );
+      }
+    }
+  };
+  for (const sourceRoot of sourceRoots) {
+    if (existsSync(sourceRoot)) visit(sourceRoot);
+  }
+  return publicImportCount;
 }
 
 /** Discovers public value and type names from the package entry point via the TypeScript AST. */
@@ -136,8 +217,11 @@ export function checkDocumentation({ root }) {
 
   for (const file of markdown) {
     const content = readFileSync(file, "utf8");
+    if (historicalWorkflowLanguage.test(content))
+      throw new Error(`Prohibited historical workflow language in ${file}`);
     if (stalePlaceholder.test(content))
       throw new Error(`Stale unnamespaced placeholder in ${file}`);
+    checkPreviewInstallSequences(content, file);
     publicImportCount += checkTypeScriptFences(
       [...content.matchAll(typeScriptFence)].map((fence) => fence[1]),
       file,
@@ -148,10 +232,13 @@ export function checkDocumentation({ root }) {
     for (const match of content.matchAll(localLink)) {
       const target = match[1];
       if (/^[a-z]+:/i.test(target)) continue;
+      if (target.startsWith("api/reference/")) continue;
       if (!existsSync(resolve(dirname(file), target)))
         throw new Error(`Broken local link ${target} in ${file}`);
     }
   }
+
+  checkPackageDocumentationLinks(root);
 
   const publicTsDoc = resolve(root, "packages/validation/src/validation.ts");
   const publicTsDocSource = readFileSync(publicTsDoc, "utf8");
@@ -164,6 +251,7 @@ export function checkDocumentation({ root }) {
     index,
     publicExports,
   );
+  publicImportCount += checkSourceTsDoc(root, index, publicExports);
 
   for (const proto of [
     "packages/example/proto/user.proto",

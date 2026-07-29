@@ -4,7 +4,7 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
-docs/api/reference/
+packages/validation/docs/api/reference/
 *.tgz
 
 # Generated code (Protobuf)

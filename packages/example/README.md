@@ -1,50 +1,33 @@
 # Spine Validation TypeScript example
 
 An executable Protobuf-ES consumer of
-`@spine-event-engine/validation`, not a second validation implementation.
+`@spine-event-engine/validation`, not a second validator implementation.
 
-## What This Example Shows
+It demonstrates generated user and product schemas, formatted diagnostics,
+duplicate-tag equality classes, leaf-only nested failures, known
+`google.protobuf.Any` payloads, and accepted/rejected `(when)` timestamps.
+Runnable schemas intentionally contain no invalid option targets.
 
-- Defining valid project-owned Protobuf messages with Spine options.
-- Validating generated User and Product schemas at runtime.
-- Handling violations through inspectable scenario results.
-- Inspectable scenario results behind a console adapter, using real Buf-generated schemas.
-- User presence and duplicate-tag equality classes; Product exact numeric minimum and nested leaf-only paths.
-- Known `google.protobuf.Any` payload validation and accepted/rejected `(when)` timestamp scenarios. The runnable schemas intentionally contain no invalid option targets.
+## Run
 
-## Quick Start
+From the workspace root:
 
-### Install dependencies
-
-```bash
+```sh
 corepack pnpm install --frozen-lockfile
-```
-
-### Run the example
-
-```bash
 pnpm example
 ```
 
-This command builds the validation workspace package, generates schemas, and
-then executes the example. It will:
+The command generates schemas, builds the package and example, then prints
+eight deterministic scenarios. Run the example tests with:
 
-1. Generate TypeScript code from `.proto` files.
-2. Build the TypeScript code.
-3. Run the example showing eight deterministic scenarios, including past/future time validation.
-
-## Test
-
-```bash
+```sh
 pnpm test:example
 ```
 
-The test asserts root type names, complete field paths, formatted diagnostics, duplicate representation, leaf-only nesting, exact-bound acceptance, and known `Any` unpacking. Invalid option targets belong only in test fixtures, never these runnable declarations.
-
-For setup and option semantics, see the [user guide](../../docs/user-guide.md)
-and [validation contract](../../docs/validation-contract.md). For contribution
-rules, see [contributing](../../docs/contributing.md).
+For consumer setup and option semantics, start with the
+[package guide](../validation/README.md). Repository-only development material
+is in the [development reference](../validation/docs/README.md).
 
 ## License
 
-Apache License 2.0.
+Apache-2.0.

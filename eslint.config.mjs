@@ -8,7 +8,7 @@ export default tseslint.config(
       "**/dist/**",
       "**/coverage/**",
       ".worktrees/**",
-      "docs/api/reference/**",
+      "packages/validation/docs/api/reference/**",
       "**/generated/**",
       "eslint.config.mjs",
     ],

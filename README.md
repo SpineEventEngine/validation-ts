@@ -1,167 +1,39 @@
-# Spine Validation — TypeScript Client Library
+# Spine Validation for TypeScript
 
-Requires Node.js 24 or later; development and CI pin and test Node.js 24.18.0.
+`@spine-event-engine/validation` validates Protobuf-ES v2 messages against
+Spine Validation options. It is an experimental ESM package for Node.js 24 or
+later.
 
-A TypeScript validation library for Protobuf messages using [Spine Validation](https://github.com/SpineEventEngine/validation/) options,
-built on [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2).
+Start with the [package guide](packages/validation/README.md) for installation,
+Buf setup, API use, option behavior, and limitations. The executable
+[example](packages/example/README.md) demonstrates generated schemas in use.
 
-> **🔧 This library is in its experimental stage, the public API should not be considered stable.**
+## Quick install
 
-## 💡 Why Use This?
-
-### For Spine Event Engine Users
-
-This library lets you:
-
-- ✅ **Reuse the same validation rules** in your frontend that you defined in your backend.
-- ✅ **Maintain a single source of truth** — validation logic lives in your `.proto` files.
-- ✅ **Keep frontend and backend validation in sync** automatically.
-- ✅ **Get type-safe validation** with full TypeScript support.
-- ✅ **Use error-message templates** defined by the same Proto options.
-
-### For New Users
-
-Even if you're not using Spine Event Engine, this library provides a way
-to add runtime validation to your Protobuf-based TypeScript applications:
-
-- ✅ **Define validation in `.proto` files** using declarative [Spine Validation options](https://github.com/SpineEventEngine/base-libraries/blob/master/base/src/main/proto/spine/options.proto).
-- ✅ **Type-safe, runtime validation** for your Protobuf messages.
-- ✅ **Clear, customizable error messages** for better UX.
-- ✅ **Works with Protobuf-ES v2** and modern tooling.
-
-## ✨ Features
-
-**Comprehensive Validation Support**
-
-- **`(required)`** — Validate the supported Proto-defined presence targets.
-- **`(pattern)`** — Regex validation for strings.
-- **`(min)` / `(max)`** — Numeric bounds with inclusive/exclusive support.
-- **`(range)`** — Bounded ranges with bracket notation `(min..max]`.
-- **`(distinct)`** — Enforce uniqueness in repeated fields.
-- **`(validate)`** — Recursive nested message validation.
-- **`(goes)`** — Field dependency constraints.
-- **`(require)`** — Complex required field combinations with boolean logic.
-- **`(choice)`** — Require that a `oneof` group has at least one field set.
-- **`(when)`** — Validate frozen Spine Time values against past/future bounds; import [`spine/time_options.proto`](packages/validation/proto/spine/time_options.proto), plus [`spine/time/time.proto`](packages/validation/proto/spine/time/time.proto) for Spine temporal field types.
-
-**Developer Experience**
-
-- 🚀 Full TypeScript type safety.
-- 📝 Custom error messages.
-- 🧪 Comprehensive contract and regression tests.
-- 📚 Extensive documentation.
-- 🎨 Clean, readable error formatting.
-
-### ⚠️ Known Limitations
-
-- **`(set_once)`** — Not currently supported. This option requires state tracking across multiple validations,
-  which is outside the scope of single-message validation.
-- **`(pattern)`** — Uses ECMAScript `RegExp`; the frozen Proto contract uses Java `Pattern` as its syntax
-  baseline. See the [package regular-expression limitation](packages/validation/README.md#regular-expressions).
-
-## 🚀 Getting Started
-
-See the [documentation hub](docs/README.md), [package guide](packages/validation/README.md), and [executable example](packages/example/README.md).
-
-**Quick install:**
-
-```bash
-npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
+```sh
+pnpm add @spine-event-engine/validation@snapshot @bufbuild/protobuf
 ```
 
-The `snapshot` dist-tag moves as preview releases are published; use the exact
-version command for a reproducible install.
+### Alternative: exact preview version
 
----
-
-## 📦 What's Included
-
-This repository is structured as a pnpm workspace:
-
-```
-validation-ts/
-├── packages/
-│   ├── validation/              # 📦 Main validation package
-│   │   ├── src/                 # Source code
-│   │   ├── tests/               # Contract and regression tests
-│   │   ├── proto/               # Spine validation proto definitions
-│   │   └── README.md            # Full package documentation
-│   │
-│   └── example/                 # 🎯 Example project
-│       ├── proto/               # Example proto files
-│       ├── src/                 # Example usage code
-│       └── README.md            # Example documentation
-│
-└── README.md                    # You are here
+```sh
+pnpm add @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 ```
 
-## 🎓 Documentation
+The moving `snapshot` tag follows preview releases. The exact version is useful
+when reproducibility matters.
 
-See the [package-level README](packages/validation/README.md) for more details.
+## Development
 
----
+Repository-only development material lives in
+[packages/validation/docs](packages/validation/docs/README.md). The workspace
+uses pnpm, Vitest, Buf, TypeScript, and Node.js 24:
 
-## 🛠️ Development
-
-### Setup
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd validation-ts
-
-# Install the committed dependency graph
+```sh
 corepack pnpm install --frozen-lockfile
-```
-
-### Build & Test
-
-```bash
-# Run the complete local and CI quality gate
 pnpm verify
 ```
 
-### Workspace Scripts
+## License
 
-| Command        | Description                                                                           |
-| -------------- | ------------------------------------------------------------------------------------- |
-| `pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
-| `pnpm build`   | Build the package and example                                                         |
-| `pnpm test`    | Run validation-package and executable-example Vitest tests                            |
-| `pnpm example` | Run the example project                                                               |
-
----
-
-## 🤝 Contributing
-
-Development follows the permanent workflow in
-[`AGENTS.md`](AGENTS.md) and
-[`build-protocol/README.md`](build-protocol/README.md). Changes
-integrate through `dev`; `master` remains the automatic publishing branch.
-
----
-
-## 📄 License
-
-Apache 2.0.
-
----
-
-## 🔗 Related Projects
-
-- [Protobuf-ES](https://github.com/bufbuild/protobuf-es) — Protocol Buffers for ECMAScript
-- [Buf](https://buf.build/) — Modern Protobuf tooling
-
----
-
-<div align="center">
-
-**Made with ❤️ for the Spine Event Engine ecosystem.**
-
-[Documentation](packages/validation/README.md) · [Examples](packages/example) · [Report Bug](https://github.com/SpineEventEngine/validation-ts/issues)
-
-</div>
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Protobuf-ES](https://img.shields.io/badge/protobuf--es-v2-green.svg)](https://github.com/bufbuild/protobuf-es)
+Apache-2.0.
