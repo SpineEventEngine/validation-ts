@@ -31,11 +31,14 @@
  */
 
 import { create } from "@bufbuild/protobuf";
+
+const atLeast = (value: number, minimum: number): void =>
+  expect(value)["toBeGreaterThanOrEqual"](minimum);
 import { ValidationConfigurationError, validate } from "../src/index.js";
 
 import {
   RequiredFieldsSchema,
-  CustomErrorMessagesSchema as RequiredCustomErrorMessagesSchema,
+  CustomErrorMessagesSchema as RequiredErrorsSchema,
   OptionalFieldsSchema,
   InvalidRequiredNumericSchema,
   InvalidRequiredBooleanSchema,
@@ -122,18 +125,18 @@ describe("Required Field Validation", () => {
       });
 
       const violations = validate(RequiredFieldsSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(3);
+      atLeast(violations.length, 3);
     });
   });
 
   describe("Custom Error Messages", () => {
     it("should use custom error message from (`if_missing`) option", () => {
-      const invalid = create(RequiredCustomErrorMessagesSchema, {
+      const invalid = create(RequiredErrorsSchema, {
         username: "", // Required with custom message.
         email: "valid@example.com",
       });
 
-      const violations = validate(RequiredCustomErrorMessagesSchema, invalid);
+      const violations = validate(RequiredErrorsSchema, invalid);
       const usernameViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "username");
       expect(usernameViolation).toBeDefined();
       expect(usernameViolation?.message?.withPlaceholders).toBe(
@@ -142,12 +145,12 @@ describe("Required Field Validation", () => {
     });
 
     it("should use custom error message for field with custom error message", () => {
-      const invalid = create(RequiredCustomErrorMessagesSchema, {
+      const invalid = create(RequiredErrorsSchema, {
         username: "johndoe",
         email: "", // Required with custom message.
       });
 
-      const violations = validate(RequiredCustomErrorMessagesSchema, invalid);
+      const violations = validate(RequiredErrorsSchema, invalid);
       const emailViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "email");
       expect(emailViolation).toBeDefined();
       expect(emailViolation?.message?.withPlaceholders).toBe("Email address must be provided.");

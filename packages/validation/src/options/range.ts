@@ -26,6 +26,13 @@ import { NumericValues, type ResolvedBound } from "./numeric.js";
 /** Validates `(range)` for one field in orchestration order. */
 /** Owns `(range)` option validation. */
 export const Range = {
+  /** Processes inputs for `validate`.
+   * @param context Supplies the context input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param field Supplies the field input.
+   * @param violations Supplies the violations input.
+   */
   validate(
     context: ValidationContext,
     schema: DescMessage,
@@ -62,6 +69,14 @@ export const Range = {
     }
   },
 
+  /** Processes inputs for `parse`.
+   * @param declaration Supplies the declaration input.
+   * @param scalar Supplies the scalar input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param field Supplies the field input.
+   * @returns Returns the computed result.
+   */
   parse(
     declaration: string,
     scalar: ReturnType<typeof NumericValues.assertTarget>,
@@ -91,6 +106,12 @@ export const Range = {
     };
   },
 
+  /** Processes inputs for `renderBound`.
+   * @param raw Supplies the raw input.
+   * @param token Supplies the token input.
+   * @param bound Supplies the bound input.
+   * @returns Returns the computed result.
+   */
   renderBound(raw: string, token: string, bound: ResolvedBound): string {
     return bound.display === token ? raw : raw.replace(token, bound.display);
   },

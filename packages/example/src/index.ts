@@ -2,17 +2,23 @@
 import { Violations } from "@spine-event-engine/validation";
 import { ExampleScenarios } from "./scenarios.js";
 
+/** Describes the purpose of the `ConsoleOutput` member. */
 const ConsoleOutput = {
-  displayViolations(violations: ReturnType<typeof ExampleScenarios.run>[number]["violations"]): void {
-  if (violations.length === 0) {
-    console.log("✓ No violations - message is valid!");
-    return;
-  }
-  violations.forEach((violation, index) => {
-    console.log(
-      `${index + 1}. ${violation.typeName}.${Violations.failurePath(violation)}: ${Violations.formatMessage(violation)}`,
-    );
-  });
+  /** Processes inputs for `displayViolations`.
+   * @param violations Supplies the violations input.
+   */
+  displayViolations(
+    violations: ReturnType<typeof ExampleScenarios.run>[number]["violations"],
+  ): void {
+    if (violations.length === 0) {
+      console.log("✓ No violations - message is valid!");
+      return;
+    }
+    violations.forEach((violation, index) => {
+      console.log(
+        `${index + 1}. ${violation.typeName}.${Violations.failurePath(violation)}: ${Violations.formatMessage(violation)}`,
+      );
+    });
   },
 };
 

@@ -51,6 +51,13 @@ import type { PatternOption } from "../generated/spine/options_pb.js";
  */
 /** Owns descriptor-defined `(pattern)` validation and its private diagnostics. */
 export const Pattern = {
+  /** Processes inputs for `createViolation`.
+   * @param typeName Supplies the typeName input.
+   * @param fieldName Supplies the fieldName input.
+   * @param fieldValue Supplies the fieldValue input.
+   * @param violationMessage Supplies the violationMessage input.
+   * @returns Returns the computed result.
+   */
   createViolation(
     typeName: string,
     fieldName: string,
@@ -83,6 +90,12 @@ export const Pattern = {
    * @param regex The regular expression pattern.
    * @param patternOption The pattern option object with optional modifiers.
    * @returns `true` if the value matches the pattern, `false` otherwise.
+   */
+  /** Processes inputs for `validateValue`.
+   * @param value Supplies the value input.
+   * @param regex Supplies the regex input.
+   * @param patternOption Supplies the patternOption input.
+   * @returns Returns the computed result.
    */
   validateValue(value: string, regex: string, patternOption: PatternOption): boolean {
     if (typeof value !== "string") {
@@ -131,6 +144,11 @@ export const Pattern = {
    * @param schema The message schema containing field descriptors.
    * @param message The message instance to validate.
    * @param violations Array to collect constraint violations.
+   */
+  /** Processes inputs for `validate`.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param violations Supplies the violations input.
    */
   validate<S extends DescMessage>(
     schema: S,

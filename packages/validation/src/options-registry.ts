@@ -77,7 +77,9 @@ const optionRegistry = {
 /**
  * Type representing the names of all registered options.
  */
+/** Describes the purpose of the `OptionName` member. */
 export type OptionName = keyof typeof optionRegistry;
+/** Describes the purpose of the `OptionRegistry` member. */
 type OptionRegistry = typeof optionRegistry;
 
 /**
@@ -87,7 +89,12 @@ type OptionRegistry = typeof optionRegistry;
  * @returns The registered option extension.
  * @internal
  */
+/** Describes the purpose of the `ValidationOptions` member. */
 export const ValidationOptions = {
+  /** Processes inputs for `get`.
+   * @param name Supplies the name input.
+   * @returns Returns the computed result.
+   */
   get<N extends OptionName>(name: N): OptionRegistry[N] {
     return optionRegistry[name];
   },

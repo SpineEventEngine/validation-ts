@@ -39,7 +39,6 @@ export {
   type ValidationConfigurationErrorInit,
 } from "./validation-configuration-error.js";
 
-
 export type {
   ConstraintViolation,
   ValidationError,

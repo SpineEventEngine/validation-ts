@@ -23,21 +23,31 @@ import { scalarEquals } from "@bufbuild/protobuf/reflect";
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import {
   default_message,
-  IfHasDuplicatesOptionSchema,
+  IfHasDuplicatesOptionSchema as DuplicatesOptionSchema,
   type IfHasDuplicatesOption,
 } from "../generated/spine/options_pb.js";
 import { ValidationOptions } from "../options-registry.js";
 import { ViolationFactory, MessageFields, ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
+/** Describes the purpose of the `EqualityClass` member. */
 interface EqualityClass {
+  /** Describes the purpose of the `representative` member. */
   representative: unknown;
+  /** Describes the purpose of the `count` member. */
   count: number;
 }
 
 /** Owns descriptor-defined `(distinct)` validation and its private formatting helpers. */
 export const Distinct = {
   /** Validates `(distinct)` for one field in deterministic orchestration order. */
+  /** Processes inputs for `validate`.
+   * @param context Supplies the context input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param field Supplies the field input.
+   * @param violations Supplies the violations input.
+   */
   validate(
     context: ValidationContext,
     schema: DescMessage,
@@ -79,7 +89,7 @@ export const Distinct = {
       violations.push(
         ViolationFactory.create(context.atField(field), field, duplicate.representative, {
           customMessage: custom?.errorMsg || undefined,
-          defaultMessage: getOption(IfHasDuplicatesOptionSchema, default_message),
+          defaultMessage: getOption(DuplicatesOptionSchema, default_message),
           placeholders: {
             "field.value": Distinct.formatCollection(collection),
             "field.duplicates": Distinct.formatCollection([duplicate.representative]),
@@ -90,18 +100,34 @@ export const Distinct = {
   },
 
   /** Validates every field for internal callers outside orchestration. */
+  /** Processes inputs for `validateAll`.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param violations Supplies the violations input.
+   */
   validateAll(schema: DescMessage, message: Message, violations: ConstraintViolation[]): void {
     const context = new ValidationContext(schema.typeName);
     for (const field of schema.fields)
       Distinct.validate(context, schema, message, field, violations);
   },
 
+  /** Processes inputs for `collectionValues`.
+   * @param field Supplies the field input.
+   * @param collection Supplies the collection input.
+   * @returns Returns the computed result.
+   */
   collectionValues(field: DescField, collection: unknown): unknown[] {
     if (field.fieldKind === "list") return Array.isArray(collection) ? collection : [];
     if (collection === null || typeof collection !== "object") return [];
     return Object.values(collection);
   },
 
+  /** Processes inputs for `valuesAreEqual`.
+   * @param field Supplies the field input.
+   * @param left Supplies the left input.
+   * @param right Supplies the right input.
+   * @returns Returns the computed result.
+   */
   valuesAreEqual(field: DescField, left: unknown, right: unknown): boolean {
     if (field.fieldKind === "list") {
       if (field.listKind === "scalar")
@@ -118,15 +144,27 @@ export const Distinct = {
     return equals(field.message, left as never, right as never);
   },
 
+  /** Processes inputs for `diagnostic`.
+   * @param field Supplies the field input.
+   * @returns Returns the computed result.
+   */
   diagnostic(field: DescField): IfHasDuplicatesOption | undefined {
     const extension = ValidationOptions.get("if_has_duplicates");
     return hasOption(field, extension) ? getOption(field, extension) : undefined;
   },
 
+  /** Processes inputs for `formatCollection`.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   formatCollection(value: unknown): string {
     return Distinct.formatValue(value);
   },
 
+  /** Processes inputs for `formatValue`.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   formatValue(value: unknown): string {
     if (value instanceof Uint8Array) return Distinct.bytesToHex(value);
     if (typeof value === "bigint") return value.toString();
@@ -139,6 +177,10 @@ export const Distinct = {
     return String(value);
   },
 
+  /** Processes inputs for `bytesToHex`.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   bytesToHex(value: Uint8Array): string {
     return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
   },

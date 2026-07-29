@@ -18,36 +18,53 @@ import { create, equals, ScalarType } from "@bufbuild/protobuf";
 import type { DescField, DescOneof, Message } from "@bufbuild/protobuf";
 import { MessageFields } from "./validation-contract.js";
 
+/** Describes the purpose of the `Presence` member. */
 export const Presence = {
+  /** Processes inputs for `supports`.
+   * @param field Supplies the field input.
+   * @returns Returns the computed result.
+   */
   supports(field: DescField): boolean {
-  return (
-    field.fieldKind === "message" ||
-    field.fieldKind === "enum" ||
-    field.fieldKind === "list" ||
-    field.fieldKind === "map" ||
-    (field.fieldKind === "scalar" &&
-      (field.scalar === ScalarType.STRING || field.scalar === ScalarType.BYTES))
-  );
-  },
-
-  is(field: DescField, value: unknown): boolean {
-  if (field.fieldKind === "message") {
     return (
-      value !== undefined &&
-      value !== null &&
-      !equals(field.message, value as never, create(field.message))
+      field.fieldKind === "message" ||
+      field.fieldKind === "enum" ||
+      field.fieldKind === "list" ||
+      field.fieldKind === "map" ||
+      (field.fieldKind === "scalar" &&
+        (field.scalar === ScalarType.STRING || field.scalar === ScalarType.BYTES))
     );
-  }
-  if (field.fieldKind === "enum") return typeof value === "number" && value !== 0;
-  if (field.fieldKind === "list") return Array.isArray(value) && value.length > 0;
-  if (field.fieldKind === "map")
-    return !!value && typeof value === "object" && Object.keys(value).length > 0;
-  if (field.scalar === ScalarType.STRING) return typeof value === "string" && value.length > 0;
-  return value instanceof Uint8Array && value.length > 0;
   },
 
+  /** Processes inputs for `is`.
+   * @param field Supplies the field input.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
+  is(field: DescField, value: unknown): boolean {
+    if (field.fieldKind === "message") {
+      return (
+        value !== undefined &&
+        value !== null &&
+        !equals(field.message, value as never, create(field.message))
+      );
+    }
+    if (field.fieldKind === "enum") return typeof value === "number" && value !== 0;
+    if (field.fieldKind === "list") return Array.isArray(value) && value.length > 0;
+    if (field.fieldKind === "map")
+      return !!value && typeof value === "object" && Object.keys(value).length > 0;
+    if (field.scalar === ScalarType.STRING) return typeof value === "string" && value.length > 0;
+    return value instanceof Uint8Array && value.length > 0;
+  },
+
+  /** Processes inputs for `isOneof`.
+   * @param oneof Supplies the oneof input.
+   * @param message Supplies the message input.
+   * @returns Returns the computed result.
+   */
   isOneof(oneof: DescOneof, message: Message): boolean {
-  const value = MessageFields.read(message, oneof);
-  return typeof value === "object" && value !== null && "case" in value && value.case !== undefined;
+    const value = MessageFields.read(message, oneof);
+    return (
+      typeof value === "object" && value !== null && "case" in value && value.case !== undefined
+    );
   },
 };

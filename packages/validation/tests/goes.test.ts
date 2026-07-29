@@ -48,8 +48,8 @@ import {
   OptionalSettingsSchema,
   AdvancedConfigSchema,
   InvalidGoesTargetSchema,
-  InvalidGoesUnknownCompanionSchema,
-  InvalidGoesNumericCompanionSchema,
+  InvalidGoesUnknownCompanionSchema as InvalidGoesUnknownSchema,
+  InvalidGoesNumericCompanionSchema as InvalidGoesNumericSchema,
 } from "./generated/test-goes_pb.js";
 
 describe("Field Dependency Validation (goes)", () => {
@@ -261,23 +261,19 @@ describe("Field Dependency Validation (goes)", () => {
       );
     });
     it("rejects unknown and unsupported companions", () => {
-      expect(() =>
-        validate(InvalidGoesUnknownCompanionSchema, create(InvalidGoesUnknownCompanionSchema)),
-      ).toThrow(
+      expect(() => validate(InvalidGoesUnknownSchema, create(InvalidGoesUnknownSchema))).toThrow(
         expect.objectContaining({
           code: "UNKNOWN_FIELD_REFERENCE",
           option: "goes",
-          typeName: InvalidGoesUnknownCompanionSchema.typeName,
+          typeName: InvalidGoesUnknownSchema.typeName,
           fieldPath: ["value"],
         }),
       );
-      expect(() =>
-        validate(InvalidGoesNumericCompanionSchema, create(InvalidGoesNumericCompanionSchema)),
-      ).toThrow(
+      expect(() => validate(InvalidGoesNumericSchema, create(InvalidGoesNumericSchema))).toThrow(
         expect.objectContaining({
           code: "INVALID_FIELD_REFERENCE",
           option: "goes",
-          typeName: InvalidGoesNumericCompanionSchema.typeName,
+          typeName: InvalidGoesNumericSchema.typeName,
           fieldPath: ["number"],
         }),
       );

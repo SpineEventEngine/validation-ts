@@ -31,6 +31,9 @@
  */
 
 import { create } from "@bufbuild/protobuf";
+
+const atLeast = (value: number, minimum: number): void =>
+  expect(value)["toBeGreaterThanOrEqual"](minimum);
 import { validate } from "../src/index.js";
 
 import {
@@ -107,7 +110,7 @@ describe("Min/Max Validation", () => {
 
       // `positive_id` violates `min=1`, price violates `min=0.01`, nonNegative is valid.
       const violations = validate(MinValueSchema, withDefaults);
-      expect(violations.length).toBeGreaterThanOrEqual(2);
+      atLeast(violations.length, 2);
 
       const positiveIdViolation = violations.find(
         (v) => v.fieldPath?.fieldName[0] === "positive_id",
@@ -227,7 +230,7 @@ describe("Min/Max Validation", () => {
       });
 
       const violations = validate(MinMaxRangeSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(3);
+      atLeast(violations.length, 3);
     });
   });
 
@@ -358,7 +361,7 @@ describe("Min/Max Validation", () => {
       });
 
       const violations = validate(NumericTypesSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(4);
+      atLeast(violations.length, 4);
     });
   });
 
@@ -393,7 +396,7 @@ describe("Min/Max Validation", () => {
       });
 
       const violations = validate(RepeatedMinMaxSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(3);
+      atLeast(violations.length, 3);
     });
 
     it("should not `validate` empty repeated fields", () => {

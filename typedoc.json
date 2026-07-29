@@ -8,6 +8,21 @@
   "highlightLanguages": ["bash", "js", "json", "protobuf", "typescript", "yaml"],
   "includeVersion": true,
   "treatWarningsAsErrors": true,
+  "validation": {
+    "notDocumented": true
+  },
+  "requiredToBeDocumented": [
+    "Class",
+    "Constructor",
+    "Enum",
+    "EnumMember",
+    "Function",
+    "Interface",
+    "Method",
+    "Property",
+    "TypeAlias",
+    "Variable"
+  ],
   "blockTags": ["@deprecated", "@example", "@generated", "@param", "@returns"],
   "excludeTags": ["@generated"]
 }

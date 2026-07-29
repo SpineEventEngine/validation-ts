@@ -8,101 +8,121 @@ import { ProductEnvelopeSchema, ProductSchema } from "./generated/product_pb.js"
 import { Role, UserSchema } from "./generated/user_pb.js";
 
 /** Inspectable result returned by each executable validation scenario. */
+/** Describes the purpose of the `ExampleScenarioResult` member. */
 export interface ExampleScenarioResult {
+  /** Describes the purpose of the `name` member. */
   name: string;
+  /** Describes the purpose of the `typeName` member. */
   typeName: string;
+  /** Describes the purpose of the `violationCount` member. */
   violationCount: number;
+  /** Describes the purpose of the `fieldPaths` member. */
   fieldPaths: string[];
+  /** Describes the purpose of the `violations` member. */
   violations: ConstraintViolation[];
 }
 
 /** Runs generated-schema scenarios used by the console adapter and tests. */
+/** Describes the purpose of the `ExampleScenarios` member. */
 export const ExampleScenarios = {
+  /** Processes inputs for `run`.
+   * @returns Returns the computed result.
+   */
   run(): ExampleScenarioResult[] {
     return [
-    ExampleScenarios.result("missing user values", UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
-    ExampleScenarios.result(
-      "duplicate user tags",
-      UserSchema,
-      create(UserSchema, {
-        id: 1,
-        name: "Ada Lovelace",
-        email: "ada@example.test",
-        role: Role.USER,
-        tags: ["typescript", "typescript"],
-      }),
-    ),
-    ExampleScenarios.result(
-      "invalid user email pattern",
-      UserSchema,
-      create(UserSchema, {
-        id: 1,
-        name: "Ada Lovelace",
-        email: "not-an-email",
-        role: Role.USER,
-      }),
-    ),
-    ExampleScenarios.result(
-      "past and future time constraints",
-      UserSchema,
-      create(UserSchema, {
-        id: 1,
-        name: "Ada Lovelace",
-        email: "ada@example.test",
-        role: Role.USER,
-        issuedAt: { seconds: 0n },
-        expiresAt: { seconds: 4_102_444_800n },
-      }),
-    ),
-    ExampleScenarios.result(
-      "violated past and future time constraints",
-      UserSchema,
-      create(UserSchema, {
-        id: 1,
-        name: "Ada Lovelace",
-        email: "ada@example.test",
-        role: Role.USER,
-        issuedAt: { seconds: 4_102_444_800n },
-        expiresAt: { seconds: 1n },
-      }),
-    ),
-    ExampleScenarios.result(
-      "product at its exact minimum price",
-      ProductSchema,
-      create(ProductSchema, { id: "prod-1", name: "Keyboard", price: 0.01 }),
-    ),
-    ExampleScenarios.result(
-      "nested product category leaf violations",
-      ProductSchema,
-      create(ProductSchema, {
-        id: "prod-2",
-        name: "Keyboard",
-        price: 1,
-        category: { id: 0, name: "", context: "present" },
-      }),
-    ),
-    ExampleScenarios.result(
-      "known Any payload leaf violations",
-      ProductEnvelopeSchema,
-      create(ProductEnvelopeSchema, {
-        payload: anyPack(UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
-      }),
-    ),
+      ExampleScenarios.result(
+        "missing user values",
+        UserSchema,
+        create(UserSchema, { id: 1, role: Role.USER }),
+      ),
+      ExampleScenarios.result(
+        "duplicate user tags",
+        UserSchema,
+        create(UserSchema, {
+          id: 1,
+          name: "Ada Lovelace",
+          email: "ada@example.test",
+          role: Role.USER,
+          tags: ["typescript", "typescript"],
+        }),
+      ),
+      ExampleScenarios.result(
+        "invalid user email pattern",
+        UserSchema,
+        create(UserSchema, {
+          id: 1,
+          name: "Ada Lovelace",
+          email: "not-an-email",
+          role: Role.USER,
+        }),
+      ),
+      ExampleScenarios.result(
+        "past and future time constraints",
+        UserSchema,
+        create(UserSchema, {
+          id: 1,
+          name: "Ada Lovelace",
+          email: "ada@example.test",
+          role: Role.USER,
+          issuedAt: { seconds: 0n },
+          expiresAt: { seconds: 4_102_444_800n },
+        }),
+      ),
+      ExampleScenarios.result(
+        "violated past and future time constraints",
+        UserSchema,
+        create(UserSchema, {
+          id: 1,
+          name: "Ada Lovelace",
+          email: "ada@example.test",
+          role: Role.USER,
+          issuedAt: { seconds: 4_102_444_800n },
+          expiresAt: { seconds: 1n },
+        }),
+      ),
+      ExampleScenarios.result(
+        "product at its exact minimum price",
+        ProductSchema,
+        create(ProductSchema, { id: "prod-1", name: "Keyboard", price: 0.01 }),
+      ),
+      ExampleScenarios.result(
+        "nested product category leaf violations",
+        ProductSchema,
+        create(ProductSchema, {
+          id: "prod-2",
+          name: "Keyboard",
+          price: 1,
+          category: { id: 0, name: "", context: "present" },
+        }),
+      ),
+      ExampleScenarios.result(
+        "known Any payload leaf violations",
+        ProductEnvelopeSchema,
+        create(ProductEnvelopeSchema, {
+          payload: anyPack(UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
+        }),
+      ),
     ];
   },
 
+  /** Processes inputs for `result`.
+   * @param name Supplies the name input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @returns Returns the computed result.
+   */
   result<T extends Message>(
-  name: string,
-  schema: GenMessage<T>,
-  message: T,
+    name: string,
+    schema: GenMessage<T>,
+    message: T,
   ): ExampleScenarioResult {
-  const violations = validate(schema, message);
-  return {
-    name,
-    typeName: schema.typeName,
-    violationCount: violations.length,
-    fieldPaths: violations.map((violation) => violation.fieldPath?.fieldName.join(".") ?? ""),
-    violations,
-  };
+    const violations = validate(schema, message);
+    return {
+      name,
+      typeName: schema.typeName,
+      violationCount: violations.length,
+      fieldPaths: violations.map((violation) => violation.fieldPath?.fieldName.join(".") ?? ""),
+      violations,
+    };
   },
 };

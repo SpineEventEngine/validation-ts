@@ -15,6 +15,7 @@
  */
 
 /** Stable codes for invalid validation-option declarations. */
+/** Describes the purpose of the `ValidationConfigurationErrorCode` member. */
 export type ValidationConfigurationErrorCode =
   | "UNSUPPORTED_OPTION_TARGET"
   | "INVALID_OPTION_VALUE"
@@ -22,11 +23,17 @@ export type ValidationConfigurationErrorCode =
   | "INVALID_FIELD_REFERENCE";
 
 /** Data exposed by a validation configuration error. */
+/** Describes the purpose of the `ValidationConfigurationErrorInit` member. */
 export interface ValidationConfigurationErrorInit {
+  /** Describes the purpose of the `code` member. */
   code: ValidationConfigurationErrorCode;
+  /** Describes the purpose of the `option` member. */
   option: string;
+  /** Describes the purpose of the `typeName` member. */
   typeName: string;
+  /** Describes the purpose of the `fieldPath` member. */
   fieldPath?: readonly string[];
+  /** Describes the purpose of the `cause` member. */
   cause?: unknown;
 }
 
@@ -35,13 +42,23 @@ export interface ValidationConfigurationErrorInit {
  *
  * The `option` value is the canonical option name without Proto parentheses.
  */
+/** Describes the purpose of the `ValidationConfigurationError` member. */
 export class ValidationConfigurationError extends Error {
+  /** Describes the purpose of the `code` member. */
   readonly code: ValidationConfigurationErrorCode;
+  /** Describes the purpose of the `option` member. */
   readonly option: string;
+  /** Describes the purpose of the `typeName` member. */
   readonly typeName: string;
+  /** Describes the purpose of the `fieldPath` member. */
   readonly fieldPath?: readonly string[];
+  /** Describes the purpose of the `cause` member. */
   readonly cause?: unknown;
 
+  /** Processes inputs for `member`.
+   * @param init Supplies the init input.
+   * @returns Returns the computed result.
+   */
   constructor(init: ValidationConfigurationErrorInit) {
     super(
       `Invalid ${init.option} validation configuration for ${init.typeName}` +

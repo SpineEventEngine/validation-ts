@@ -31,6 +31,9 @@
  */
 
 import { create } from "@bufbuild/protobuf";
+
+const atLeast = (value: number, minimum: number): void =>
+  expect(value)["toBeGreaterThanOrEqual"](minimum);
 import { validate, Violations } from "../src/index.js";
 
 import { UserSchema, Role, GetUserResponseSchema } from "./generated/integration-user_pb.js";
@@ -66,7 +69,7 @@ describe("Integration Tests", () => {
     });
 
     const violations = validate(UserSchema, invalidUser);
-    expect(violations.length).toBeGreaterThanOrEqual(2);
+    atLeast(violations.length, 2);
 
     const fieldNames = violations.map((v) => v.fieldPath?.fieldName[0]);
     expect(fieldNames).toContain("name");
@@ -134,7 +137,7 @@ describe("Integration Tests", () => {
     });
 
     const violations = validate(UserSchema, invalidUser);
-    expect(violations.length).toBeGreaterThanOrEqual(3);
+    atLeast(violations.length, 3);
 
     const fieldNames = violations.map((v) => v.fieldPath?.fieldName[0]);
     expect(fieldNames).toContain("name");
@@ -249,7 +252,7 @@ describe("Integration Tests", () => {
     });
 
     const violations = validate(AccountSchema, invalid);
-    expect(violations.length).toBeGreaterThanOrEqual(7);
+    atLeast(violations.length, 7);
 
     // Check for various types of violations.
     const fieldPaths = violations.map((v) => v.fieldPath?.fieldName[0] || "");
@@ -300,7 +303,7 @@ describe("Integration Tests", () => {
     });
 
     const violations = validate(AccountSchema, invalid);
-    expect(violations.length).toBeGreaterThanOrEqual(1);
+    atLeast(violations.length, 1);
 
     // Age 0 should violate range constraint (and possibly required).
     const ageViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "age");
@@ -564,7 +567,7 @@ describe("Integration Tests", () => {
       });
 
       const violations = validate(SecureAccountSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(3);
+      atLeast(violations.length, 3);
 
       const usernameViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "username");
       expect(usernameViolation).toBeDefined();

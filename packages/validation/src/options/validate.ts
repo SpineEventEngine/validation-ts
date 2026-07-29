@@ -36,6 +36,7 @@ import { MessageFields, type ValidationContext } from "../validation-contract.js
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
 /** Internal recursive validation seam, supplied by the validation orchestrator. */
+/** Describes the purpose of the `NestedValidator` member. */
 export type NestedValidator = <S extends DescMessage>(
   schema: S,
   message: MessageShape<S>,
@@ -46,6 +47,15 @@ export type NestedValidator = <S extends DescMessage>(
 /** Owns descriptor-defined recursive `(validate)` option processing. */
 export const NestedValidation = {
   /** Validates one field in declaration order, preserving the root validation context. */
+  /** Processes inputs for `validate`.
+   * @param context Supplies the context input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param field Supplies the field input.
+   * @param violations Supplies the violations input.
+   * @param registry Supplies the registry input.
+   * @param validateNested Supplies the validateNested input.
+   */
   validate(
     context: ValidationContext,
     schema: DescMessage,
@@ -111,6 +121,10 @@ export const NestedValidation = {
     }
   },
 
+  /** Processes inputs for `messageSchema`.
+   * @param field Supplies the field input.
+   * @returns Returns the computed result.
+   */
   messageSchema(field: DescField): DescMessage | undefined {
     if (field.fieldKind === "message") return field.message;
     if (field.fieldKind === "list" && field.listKind === "message") return field.message;
@@ -118,10 +132,23 @@ export const NestedValidation = {
     return undefined;
   },
 
+  /** Processes inputs for `isDefault`.
+   * @param schema Supplies the schema input.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   isDefault(schema: DescMessage, value: unknown): boolean {
     return equals(schema, value as never, create(schema));
   },
 
+  /** Processes inputs for `append`.
+   * @param schema Supplies the schema input.
+   * @param value Supplies the value input.
+   * @param context Supplies the context input.
+   * @param registry Supplies the registry input.
+   * @param violations Supplies the violations input.
+   * @param validateNested Supplies the validateNested input.
+   */
   append(
     schema: DescMessage,
     value: unknown,
@@ -138,6 +165,13 @@ export const NestedValidation = {
     violations.push(...validateNested(schema, value, context, registry));
   },
 
+  /** Processes inputs for `appendPackedAny`.
+   * @param value Supplies the value input.
+   * @param context Supplies the context input.
+   * @param registry Supplies the registry input.
+   * @param violations Supplies the violations input.
+   * @param validateNested Supplies the validateNested input.
+   */
   appendPackedAny(
     value: unknown,
     context: ValidationContext,

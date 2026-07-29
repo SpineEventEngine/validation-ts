@@ -26,10 +26,22 @@ import { Presence } from "../presence.js";
 import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
-type Requirement = { readonly field?: DescField; readonly oneof?: DescOneof };
+/** Describes the purpose of the `Requirement` member. */
+interface Requirement {
+  /** Identifies the required field when the expression names a field. */
+  readonly field?: DescField;
+  /** Identifies the required oneof when the expression names a oneof. */
+  readonly oneof?: DescOneof;
+}
 
 /** Owns `(require)` option parsing and validation. */
 export const Require = {
+  /** Processes inputs for `validate`.
+   * @param context Supplies the context input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param violations Supplies the violations input.
+   */
   validate(
     context: ValidationContext,
     schema: DescMessage,
@@ -60,10 +72,16 @@ export const Require = {
     );
   },
 
+  /** Processes inputs for `defaultMessage`.
+   * @returns Returns the computed result.
+   */
   defaultMessage(): string | undefined {
     return getOption(RequireOptionSchema, default_message);
   },
 
+  /** Processes inputs for `invalidOption`.
+   * @param schema Supplies the schema input.
+   */
   invalidOption(schema: DescMessage): never {
     throw new ValidationConfigurationError({
       code: "INVALID_OPTION_VALUE",
@@ -72,6 +90,11 @@ export const Require = {
     });
   },
 
+  /** Processes inputs for `parseRequirements`.
+   * @param expression Supplies the expression input.
+   * @param schema Supplies the schema input.
+   * @returns Returns the computed result.
+   */
   parseRequirements(expression: string, schema: DescMessage): readonly (readonly Requirement[])[] {
     if (!expression.trim() || /[()]/.test(expression)) Require.invalidOption(schema);
 
@@ -85,6 +108,11 @@ export const Require = {
     });
   },
 
+  /** Processes inputs for `resolve`.
+   * @param token Supplies the token input.
+   * @param schema Supplies the schema input.
+   * @returns Returns the computed result.
+   */
   resolve(token: string, schema: DescMessage): Requirement {
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) Require.invalidOption(schema);
 
@@ -112,6 +140,11 @@ export const Require = {
     });
   },
 
+  /** Processes inputs for `requirementIsPresent`.
+   * @param requirement Supplies the requirement input.
+   * @param message Supplies the message input.
+   * @returns Returns the computed result.
+   */
   requirementIsPresent(requirement: Requirement, message: Message): boolean {
     if (requirement.field !== undefined) {
       return Presence.is(requirement.field, MessageFields.read(message, requirement.field));

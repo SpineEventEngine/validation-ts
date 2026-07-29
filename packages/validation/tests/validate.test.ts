@@ -37,21 +37,21 @@ import { ValidationConfigurationError, validate } from "../src/index.js";
 import {
   PersonWithAddressSchema,
   AddressSchema,
-  OrderWithCustomErrorSchema,
+  OrderWithCustomErrorSchema as OrderCustomErrorSchema,
   CustomerSchema,
   TeamWithMembersSchema,
   MemberSchema,
   CompanyStructureSchema,
   DepartmentSchema,
   ManagerSchema,
-  ProfileWithOptionalDataSchema,
+  ProfileWithOptionalDataSchema as ProfileOptionalDataSchema,
   OptionalDataSchema as ValidateOptionalDataSchema,
   PersonWithoutValidationSchema,
   ProductOrderSchema,
   ProductDetailsSchema,
   ReviewSchema,
   ShippingInfoSchema,
-  ContainerWithEmptyMessageSchema,
+  ContainerWithEmptyMessageSchema as ContainerEmptyMessageSchema,
   EmptyValidatedSchema,
   ProjectWithTasksSchema,
   TaskSchema,
@@ -59,7 +59,7 @@ import {
   NestedValidationContainersSchema,
   ValidateDisabledSchema,
   ValidateUnsupportedTargetSchema,
-  NestedMessageOptionContainersSchema,
+  NestedMessageOptionContainersSchema as NestedOptionContainersSchema,
   RequireLeafSchema,
   ChoiceLeafSchema,
 } from "./generated/test-validate_pb.js";
@@ -141,7 +141,7 @@ describe("Nested Message Validation (validate)", () => {
 
   describe("Deprecated parent diagnostics", () => {
     it("does not emit a deprecated parent summary when nested validation fails", () => {
-      const invalid = create(OrderWithCustomErrorSchema, {
+      const invalid = create(OrderCustomErrorSchema, {
         orderId: 123,
         customer: create(CustomerSchema, {
           email: "invalid-email", // Pattern violation.
@@ -149,7 +149,7 @@ describe("Nested Message Validation (validate)", () => {
         }),
       });
 
-      const violations = validate(OrderWithCustomErrorSchema, invalid);
+      const violations = validate(OrderCustomErrorSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
 
       expect(violations).toHaveLength(1);
@@ -157,7 +157,7 @@ describe("Nested Message Validation (validate)", () => {
     });
 
     it("propagates only leaves when multiple nested constraints fail", () => {
-      const invalid = create(OrderWithCustomErrorSchema, {
+      const invalid = create(OrderCustomErrorSchema, {
         orderId: 123,
         customer: create(CustomerSchema, {
           email: "invalid-email",
@@ -165,7 +165,7 @@ describe("Nested Message Validation (validate)", () => {
         }),
       });
 
-      const violations = validate(OrderWithCustomErrorSchema, invalid);
+      const violations = validate(OrderCustomErrorSchema, invalid);
       expect(violations).toHaveLength(2);
       const emailViolation = violations.find((v) => v.fieldPath?.fieldName[1] === "email");
       expect(emailViolation).toBeDefined();
@@ -267,17 +267,17 @@ describe("Nested Message Validation (validate)", () => {
 
   describe("Optional Nested Fields", () => {
     it("should pass when optional nested field is not set", () => {
-      const valid = create(ProfileWithOptionalDataSchema, {
+      const valid = create(ProfileOptionalDataSchema, {
         username: "johndoe",
         // `optional_data` not set.
       });
 
-      const violations = validate(ProfileWithOptionalDataSchema, valid);
+      const violations = validate(ProfileOptionalDataSchema, valid);
       expect(violations).toHaveLength(0);
     });
 
     it("should `validate` when optional nested field is set", () => {
-      const valid = create(ProfileWithOptionalDataSchema, {
+      const valid = create(ProfileOptionalDataSchema, {
         username: "johndoe",
         optionalData: create(ValidateOptionalDataSchema, {
           bio: "Software engineer",
@@ -285,12 +285,12 @@ describe("Nested Message Validation (validate)", () => {
         }),
       });
 
-      const violations = validate(ProfileWithOptionalDataSchema, valid);
+      const violations = validate(ProfileOptionalDataSchema, valid);
       expect(violations).toHaveLength(0);
     });
 
     it("should detect violations in optional nested field when set", () => {
-      const invalid = create(ProfileWithOptionalDataSchema, {
+      const invalid = create(ProfileOptionalDataSchema, {
         username: "johndoe",
         optionalData: create(ValidateOptionalDataSchema, {
           bio: "Software engineer",
@@ -298,7 +298,7 @@ describe("Nested Message Validation (validate)", () => {
         }),
       });
 
-      const violations = validate(ProfileWithOptionalDataSchema, invalid);
+      const violations = validate(ProfileOptionalDataSchema, invalid);
       expect(violations.length).toBeGreaterThan(0);
     });
   });
@@ -440,14 +440,14 @@ describe("Nested Message Validation (validate)", () => {
 
   describe("Edge Cases", () => {
     it("should pass when validating message with no constraints", () => {
-      const valid = create(ContainerWithEmptyMessageSchema, {
+      const valid = create(ContainerEmptyMessageSchema, {
         id: "test-123",
         empty: create(EmptyValidatedSchema, {
           note: "Some note",
         }),
       });
 
-      const violations = validate(ContainerWithEmptyMessageSchema, valid);
+      const violations = validate(ContainerEmptyMessageSchema, valid);
       expect(violations).toHaveLength(0);
     });
 
@@ -586,8 +586,8 @@ describe("Nested Message Validation (validate)", () => {
 
     it("prefixes nested message-level require and choice violations", () => {
       const violations = validate(
-        NestedMessageOptionContainersSchema,
-        create(NestedMessageOptionContainersSchema, {
+        NestedOptionContainersSchema,
+        create(NestedOptionContainersSchema, {
           requireChild: create(RequireLeafSchema, { marker: "set" }),
           choiceChild: create(ChoiceLeafSchema, { marker: "set" }),
         }),
@@ -597,8 +597,8 @@ describe("Nested Message Validation (validate)", () => {
         ["choice_child"],
       ]);
       expect(violations.map((violation) => violation.typeName)).toEqual([
-        NestedMessageOptionContainersSchema.typeName,
-        NestedMessageOptionContainersSchema.typeName,
+        NestedOptionContainersSchema.typeName,
+        NestedOptionContainersSchema.typeName,
       ]);
     });
 

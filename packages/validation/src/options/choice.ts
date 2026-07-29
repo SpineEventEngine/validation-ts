@@ -27,6 +27,12 @@ import { ViolationFactory, type ValidationContext } from "../validation-contract
 
 /** Owns `(choice)` option validation. */
 export const Choice = {
+  /** Processes inputs for `validate`.
+   * @param context Supplies the context input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param violations Supplies the violations input.
+   */
   validate(
     context: ValidationContext,
     schema: DescMessage,
@@ -51,6 +57,9 @@ export const Choice = {
     }
   },
 
+  /** Processes inputs for `defaultMessage`.
+   * @returns Returns the computed result.
+   */
   defaultMessage(): string | undefined {
     return getOption(ChoiceOptionSchema, default_message);
   },

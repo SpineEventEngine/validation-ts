@@ -37,42 +37,75 @@ import {
 import { TemplateStringSchema } from "./generated/spine/validate/error_message_pb.js";
 
 /** Shared root entry and current Proto-field path for validation. */
+/** Describes the purpose of the `ValidationContext` member. */
 export class ValidationContext {
+  /** Describes the purpose of the `rootTypeName` member. */
   readonly rootTypeName: string;
+  /** Describes the purpose of the `fieldPath` member. */
   readonly fieldPath: readonly string[];
 
+  /** Processes inputs for `member`.
+   * @param rootTypeName Supplies the rootTypeName input.
+   * @param fieldPath Supplies the fieldPath input.
+   * @returns Returns the computed result.
+   */
   constructor(rootTypeName: string, fieldPath: readonly string[] = []) {
     this.rootTypeName = rootTypeName;
     this.fieldPath = fieldPath;
   }
 
   /** Creates the root context for a message descriptor. */
+  /** Processes inputs for `create`.
+   * @param schema Supplies the schema input.
+   * @returns Returns the computed result.
+   */
   static create(schema: DescMessage): ValidationContext {
     return new ValidationContext(schema.typeName);
   }
 
   /** Extends the current path with one unqualified Proto field name. */
+  /** Processes inputs for `atField`.
+   * @param field Supplies the field input.
+   * @returns Returns the computed result.
+   */
   atField(field: DescField): ValidationContext {
     return new ValidationContext(this.rootTypeName, [...this.fieldPath, field.name]);
   }
 }
 
 /** Reads one descriptor-named field from a generated message at the reflective seam. */
+/** Describes the purpose of the `MessageFields` member. */
 export const MessageFields = {
+  /** Processes inputs for `read`.
+   * @param message Supplies the message input.
+   * @param field Supplies the field input.
+   * @returns Returns the computed result.
+   */
   read(message: Message, field: Pick<DescField, "localName">): unknown {
     return (message as unknown as Record<string, unknown>)[field.localName];
   },
 };
 
 /** Inputs for a violation's present `TemplateString`. */
+/** Describes the purpose of the `ViolationMessage` member. */
 export interface ViolationMessage {
+  /** Describes the purpose of the `customMessage` member. */
   customMessage?: string;
+  /** Describes the purpose of the `defaultMessage` member. */
   defaultMessage?: string;
+  /** Describes the purpose of the `placeholders` member. */
   placeholders?: Readonly<Record<string, string>>;
 }
 
 /** Creates shared violation envelopes from descriptor-aware field values. */
 export const ViolationFactory = {
+  /** Processes inputs for `create`.
+   * @param context Supplies the context input.
+   * @param field Supplies the field input.
+   * @param fieldValue Supplies the fieldValue input.
+   * @param message Supplies the message input.
+   * @returns Returns the computed result.
+   */
   create(
     context: ValidationContext,
     field: DescField | undefined,
@@ -112,6 +145,11 @@ export const ViolationFactory = {
     });
   },
 
+  /** Processes inputs for `packFieldValue`.
+   * @param field Supplies the field input.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   packFieldValue(field: DescField, value: unknown) {
     if (field.fieldKind === "message") return ViolationFactory.packMessage(field.message, value);
     if (field.fieldKind === "enum") return ViolationFactory.packWrapper(Int32ValueSchema, value);
@@ -126,6 +164,11 @@ export const ViolationFactory = {
     return ViolationFactory.packScalar(field.scalar, value);
   },
 
+  /** Processes inputs for `packScalar`.
+   * @param scalar Supplies the scalar input.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   packScalar(scalar: ScalarType, value: unknown) {
     switch (scalar) {
       case ScalarType.DOUBLE:
@@ -155,14 +198,28 @@ export const ViolationFactory = {
     }
   },
 
+  /** Processes inputs for `packWrapper`.
+   * @param schema Supplies the schema input.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   packWrapper(schema: DescMessage, value: unknown) {
     return anyPack(schema, create(schema, { value }));
   },
 
+  /** Processes inputs for `packMessage`.
+   * @param schema Supplies the schema input.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   packMessage(schema: DescMessage, value: unknown) {
     return anyPack(schema, value as never);
   },
 
+  /** Processes inputs for `fieldTypeName`.
+   * @param field Supplies the field input.
+   * @returns Returns the computed result.
+   */
   fieldTypeName(field: DescField): string {
     if (field.fieldKind === "message") return field.message.typeName;
     if (field.fieldKind === "enum") return field.enum.typeName;
@@ -177,6 +234,10 @@ export const ViolationFactory = {
     return ViolationFactory.scalarProtoTypeName(field.scalar);
   },
 
+  /** Processes inputs for `scalarProtoTypeName`.
+   * @param scalar Supplies the scalar input.
+   * @returns Returns the computed result.
+   */
   scalarProtoTypeName(scalar: ScalarType): string {
     switch (scalar) {
       case ScalarType.DOUBLE:
@@ -212,6 +273,10 @@ export const ViolationFactory = {
     }
   },
 
+  /** Processes inputs for `formatFieldValue`.
+   * @param value Supplies the value input.
+   * @returns Returns the computed result.
+   */
   formatFieldValue(value: unknown): string {
     if (value instanceof Uint8Array) {
       return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");

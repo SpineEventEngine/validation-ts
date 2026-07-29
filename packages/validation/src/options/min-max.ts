@@ -30,6 +30,13 @@ import { NumericValues } from "./numeric.js";
 /** Validates `(min)` and `(max)` for a single field in orchestration order. */
 /** Owns `(min)` and `(max)` option validation. */
 export const MinMax = {
+  /** Processes inputs for `validate`.
+   * @param context Supplies the context input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param field Supplies the field input.
+   * @param violations Supplies the violations input.
+   */
   validate(
     context: ValidationContext,
     schema: DescMessage,
@@ -41,6 +48,14 @@ export const MinMax = {
     MinMax.validateBound("max", context, schema, message, field, violations);
   },
 
+  /** Processes inputs for `validateBound`.
+   * @param name Supplies the name input.
+   * @param context Supplies the context input.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param field Supplies the field input.
+   * @param violations Supplies the violations input.
+   */
   validateBound(
     name: "min" | "max",
     context: ValidationContext,

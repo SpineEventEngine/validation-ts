@@ -52,32 +52,81 @@ import { ValidationContext } from "./validation-contract.js";
 
 const fieldValidators: readonly FieldValidator[] = [
   {
+    /** Processes inputs for `validate`.
+     * @param context Supplies the context input.
+     * @param schema Supplies the schema input.
+     * @param message Supplies the message input.
+     * @param field Supplies the field input.
+     * @param violations Supplies the violations input.
+     * @returns Returns the computed result.
+     */
     validate(context, schema, message, field, violations) {
       Required.validate(context, schema, message, field, violations);
     },
   },
   ValidationOrchestration.legacyFieldValidator(Pattern.validate),
   {
+    /** Processes inputs for `validate`.
+     * @param context Supplies the context input.
+     * @param schema Supplies the schema input.
+     * @param message Supplies the message input.
+     * @param field Supplies the field input.
+     * @param violations Supplies the violations input.
+     * @returns Returns the computed result.
+     */
     validate(context, schema, message, field, violations) {
       MinMax.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Processes inputs for `validate`.
+     * @param context Supplies the context input.
+     * @param schema Supplies the schema input.
+     * @param message Supplies the message input.
+     * @param field Supplies the field input.
+     * @param violations Supplies the violations input.
+     * @returns Returns the computed result.
+     */
     validate(context, schema, message, field, violations) {
       Range.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Processes inputs for `validate`.
+     * @param context Supplies the context input.
+     * @param schema Supplies the schema input.
+     * @param message Supplies the message input.
+     * @param field Supplies the field input.
+     * @param violations Supplies the violations input.
+     * @returns Returns the computed result.
+     */
     validate(context, schema, message, field, violations) {
       When.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Processes inputs for `validate`.
+     * @param context Supplies the context input.
+     * @param schema Supplies the schema input.
+     * @param message Supplies the message input.
+     * @param field Supplies the field input.
+     * @param violations Supplies the violations input.
+     * @returns Returns the computed result.
+     */
     validate(context, schema, message, field, violations) {
       Distinct.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Processes inputs for `validate`.
+     * @param context Supplies the context input.
+     * @param schema Supplies the schema input.
+     * @param message Supplies the message input.
+     * @param field Supplies the field input.
+     * @param violations Supplies the violations input.
+     * @param registry Supplies the registry input.
+     * @returns Returns the computed result.
+     */
     validate(context, schema, message, field, violations, registry) {
       NestedValidation.validate(
         context,
@@ -91,6 +140,14 @@ const fieldValidators: readonly FieldValidator[] = [
     },
   },
   {
+    /** Processes inputs for `validate`.
+     * @param context Supplies the context input.
+     * @param schema Supplies the schema input.
+     * @param message Supplies the message input.
+     * @param field Supplies the field input.
+     * @param violations Supplies the violations input.
+     * @returns Returns the computed result.
+     */
     validate(context, schema, message, field, violations) {
       Goes.validate(context, schema, message, field, violations);
     },
@@ -150,6 +207,11 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * }
  * ```
  */
+/** Processes inputs for `validate`.
+ * @param schema Supplies the schema input.
+ * @param message Supplies the message input.
+ * @returns Returns the computed result.
+ */
 export function validate<S extends DescMessage>(
   schema: S,
   message: NoInfer<MessageShape<S>>,
@@ -164,6 +226,13 @@ export function validate<S extends DescMessage>(
 
 /** Coordinates internal traversal while preserving context and registry state. */
 const ValidationEngine = {
+  /** Processes inputs for `validateInternal`.
+   * @param schema Supplies the schema input.
+   * @param message Supplies the message input.
+   * @param context Supplies the context input.
+   * @param registry Supplies the registry input.
+   * @returns Returns the computed result.
+   */
   validateInternal<S extends DescMessage>(
     schema: S,
     message: MessageShape<S>,
@@ -185,10 +254,18 @@ const ValidationEngine = {
     return violations;
   },
 
+  /** Processes inputs for `createRootRegistry`.
+   * @param schema Supplies the schema input.
+   * @returns Returns the computed result.
+   */
   createRootRegistry(schema: DescMessage): Registry {
     return createRegistry(...ValidationEngine.dependencyClosure(schema.file));
   },
 
+  /** Processes inputs for `dependencyClosure`.
+   * @param root Supplies the root input.
+   * @returns Returns the computed result.
+   */
   dependencyClosure(root: DescFile): DescFile[] {
     const files: DescFile[] = [];
     const visited = new Set<string>();
@@ -213,7 +290,12 @@ const ValidationEngine = {
  * @returns Formatted string with placeholders replaced.
  *
  */
+/** Describes the purpose of the `TemplateStrings` member. */
 const TemplateStrings = {
+  /** Processes inputs for `format`.
+   * @param template Supplies the template input.
+   * @returns Returns the computed result.
+   */
   format(template: TemplateString): string {
     let result = template.withPlaceholders;
     for (const [key, value] of Object.entries(template.placeholderValue)) {
@@ -267,6 +349,10 @@ const TemplateStrings = {
  * ```
  */
 export const Violations = {
+  /** Processes inputs for `formatAll`.
+   * @param violations Supplies the violations input.
+   * @returns Returns the computed result.
+   */
   formatAll(violations: ConstraintViolation[]): string {
     if (violations.length === 0) return "No violations";
     return violations
@@ -297,6 +383,10 @@ export const Violations = {
    * // Returns: "Email must be valid. Provided: `invalid@`."
    * ```
    */
+  /** Processes inputs for `formatMessage`.
+   * @param violation Supplies the violation input.
+   * @returns Returns the computed result.
+   */
   formatMessage(violation: ConstraintViolation): string {
     return violation.message ? TemplateStrings.format(violation.message) : "Validation failed";
   },
@@ -318,6 +408,10 @@ export const Violations = {
    * const path = Violations.failurePath(violation);
    * // Returns: "user.email"
    * ```
+   */
+  /** Processes inputs for `failurePath`.
+   * @param violation Supplies the violation input.
+   * @returns Returns the computed result.
    */
   failurePath(violation: ConstraintViolation): string {
     return violation.fieldPath?.fieldName.join(".") || "unknown";
