@@ -23,81 +23,88 @@ import {
   MaxOptionSchema,
   MinOptionSchema,
 } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
-import {
-  assertNumericTarget,
-  compareNumeric,
-  isNaNNumeric,
-  resolveBound,
-  runtimeNumeric,
-} from "./numeric.js";
+import { ValidationOptions } from "../options-registry.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
+import { NumericValues } from "./numeric.js";
 
-/** Validates `(min)` and `(max)` for a single field in orchestration order. */
-export function validateMinMaxField(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  field: DescField,
-  violations: ConstraintViolation[],
-): void {
-  validateBound("min", context, schema, message, field, violations);
-  validateBound("max", context, schema, message, field, violations);
-}
+/** Evaluates `(min)` and `(max)` option bounds for numeric fields. */
+export const MinMax = {
+  /** Checks the minimum and maximum bounds declared on one numeric field.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to resolve numeric references.
+   * @param message Candidate message supplying the compared values.
+   * @param field Numeric field declaring `(min)` or `(max)`.
+   * @param violations Mutable collection receiving bound diagnostics.
+   */
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    field: DescField,
+    violations: ConstraintViolation[],
+  ): void {
+    MinMax.validateBound("min", context, schema, message, field, violations);
+    MinMax.validateBound("max", context, schema, message, field, violations);
+  },
 
-function validateBound(
-  name: "min" | "max",
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  field: DescField,
-  violations: ConstraintViolation[],
-): void {
-  const extension = getRegisteredOption(name);
-  if (!extension || !hasOption(field, extension)) return;
-  const option = getOption(field, extension);
-  const scalar = assertNumericTarget(name, schema, field);
-  const declaration = option.value;
-  const bound = resolveBound(declaration, scalar, name, schema, message, field);
-  const exclusive = "exclusive" in option && option.exclusive;
-  const fieldValue = readField(message, field);
-  const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
-  if (!Array.isArray(values)) return;
-  for (const raw of values) {
-    const value = runtimeNumeric(raw, scalar);
-    const comparison = compareNumeric(value, bound.value);
-    const valid =
-      !isNaNNumeric(value) &&
-      (name === "min"
-        ? exclusive
-          ? comparison > 0
-          : comparison >= 0
-        : exclusive
-          ? comparison < 0
-          : comparison <= 0);
-    if (valid) continue;
-    const defaultMessage = getOption(
-      name === "min" ? MinOptionSchema : MaxOptionSchema,
-      default_message,
-    );
-    const customMessage = option.errorMsg || undefined;
-    violations.push(
-      createConstraintViolation(context.atField(field), field, raw, {
-        customMessage,
-        defaultMessage,
-        placeholders: {
-          [`${name}.value`]: bound.display,
-          [`${name}.operator`]: name === "min" ? (exclusive ? ">" : ">=") : exclusive ? "<" : "<=",
-          // Retained for already-authored custom messages; documented templates
-          // use the namespaced placeholders above.
-          value: String(raw),
-          other: bound.display,
-        },
-      }),
-    );
-  }
-}
+  /** Checks one named numeric bound and adds its diagnostic when it is exceeded.
+   * @param name Option name identifying the bound extension to evaluate.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to resolve numeric references.
+   * @param message Candidate message supplying the compared values.
+   * @param field Numeric field declaring the named bound.
+   * @param violations Mutable collection receiving the bound diagnostic.
+   */
+  validateBound(
+    name: "min" | "max",
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    field: DescField,
+    violations: ConstraintViolation[],
+  ): void {
+    const extension = ValidationOptions.get(name);
+    if (!extension || !hasOption(field, extension)) return;
+    const option = getOption(field, extension);
+    const scalar = NumericValues.assertTarget(name, schema, field);
+    const declaration = option.value;
+    const bound = NumericValues.resolveBound(declaration, scalar, name, schema, message, field);
+    const exclusive = "exclusive" in option && option.exclusive;
+    const fieldValue = MessageFields.read(message, field);
+    const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
+    if (!Array.isArray(values)) return;
+    for (const raw of values) {
+      const value = NumericValues.runtime(raw, scalar);
+      const comparison = NumericValues.compare(value, bound.value);
+      const valid =
+        !NumericValues.isNaN(value) &&
+        (name === "min"
+          ? exclusive
+            ? comparison > 0
+            : comparison >= 0
+          : exclusive
+            ? comparison < 0
+            : comparison <= 0);
+      if (valid) continue;
+      const defaultMessage = getOption(
+        name === "min" ? MinOptionSchema : MaxOptionSchema,
+        default_message,
+      );
+      const customMessage = option.errorMsg || undefined;
+      violations.push(
+        ViolationFactory.create(context.atField(field), field, raw, {
+          customMessage,
+          defaultMessage,
+          placeholders: {
+            [`${name}.value`]: bound.display,
+            [`${name}.operator`]:
+              name === "min" ? (exclusive ? ">" : ">=") : exclusive ? "<" : "<=",
+            // Supplies unnamespaced aliases alongside the documented placeholders.
+            value: String(raw),
+            other: bound.display,
+          },
+        }),
+      );
+    }
+  },
+} as const;

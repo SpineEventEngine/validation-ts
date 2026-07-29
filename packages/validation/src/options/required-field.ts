@@ -21,105 +21,134 @@ import type { DescField, DescMessage, DescOneof, Message } from "@bufbuild/proto
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, RequireOptionSchema } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { isOneofPresent, isPresent, supportsPresence } from "../presence.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { Presence } from "../presence.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
 import { ValidationConfigurationError } from "../validation-configuration-error.js";
 
-type Requirement = { readonly field?: DescField; readonly oneof?: DescOneof };
-
-function requireDefaultMessage(): string | undefined {
-  return getOption(RequireOptionSchema, default_message);
+/** Represents an operand accepted by a message-level `(require)` declaration. */
+interface Requirement {
+  /** Identifies the required field when the expression names a field. */
+  readonly field?: DescField;
+  /** Identifies the required oneof when the expression names a oneof. */
+  readonly oneof?: DescOneof;
 }
 
-function invalidOption(schema: DescMessage): never {
-  throw new ValidationConfigurationError({
-    code: "INVALID_OPTION_VALUE",
-    option: "require",
-    typeName: schema.typeName,
-  });
-}
+/** Owns `(require)` option parsing and validation. */
+export const Require = {
+  /** Adds a violation when a `(require)` expression is not satisfied.
+   * @param context Violation location for the validated message.
+   * @param schema Descriptor declaring `(require)` expressions.
+   * @param message Candidate message whose required fields are inspected.
+   * @param violations Collection receiving requirement diagnostics.
+   */
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    violations: ConstraintViolation[],
+  ): void {
+    const requireOption = ValidationOptions.get("requireFields");
+    const options = schema.proto.options;
+    if (!options || !hasExtension(options, requireOption)) return;
 
-/** Parses the documented OR-of-AND grammar, resolving every token eagerly. */
-function parseRequirements(
-  expression: string,
-  schema: DescMessage,
-): readonly (readonly Requirement[])[] {
-  if (!expression.trim() || /[()]/.test(expression)) invalidOption(schema);
-
-  const groups = expression.split("|").map((group) => group.trim());
-  if (groups.some((group) => !group)) invalidOption(schema);
-
-  return groups.map((group) => {
-    const tokens = group.split("&").map((token) => token.trim());
-    if (tokens.some((token) => !token || /\s/.test(token))) invalidOption(schema);
-    return tokens.map((token) => resolveRequirement(token, schema));
-  });
-}
-
-function resolveRequirement(token: string, schema: DescMessage): Requirement {
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) invalidOption(schema);
-
-  const field = schema.fields.find((candidate) => candidate.name === token);
-  if (field !== undefined) {
-    if (!supportsPresence(field)) {
-      throw new ValidationConfigurationError({
-        code: "INVALID_FIELD_REFERENCE",
-        option: "require",
-        typeName: schema.typeName,
-        fieldPath: [field.name],
-      });
+    const require = getExtension(options, requireOption);
+    const expression = require.fields;
+    const groups = Require.parseRequirements(expression, schema);
+    if (
+      groups.some((group) =>
+        group.every((requirement) => Require.requirementIsPresent(requirement, message)),
+      )
+    ) {
+      return;
     }
-    return { field };
-  }
 
-  const oneof = schema.oneofs.find((candidate) => candidate.name === token);
-  if (oneof !== undefined) return { oneof };
+    violations.push(
+      ViolationFactory.create(context, undefined, undefined, {
+        customMessage: require.errorMsg,
+        defaultMessage: Require.defaultMessage(),
+        placeholders: { "require.fields": expression },
+      }),
+    );
+  },
 
-  throw new ValidationConfigurationError({
-    code: "UNKNOWN_FIELD_REFERENCE",
-    option: "require",
-    typeName: schema.typeName,
-    fieldPath: [token],
-  });
-}
+  /** Retrieves the extension-level fallback message for `(require)` violations.
+   * @returns The configured fallback template, when present.
+   */
+  defaultMessage(): string | undefined {
+    return getOption(RequireOptionSchema, default_message);
+  },
 
-function requirementIsPresent(requirement: Requirement, message: Message): boolean {
-  if (requirement.field !== undefined) {
-    return isPresent(requirement.field, readField(message, requirement.field));
-  }
-  return isOneofPresent(requirement.oneof as DescOneof, message);
-}
+  /** Creates an error for an invalid `(require)` option expression.
+   * @param schema Descriptor containing the invalid expression.
+   */
+  invalidOption(schema: DescMessage): never {
+    throw new ValidationConfigurationError({
+      code: "INVALID_OPTION_VALUE",
+      option: "require",
+      typeName: schema.typeName,
+    });
+  },
 
-/** Validates a `(require)` option once for the message validation entry. */
-export function validateRequireOption(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  violations: ConstraintViolation[],
-): void {
-  const requireOption = getRegisteredOption("requireFields");
-  const options = schema.proto.options;
-  if (!options || !hasExtension(options, requireOption)) return;
+  /** Parses the field groups encoded by a `(require)` expression.
+   * @param expression Option expression to parse.
+   * @param schema Descriptor used to resolve named fields.
+   * @returns Resolved field groups that represent the requirement.
+   */
+  parseRequirements(expression: string, schema: DescMessage): readonly (readonly Requirement[])[] {
+    if (!expression.trim() || /[()]/.test(expression)) Require.invalidOption(schema);
 
-  const require = getExtension(options, requireOption);
-  const expression = require.fields;
-  const groups = parseRequirements(expression, schema);
-  if (
-    groups.some((group) => group.every((requirement) => requirementIsPresent(requirement, message)))
-  ) {
-    return;
-  }
+    const groups = expression.split("|").map((group) => group.trim());
+    if (groups.some((group) => !group)) Require.invalidOption(schema);
 
-  violations.push(
-    createConstraintViolation(context, undefined, undefined, {
-      customMessage: require.errorMsg,
-      defaultMessage: requireDefaultMessage(),
-      placeholders: { "require.fields": expression },
-    }),
-  );
-}
+    return groups.map((group) => {
+      const tokens = group.split("&").map((token) => token.trim());
+      if (tokens.some((token) => !token || /\s/.test(token))) Require.invalidOption(schema);
+      return tokens.map((token) => Require.resolve(token, schema));
+    });
+  },
+
+  /** Resolves one field name used in a `(require)` expression.
+   * @param token Field name from the option expression.
+   * @param schema Descriptor whose fields are searched.
+   * @returns The matching field descriptor.
+   */
+  resolve(token: string, schema: DescMessage): Requirement {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(token)) Require.invalidOption(schema);
+
+    const field = schema.fields.find((candidate) => candidate.name === token);
+    if (field !== undefined) {
+      if (!Presence.supports(field)) {
+        throw new ValidationConfigurationError({
+          code: "INVALID_FIELD_REFERENCE",
+          option: "require",
+          typeName: schema.typeName,
+          fieldPath: [field.name],
+        });
+      }
+      return { field };
+    }
+
+    const oneof = schema.oneofs.find((candidate) => candidate.name === token);
+    if (oneof !== undefined) return { oneof };
+
+    throw new ValidationConfigurationError({
+      code: "UNKNOWN_FIELD_REFERENCE",
+      option: "require",
+      typeName: schema.typeName,
+      fieldPath: [token],
+    });
+  },
+
+  /** Determines whether at least one field in a required group is present.
+   * @param requirement Resolved fields forming one required group.
+   * @param message Candidate message whose fields are read.
+   * @returns Whether the group has a present field.
+   */
+  requirementIsPresent(requirement: Requirement, message: Message): boolean {
+    if (requirement.field !== undefined) {
+      return Presence.is(requirement.field, MessageFields.read(message, requirement.field));
+    }
+    return Presence.isOneof(requirement.oneof as DescOneof, message);
+  },
+} as const;

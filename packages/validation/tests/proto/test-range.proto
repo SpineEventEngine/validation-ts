@@ -27,107 +27,149 @@ syntax = "proto3";
 
 package spine.validation.testing.range_suite;
 
-// Test messages for the `(range)` validation option.
-//
-// This file contains test cases for bounded numeric range validation using
-// bracket notation. Supports inclusive bounds `[min..max]`, exclusive bounds
-// `(min..max)`, and half-open intervals `[min..max)` or `(min..max]`.
-
 import "spine/options.proto";
-
-// Tests closed (inclusive) ranges.
+// Fixture `ClosedRange` exercises `(range)`.
 message ClosedRange {
+    // Validates `percentage` with `(range).value = "[0..100]"`.
     int32 percentage = 1 [(range).value = "[0..100]"];
+    // Validates `rgb_value` with `(range).value = "[0..255]"`.
     int32 rgb_value = 2 [(range).value = "[0..255]"];
+    // Validates `temperature_c` with `(range).value = "[-273.15..1000.0]"`.
     double temperature_c = 3 [(range).value = "[-273.15..1000.0]"];
 }
-
-// Tests open (exclusive) ranges.
+// Fixture `OpenRange` exercises `(range)`.
 message OpenRange {
+    // Validates `positive_value` with `(range).value = "(0.0..100.0)"`.
     double positive_value = 1 [(range).value = "(0.0..100.0)"];
+    // Validates `exclusive_count` with `(range).value = "(0..10)"`.
     int32 exclusive_count = 2 [(range).value = "(0..10)"];
 }
-
-// Tests half-open ranges.
+// Fixture `HalfOpenRange` exercises `(range)`.
 message HalfOpenRange {
+    // Validates `hour` with `(range).value = "[0..24)"`.
     int32 hour = 1 [(range).value = "[0..24)"];
+    // Validates `minute` with `(range).value = "[0..60)"`.
     int32 minute = 2 [(range).value = "[0..60)"];
+    // Validates `degree` with `(range).value = "[0.0..360.0)"`.
     float degree = 3 [(range).value = "[0.0..360.0)"];
+    // Validates `angle` with `(range).value = "(0.0..180.0]"`.
     double angle = 4 [(range).value = "(0.0..180.0]"];
 }
-
-// Tests range validation across different numeric types.
+// Fixture `NumericTypeRanges` exercises `(range)`.
 message NumericTypeRanges {
+    // Validates `int32_field` with `(range).value = "[1..100]"`.
     int32 int32_field = 1 [(range).value = "[1..100]"];
+    // Validates `int64_field` with `(range).value = "[0..1000000]"`.
     int64 int64_field = 2 [(range).value = "[0..1000000]"];
+    // Validates `uint32_field` with `(range).value = "[1..65535]"`.
     uint32 uint32_field = 3 [(range).value = "[1..65535]"];
+    // Validates `uint64_field` with `(range).value = "[1..4294967295]"`.
     uint64 uint64_field = 4 [(range).value = "[1..4294967295]"];
+    // Validates `float_field` with `(range).value = "[0.0..1.0]"`.
     float float_field = 5 [(range).value = "[0.0..1.0]"];
+    // Validates `double_field` with `(range).value = "[-1000.0..1000.0]"`.
     double double_field = 6 [(range).value = "[-1000.0..1000.0]"];
 }
-
-// Tests range validation on repeated fields.
+// Fixture `RepeatedRange` exercises `(range)`.
 message RepeatedRange {
+    // Validates `scores` with `(range).value = "[0..100]"`.
     repeated int32 scores = 1 [(range).value = "[0..100]"];
+    // Validates `percentages` with `(range).value = "[0.0..100.0]"`.
     repeated double percentages = 2 [(range).value = "[0.0..100.0]"];
 }
-
-// Tests combined required and range constraints.
+// Fixture `CombinedConstraints` exercises `(range)`.
 message CombinedConstraints {
+    // Validates `product_id` with `(range).value = "[1..999999]"`.
     int32 product_id = 1 [(range).value = "[1..999999]"];
+    // Validates `quantity` with `(range).value = "[1..1000]"`.
     int32 quantity = 2 [(range).value = "[1..1000]"];
+    // Validates `discount` with `(range).value = "[0.0..1.0]"`.
     double discount = 3 [(range).value = "[0.0..1.0]"];
 }
-
-// Tests range validation for payment card fields.
+// Fixture `PaymentCard` exercises `(range)`.
 message PaymentCard {
+    // Validates `expiry_month` with `(range).value = "[1..12]"`.
     int32 expiry_month = 1 [(range).value = "[1..12]"];
+    // Validates `expiry_year` with `(range).value = "[2024..2050]"`.
     int32 expiry_year = 2 [(range).value = "[2024..2050]"];
+    // Validates `cvv` with `(range).value = "[0..999]"`.
     int32 cvv = 3 [(range).value = "[0..999]"];
 }
-
-// Tests range validation for RGB color values.
+// Fixture `RGBColor` exercises `(range)`.
 message RGBColor {
+    // Validates `red` with `(range).value = "[0..255]"`.
     int32 red = 1 [(range).value = "[0..255]"];
+    // Validates `green` with `(range).value = "[0..255]"`.
     int32 green = 2 [(range).value = "[0..255]"];
+    // Validates `blue` with `(range).value = "[0..255]"`.
     int32 blue = 3 [(range).value = "[0..255]"];
+    // Validates `alpha` with `(range).value = "[0.0..1.0]"`.
     double alpha = 4 [(range).value = "[0.0..1.0]"];
 }
-
-// Tests range validation for pagination parameters.
+// Fixture `PaginationRequest` exercises `(range)`.
 message PaginationRequest {
+    // Validates `page` with `(range).value = "[1..10000]"`.
     int32 page = 1 [(range).value = "[1..10000]"];
+    // Validates `page_size` with `(range).value = "[1..100]"`.
     int32 page_size = 2 [(range).value = "[1..100]"];
 }
-
-// Tests optional fields with range constraints.
+// Fixture `OptionalRange` exercises `(range)`.
 message OptionalRange {
+    // Validates `optional_score` with `(range).value = "[1..100]"`.
     int32 optional_score = 1 [(range).value = "[1..100]"];
+    // Validates `optional_rating` with `(range).value = "[1.0..5.0]"`.
     double optional_rating = 2 [(range).value = "[1.0..5.0]"];
 }
-
-// Tests edge cases with single-value ranges.
+// Fixture `EdgeCaseRanges` exercises `(range)`.
 message EdgeCaseRanges {
+    // Validates `exact_value` with `(range).value = "[42..42]"`.
     int32 exact_value = 1 [(range).value = "[42..42]"];
+    // Validates `pi_approx` with `(range).value = "[3.14..3.15]"`.
     double pi_approx = 2 [(range).value = "[3.14..3.15]"];
 }
 
+// Fixture `RangeContract` exercises `(range)`.
 message RangeContract {
+    // Validates `precise` with `(range).value = "[9007199254740993..9007199254740995]"`.
     int64 precise = 1 [(range).value = "[9007199254740993..9007199254740995]"];
+    // Validates `repeated` with `(range).value = "[0..10]"`.
     repeated int32 repeated = 2 [(range).value = "[0..10]"];
 }
-message ReversedRange { int32 value = 1 [(range).value = "[10..0]"]; }
-message MalformedRange { int32 value = 1 [(range).value = "[0..1..2]"]; }
-message InvalidRangeTarget { string value = 1 [(range).value = "[0..1]"]; }
+// Deliberately tests invalid configuration `(range).value = "[10..0]"`.
+message ReversedRange {
+    // Validates `value` with `(range).value = "[10..0]"`.
+    int32 value = 1 [(range).value = "[10..0]"];
+}
+// Deliberately tests invalid configuration `(range).value = "[0..1..2]"`.
+message MalformedRange {
+    // Validates `value` with `(range).value = "[0..1..2]"`.
+    int32 value = 1 [(range).value = "[0..1..2]"];
+}
+// Deliberately tests invalid configuration `(range).value = "[0..1]"`.
+message InvalidRangeTarget {
+    // Validates `value` with `(range).value = "[0..1]"`.
+    string value = 1 [(range).value = "[0..1]"];
+}
 
-message RangeBounds { int32 upper = 1; }
+// Supplies the named upper bound used by a range expression.
+message RangeBounds {
+    // Provides the upper endpoint referenced by `limits.upper`.
+    int32 upper = 1;
+}
+// Fixture `RangeTextReferences` exercises `(range)`.
 message RangeTextReferences {
+    // Provides the range-bound object used by the textual reference.
     RangeBounds limits = 1;
+    // Validates `value` with `(range).value = "[ -1 .. limits.upper ]"`.
     int32 value = 2 [(range).value = "[ -1 .. limits.upper ]"];
+    // Validates `literal` with `(range).value = "[ 1 .. 2 ]"`.
     int32 literal = 3 [(range).value = "[ 1 .. 2 ]"];
 }
 
+// Fixture `ExactLongRanges` exercises `(range)`.
 message ExactLongRanges {
+    // Validates `signed_value` with `(range).value = "[9007199254740993..9007199254740995]"`.
     int64 signed_value = 1 [(range).value = "[9007199254740993..9007199254740995]"];
+    // Validates `unsigned_value` with `(range).value = "[9007199254740993..9007199254740995]"`.
     uint64 unsigned_value = 2 [(range).value = "[9007199254740993..9007199254740995]"];
 }

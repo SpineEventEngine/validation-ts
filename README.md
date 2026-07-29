@@ -25,7 +25,7 @@ Even if you're not using Spine Event Engine, this library provides a way
 to add runtime validation to your Protobuf-based TypeScript applications:
 
 - ✅ **Define validation in `.proto` files** using declarative [Spine Validation options](https://github.com/SpineEventEngine/base-libraries/blob/master/base/src/main/proto/spine/options.proto).
-- ✅ **Type-safe, runtime validation** for your Protobuf messages.
+- ✅ **Type-safe, runtime validation** for Protobuf messages.
 - ✅ **Clear, customizable error messages** for better UX.
 - ✅ **Works with Protobuf-ES v2** and modern tooling.
 
@@ -42,7 +42,9 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 - **`(goes)`** — Field dependency constraints.
 - **`(require)`** — Complex required field combinations with boolean logic.
 - **`(choice)`** — Require that a `oneof` group has at least one field set.
-- **`(when)`** — Validate frozen Spine Time values against past/future bounds; import [`spine/time_options.proto`](packages/validation/proto/spine/time_options.proto), plus [`spine/time/time.proto`](packages/validation/proto/spine/time/time.proto) for Spine temporal field types.
+- **`(when)`** — Validate Spine Time values against past/future bounds; copy the
+  official [`spine/time_options.proto`](packages/validation/proto/spine/time_options.proto)
+  and its required Spine Time Proto files unchanged onto the import path.
 
 **Developer Experience**
 
@@ -56,17 +58,24 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 
 - **`(set_once)`** — Not currently supported. This option requires state tracking across multiple validations,
   which is outside the scope of single-message validation.
-- **`(pattern)`** — Uses ECMAScript `RegExp`; the frozen Proto contract uses Java `Pattern` as its syntax
+- **`(pattern)`** — Uses ECMAScript `RegExp`; the official Proto documentation uses Java `Pattern` as its syntax
   baseline. See the [package regular-expression limitation](packages/validation/README.md#regular-expressions).
 
 ## 🚀 Getting Started
 
-See the [documentation hub](docs/README.md), [package guide](packages/validation/README.md), and [executable example](packages/example/README.md).
+See the [package guide](packages/validation/README.md), the
+[development reference](packages/validation/docs/README.md), and the
+[executable example](packages/example/README.md).
 
 **Quick install:**
 
 ```bash
 npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
+```
+
+### Alternative: exact preview version
+
+```bash
 npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
 ```
 
@@ -85,7 +94,8 @@ validation-ts/
 │   ├── validation/              # 📦 Main validation package
 │   │   ├── src/                 # Source code
 │   │   ├── tests/               # Contract and regression tests
-│   │   ├── proto/               # Spine validation proto definitions
+│   │   ├── proto/               # Official Spine and project Proto files
+│   │   ├── docs/                # Repository-only development reference
 │   │   └── README.md            # Full package documentation
 │   │
 │   └── example/                 # 🎯 Example project
@@ -98,7 +108,9 @@ validation-ts/
 
 ## 🎓 Documentation
 
-See the [package-level README](packages/validation/README.md) for more details.
+See the [package-level README](packages/validation/README.md) for consumer
+setup and API details. The [development reference](packages/validation/docs/README.md)
+contains architecture, exact validation behavior, and local development notes.
 
 ---
 
@@ -135,10 +147,9 @@ pnpm verify
 
 ## 🤝 Contributing
 
-Development follows the permanent workflow in
-[`AGENTS.md`](AGENTS.md) and
-[`build-protocol/README.md`](build-protocol/README.md). Changes
-integrate through `dev`; `master` remains the automatic publishing branch.
+See the [development guide](packages/validation/docs/contributing.md) for
+local commands, generated inputs, documentation checks, and repository
+delivery practices.
 
 ---
 

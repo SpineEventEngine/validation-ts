@@ -37,54 +37,112 @@ import type { DescFile, DescMessage, MessageShape, Registry } from "@bufbuild/pr
 import type { ConstraintViolation } from "./generated/spine/validate/validation_error_pb.js";
 import type { TemplateString } from "./generated/spine/validate/error_message_pb.js";
 
-import { validateRequiredField } from "./options/required.js";
-import { validatePatternFields } from "./options/pattern.js";
-import { validateRequireOption } from "./options/required-field.js";
-import { validateMinMaxField } from "./options/min-max.js";
-import { validateRangeField } from "./options/range.js";
-import { validateWhenField } from "./options/when.js";
-import { validateDistinctField } from "./options/distinct.js";
-import { validateNestedField } from "./options/validate.js";
-import { validateGoesField } from "./options/goes.js";
-import { validateChoiceOptions } from "./options/choice.js";
-import { legacyFieldValidator, type FieldValidator } from "./orchestration.js";
-import { createValidationContext } from "./validation-contract.js";
+import { Required } from "./options/required.js";
+import { Pattern } from "./options/pattern.js";
+import { Require } from "./options/required-field.js";
+import { MinMax } from "./options/min-max.js";
+import { Range } from "./options/range.js";
+import { When } from "./options/when.js";
+import { Distinct } from "./options/distinct.js";
+import { NestedValidation } from "./options/validate.js";
+import { Goes } from "./options/goes.js";
+import { Choice } from "./options/choice.js";
+import { ValidationOrchestration, type FieldValidator } from "./orchestration.js";
+import { ValidationContext } from "./validation-contract.js";
 
 const fieldValidators: readonly FieldValidator[] = [
   {
+    /** Applies `(required)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     */
     validate(context, schema, message, field, violations) {
-      validateRequiredField(context, schema, message, field, violations);
+      Required.validate(context, schema, message, field, violations);
     },
   },
-  legacyFieldValidator(validatePatternFields),
+  ValidationOrchestration.adaptAllFieldsValidator(Pattern.validate),
   {
+    /** Applies `(min)` and `(max)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     */
     validate(context, schema, message, field, violations) {
-      validateMinMaxField(context, schema, message, field, violations);
+      MinMax.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Applies `(range)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     */
     validate(context, schema, message, field, violations) {
-      validateRangeField(context, schema, message, field, violations);
+      Range.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Applies `(when)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     */
     validate(context, schema, message, field, violations) {
-      validateWhenField(context, schema, message, field, violations);
+      When.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Applies `(distinct)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     */
     validate(context, schema, message, field, violations) {
-      validateDistinctField(context, schema, message, field, violations);
+      Distinct.validate(context, schema, message, field, violations);
     },
   },
   {
+    /** Applies nested `(validate)` traversal to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     * @param registry Registry for nested message descriptors.
+     */
     validate(context, schema, message, field, violations, registry) {
-      validateNestedField(context, schema, message, field, violations, registry, validateInternal);
+      NestedValidation.validate(
+        context,
+        schema,
+        message,
+        field,
+        violations,
+        registry,
+        ValidationEngine.validateInternal,
+      );
     },
   },
   {
+    /** Applies `(goes)` to the current field.
+     * @param context Violation location for the validated message.
+     * @param schema Descriptor containing the field.
+     * @param message Candidate message being validated.
+     * @param field Current field descriptor.
+     * @param violations Collection receiving validation failures.
+     */
     validate(context, schema, message, field, violations) {
-      validateGoesField(context, schema, message, field, violations);
+      Goes.validate(context, schema, message, field, violations);
     },
   },
 ];
@@ -106,11 +164,11 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * Traversal follows declaration order and the internal validator order, but
  * callers must not treat that order as a public compatibility guarantee.
  *
- * Shared-envelope validators retain the root entry type, a complete path of
+ * Validators using the standard `ConstraintViolation` structure retain the root entry type, a complete path of
  * Proto field names, and a descriptor-packed offending value when one exists.
  * Their diagnostic is always present; an option without a custom or default
- * message produces an empty template string. `(pattern)` is the documented
- * legacy exception; see [the pattern section](../../../docs/validation-contract.md#implemented-options).
+ * message produces an empty template string. `(pattern)` diagnostics use its
+ * documented pattern-specific representation; see the package validation contract for details.
  *
  * Currently supported validation options:
  * - `(required)` — validates supported presence targets
@@ -130,7 +188,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  *
  * @example
  * ```typescript
- * import { formatViolations, validate } from '@spine-event-engine/validation';
+ * import { validate, Violations } from '@spine-event-engine/validation';
  * import { UserSchema } from './generated/user_pb.js';
  * import { create } from '@bufbuild/protobuf';
  *
@@ -138,7 +196,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * const violations = validate(UserSchema, user);
  *
  * if (violations.length > 0) {
- *     console.log('Validation failed:', formatViolations(violations));
+ *     console.log('Validation failed:', Violations.formatAll(violations));
  * }
  * ```
  */
@@ -146,111 +204,87 @@ export function validate<S extends DescMessage>(
   schema: S,
   message: NoInfer<MessageShape<S>>,
 ): ConstraintViolation[] {
-  return validateInternal(
+  return ValidationEngine.validateInternal(
     schema,
     message,
-    createValidationContext(schema),
-    createRootRegistry(schema),
+    ValidationContext.create(schema),
+    ValidationEngine.createRootRegistry(schema),
   );
 }
 
-/** Validates a nested message while preserving its original entry context and registry. */
-function validateInternal<S extends DescMessage>(
-  schema: S,
-  message: MessageShape<S>,
-  context: ReturnType<typeof createValidationContext>,
-  registry: Registry,
-): ConstraintViolation[] {
-  const violations: ConstraintViolation[] = [];
+/** Coordinates internal traversal while preserving context and registry state. */
+const ValidationEngine = {
+  /** Traverses one message descriptor and accumulates its constraint violations.
+   * @param schema Descriptor whose options are evaluated.
+   * @param message Candidate message being validated.
+   * @param context Root type and nested path for resulting violations.
+   * @param registry Descriptor registry used by nested validation.
+   * @returns The violations emitted while traversing this message.
+   */
+  validateInternal<S extends DescMessage>(
+    schema: S,
+    message: MessageShape<S>,
+    context: ValidationContext,
+    registry: Registry,
+  ): ConstraintViolation[] {
+    const violations: ConstraintViolation[] = [];
 
-  validateRequireOption(context, schema, message, violations);
+    Require.validate(context, schema, message, violations);
 
-  for (const field of schema.fields) {
-    for (const validator of fieldValidators) {
-      validator.validate(context, schema, message, field, violations, registry);
+    for (const field of schema.fields) {
+      for (const validator of fieldValidators) {
+        validator.validate(context, schema, message, field, violations, registry);
+      }
     }
-  }
 
-  validateChoiceOptions(context, schema, message, violations);
+    Choice.validate(context, schema, message, violations);
 
-  return violations;
-}
+    return violations;
+  },
 
-function createRootRegistry(schema: DescMessage): Registry {
-  return createRegistry(...dependencyClosure(schema.file));
-}
+  /** Builds a descriptor registry containing the root file and its dependencies.
+   * @param schema Root message descriptor.
+   * @returns A registry usable for nested-message lookup.
+   */
+  createRootRegistry(schema: DescMessage): Registry {
+    return createRegistry(...ValidationEngine.dependencyClosure(schema.file));
+  },
 
-function dependencyClosure(root: DescFile): DescFile[] {
-  const files: DescFile[] = [];
-  const visited = new Set<string>();
-  const visit = (file: DescFile): void => {
-    if (visited.has(file.name)) return;
-    visited.add(file.name);
-    files.push(file);
-    for (const dependency of file.dependencies) visit(dependency);
-  };
-  visit(root);
-  return files;
-}
+  /** Collects a file and every transitive descriptor dependency exactly once.
+   * @param root File from which to begin traversal.
+   * @returns The dependency closure in traversal order.
+   */
+  dependencyClosure(root: DescFile): DescFile[] {
+    const files: DescFile[] = [];
+    const visited = new Set<string>();
+    const visit = (file: DescFile): void => {
+      if (visited.has(file.name)) return;
+      visited.add(file.name);
+      files.push(file);
+      for (const dependency of file.dependencies) visit(dependency);
+    };
+    visit(root);
+    return files;
+  },
+} as const;
 
-/**
- * Formats a `TemplateString` by replacing all placeholders with their values.
- *
- * Placeholders in the format `${key}` are replaced with corresponding values
- * from the `placeholderValue` map.
- *
- * @param template The template string with placeholders.
- * @returns Formatted string with placeholders replaced.
- *
- */
-export function formatTemplateString(template: TemplateString): string {
-  let result = template.withPlaceholders;
-  for (const [key, value] of Object.entries(template.placeholderValue)) {
-    result = result.split(`\${${key}}`).join(value);
-  }
-  return result;
-}
-
-/**
- * Formats an array of constraint violations into a human-readable string.
- *
- * Each violation is formatted as: `<index>. <typeName>.<fieldPath>: <message>`
- *
- * @param violations Array of constraint violations to format.
- * @returns Formatted string describing all violations, or "No violations" if empty.
- *
- * @example
- * ```typescript
- * import { create } from '@bufbuild/protobuf';
- * import { formatViolations, validate } from '@spine-event-engine/validation';
- * import { UserSchema } from './generated/user_pb.js';
- *
- * const user = create(UserSchema, { name: '', email: '' });
- * const violations = validate(UserSchema, user);
- * console.log(formatViolations(violations));
- * // Output:
- * // 1. example.User.name: A value must be set.
- * // 2. example.User.email: A value must be set.
- * ```
- */
-export function formatViolations(violations: ConstraintViolation[]): string {
-  if (violations.length === 0) {
-    return "No violations";
-  }
-
-  return violations
-    .map((v, index) => {
-      const fieldPath = v.fieldPath?.fieldName.join(".") || "unknown";
-      const message = v.message ? formatTemplateString(v.message) : "Validation failed";
-      return `${index + 1}. ${v.typeName}.${fieldPath}: ${message}`;
-    })
-    .join("\n");
-}
+/** Formats diagnostic template strings by substituting their named placeholder values. */
+const TemplateStrings = {
+  /** Replaces literal template placeholders with their supplied diagnostic values.
+   * @param template Message template containing placeholder values.
+   * @returns The rendered diagnostic text.
+   */
+  format(template: TemplateString): string {
+    let result = template.withPlaceholders;
+    for (const [key, value] of Object.entries(template.placeholderValue)) {
+      result = result.split(`\${${key}}`).join(value);
+    }
+    return result;
+  },
+};
 
 /**
- * Utility object for working with constraint violations.
- *
- * Provides helper methods to extract formatted information from `ConstraintViolation` objects.
+ * Formats public constraint violations for display and exposes their message and Proto field path.
  *
  * @example
  * ```typescript
@@ -268,6 +302,36 @@ export function formatViolations(violations: ConstraintViolation[]): string {
  * ```
  */
 export const Violations = {
+  /**
+   * Formats an array of constraint violations into a human-readable string.
+   *
+   * Each violation is formatted as `<index>. <typeName>.<fieldPath>: <message>`.
+   *
+   * @param violations The constraint violations to format.
+   * @returns A formatted list, or `"No violations"` for an empty collection.
+   *
+   * @example
+   * ```typescript
+   * import { create } from '@bufbuild/protobuf';
+   * import { validate, Violations } from '@spine-event-engine/validation';
+   * import { UserSchema } from './generated/user_pb.js';
+   *
+   * const user = create(UserSchema, { name: '', email: '' });
+   * console.log(Violations.formatAll(validate(UserSchema, user)));
+   * ```
+   */
+  formatAll(violations: ConstraintViolation[]): string {
+    if (violations.length === 0) return "No violations";
+    return violations
+      .map((violation, index) => {
+        const fieldPath = violation.fieldPath?.fieldName.join(".") || "unknown";
+        const message = violation.message
+          ? TemplateStrings.format(violation.message)
+          : "Validation failed";
+        return `${index + 1}. ${violation.typeName}.${fieldPath}: ${message}`;
+      })
+      .join("\n");
+  },
   /**
    * Returns the formatted error message from a violation with all placeholders replaced.
    *
@@ -287,7 +351,7 @@ export const Violations = {
    * ```
    */
   formatMessage(violation: ConstraintViolation): string {
-    return violation.message ? formatTemplateString(violation.message) : "Validation failed";
+    return violation.message ? TemplateStrings.format(violation.message) : "Validation failed";
   },
 
   /**

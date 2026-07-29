@@ -57,7 +57,12 @@ try {
   }
 
   const forbidden = [...paths].filter(
-    (path) => path.startsWith("src/") || path.startsWith("tests/") || path.startsWith("coverage/"),
+    (path) =>
+      path.startsWith("src/") ||
+      path.startsWith("tests/") ||
+      path.startsWith("coverage/") ||
+      path === "docs" ||
+      path.startsWith("docs/"),
   );
   if (forbidden.length > 0) {
     throw new Error(`Packed package contains forbidden paths: ${forbidden.join(", ")}`);
@@ -82,13 +87,86 @@ try {
   );
   run("pnpm", ["add", "--ignore-scripts", archive, protobufRuntime], consumerRoot);
 
+  const typeSmokePath = join(consumerRoot, "smoke.ts");
+  await writeFile(
+    typeSmokePath,
+    [
+      'import type { Message } from "@bufbuild/protobuf";',
+      'import type { GenMessage } from "@bufbuild/protobuf/codegenv2";',
+      'import * as validation from "@spine-event-engine/validation";',
+      'import { ValidationConfigurationError, validate, Violations, type ConstraintViolation } from "@spine-event-engine/validation";',
+      "",
+      'type SmokeMessage = Message<"smoke.Message"> & { text: string };',
+      'type OtherMessage = Message<"smoke.Other"> & { count: number };',
+      "type SmokeSchema = GenMessage<SmokeMessage>;",
+      "type OtherSchema = GenMessage<OtherMessage>;",
+      "declare const schema: SmokeSchema;",
+      "declare const otherSchema: OtherSchema;",
+      "declare const message: SmokeMessage;",
+      "declare const otherMessage: OtherMessage;",
+      "declare const violation: ConstraintViolation;",
+      "",
+      "const violations = validate(schema, message);",
+      "Violations.formatAll(violations);",
+      "Violations.formatMessage(violation);",
+      "Violations.failurePath(violation);",
+      'const configurationError = new ValidationConfigurationError({ code: "INVALID_OPTION_VALUE", option: "range", typeName: "smoke.Message" });',
+      "const configurationCode: string = configurationError.code;",
+      "void configurationCode;",
+      "",
+      "// @ts-expect-error validate requires a message matching the schema.",
+      "validate(schema, otherMessage);",
+      "// @ts-expect-error validate requires a schema matching the message.",
+      "validate(otherSchema, message);",
+      "// @ts-expect-error Removed collection formatter is not public.",
+      "validation.formatViolations(violations);",
+      "// @ts-expect-error Removed template formatter is not public.",
+      "validation.formatTemplateString(violation.message);",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    join(consumerRoot, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
+          noEmit: true,
+          strict: true,
+          skipLibCheck: true,
+          target: "ES2024",
+        },
+        files: ["smoke.ts"],
+      },
+      null,
+      2,
+    ),
+  );
+  run(resolve(repositoryRoot, "node_modules/.bin/tsc"), ["-p", "tsconfig.json"], consumerRoot);
+
   const smokePath = join(consumerRoot, "smoke.mjs");
   await writeFile(
     smokePath,
     [
       'import * as validation from "@spine-event-engine/validation";',
-      'for (const name of ["validate", "formatViolations", "Violations"]) {',
-      "    if (!(name in validation)) throw new Error(`Missing export: ${name}`);",
+      'for (const name of ["validate", "ValidationConfigurationError"]) {',
+      '    if (typeof validation[name] !== "function") {',
+      "        throw new Error(`Expected callable runtime export: ${name}`);",
+      "    }",
+      "}",
+      'if (typeof validation.Violations !== "object" || validation.Violations === null) {',
+      '    throw new Error("Expected runtime export Violations to be an object");',
+      "}",
+      'for (const name of ["formatAll", "formatMessage", "failurePath"]) {',
+      '    if (typeof validation.Violations[name] !== "function") {',
+      "        throw new Error(`Expected Violations.${name} to be callable`);",
+      "    }",
+      "}",
+      'for (const name of ["formatViolations", "formatTemplateString"]) {',
+      "    if (name in validation) {",
+      "        throw new Error(`Removed runtime export is present: ${name}`);",
+      "    }",
       "}",
       'console.log("Consumer loaded the packed ESM API.");',
       "",

@@ -31,6 +31,9 @@
  */
 
 import { create } from "@bufbuild/protobuf";
+
+const atLeast = (value: number, minimum: number): void =>
+  expect(value)["toBeGreaterThanOrEqual"](minimum);
 import {
   anyUnpack,
   BytesValueSchema,
@@ -251,7 +254,7 @@ describe("Distinct Validation", () => {
       });
 
       const violations = validate(DistinctCombinedConstraintsSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(2);
+      atLeast(violations.length, 2);
 
       const rangeViolation = violations.find(
         (v) =>

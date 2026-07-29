@@ -19,83 +19,99 @@ import type { DescField, DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { default_message, RangeOptionSchema } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import {
-  createConstraintViolation,
-  readField,
-  type ValidationContext,
-} from "../validation-contract.js";
-import {
-  assertNumericTarget,
-  compareNumeric,
-  configurationError,
-  isNaNNumeric,
-  resolveBound,
-  runtimeNumeric,
-} from "./numeric.js";
+import { ValidationOptions } from "../options-registry.js";
+import { ViolationFactory, MessageFields, type ValidationContext } from "../validation-contract.js";
+import { NumericValues, type ResolvedBound } from "./numeric.js";
 
-/** Validates `(range)` for one field in orchestration order. */
-export function validateRangeField(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  field: DescField,
-  violations: ConstraintViolation[],
-): void {
-  const extension = getRegisteredOption("range");
-  if (!extension || !hasOption(field, extension)) return;
-  const option = getOption(field, extension);
-  const scalar = assertNumericTarget("range", schema, field);
-  const parsed = parseRange(option.value, scalar, schema, message, field);
-  const fieldValue = readField(message, field);
-  const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
-  if (!Array.isArray(values)) return;
-  for (const raw of values) {
-    const value = runtimeNumeric(raw, scalar);
-    const lowerComparison = compareNumeric(value, parsed.lower.value);
-    const upperComparison = compareNumeric(value, parsed.upper.value);
-    const validLower = parsed.lowerInclusive ? lowerComparison >= 0 : lowerComparison > 0;
-    const validUpper = parsed.upperInclusive ? upperComparison <= 0 : upperComparison < 0;
-    if (!isNaNNumeric(value) && validLower && validUpper) continue;
-    violations.push(
-      createConstraintViolation(context.atField(field), field, raw, {
-        customMessage: option.errorMsg || undefined,
-        defaultMessage: getOption(RangeOptionSchema, default_message),
-        placeholders: {
-          "range.value": parsed.display,
-          value: String(raw),
-          range: parsed.display,
-        },
-      }),
-    );
-  }
-}
+/** Evaluates `(range)` interval declarations for numeric fields. */
+export const Range = {
+  /** Adds a violation when a numeric field lies outside its `(range)` interval.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor used to resolve range references.
+   * @param message Candidate message supplying the compared value.
+   * @param field Numeric field declaring `(range)`.
+   * @param violations Mutable collection receiving range diagnostics.
+   */
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    field: DescField,
+    violations: ConstraintViolation[],
+  ): void {
+    const extension = ValidationOptions.get("range");
+    if (!extension || !hasOption(field, extension)) return;
+    const option = getOption(field, extension);
+    const scalar = NumericValues.assertTarget("range", schema, field);
+    const parsed = Range.parse(option.value, scalar, schema, message, field);
+    const fieldValue = MessageFields.read(message, field);
+    const values = field.fieldKind === "list" ? fieldValue : [fieldValue];
+    if (!Array.isArray(values)) return;
+    for (const raw of values) {
+      const value = NumericValues.runtime(raw, scalar);
+      const lowerComparison = NumericValues.compare(value, parsed.lower.value);
+      const upperComparison = NumericValues.compare(value, parsed.upper.value);
+      const validLower = parsed.lowerInclusive ? lowerComparison >= 0 : lowerComparison > 0;
+      const validUpper = parsed.upperInclusive ? upperComparison <= 0 : upperComparison < 0;
+      if (!NumericValues.isNaN(value) && validLower && validUpper) continue;
+      violations.push(
+        ViolationFactory.create(context.atField(field), field, raw, {
+          customMessage: option.errorMsg || undefined,
+          defaultMessage: getOption(RangeOptionSchema, default_message),
+          placeholders: {
+            "range.value": parsed.display,
+            value: String(raw),
+            range: parsed.display,
+          },
+        }),
+      );
+    }
+  },
 
-function parseRange(
-  declaration: string,
-  scalar: ReturnType<typeof assertNumericTarget>,
-  schema: DescMessage,
-  message: Message,
-  field: DescField,
-) {
-  const match = /^(\s*)(\[|\()([\s\S]*?)(\.\.)([\s\S]*?)(\]|\))(\s*)$/.exec(declaration);
-  if (!match || !match[3].trim() || !match[5].trim())
-    throw configurationError("INVALID_OPTION_VALUE", "range", schema.typeName, [field.name]);
-  const lowerToken = match[3].trim();
-  const upperToken = match[5].trim();
-  const lower = resolveBound(lowerToken, scalar, "range", schema, message, field);
-  const upper = resolveBound(upperToken, scalar, "range", schema, message, field);
-  if (compareNumeric(lower.value, upper.value) > 0)
-    throw configurationError("INVALID_OPTION_VALUE", "range", schema.typeName, [field.name]);
-  return {
-    lower,
-    upper,
-    lowerInclusive: match[2] === "[",
-    upperInclusive: match[6] === "]",
-    display: `${match[1]}${match[2]}${renderBound(match[3], lowerToken, lower)}${match[4]}${renderBound(match[5], upperToken, upper)}${match[6]}${match[7]}`,
-  };
-}
+  /** Parses a `(range)` declaration into comparable lower and upper bounds.
+   * @param declaration Range expression from the field option.
+   * @param scalar Numeric scalar type accepted by the field.
+   * @param schema Descriptor used to resolve field references.
+   * @param message Candidate message used to read referenced bounds.
+   * @param field Field whose range expression is interpreted.
+   * @returns Parsed bounds and their inclusive or exclusive delimiters.
+   */
+  parse(
+    declaration: string,
+    scalar: ReturnType<typeof NumericValues.assertTarget>,
+    schema: DescMessage,
+    message: Message,
+    field: DescField,
+  ) {
+    const match = /^(\s*)(\[|\()([\s\S]*?)(\.\.)([\s\S]*?)(\]|\))(\s*)$/.exec(declaration);
+    if (!match || !match[3].trim() || !match[5].trim())
+      throw NumericValues.configurationError("INVALID_OPTION_VALUE", "range", schema.typeName, [
+        field.name,
+      ]);
+    const lowerToken = match[3].trim();
+    const upperToken = match[5].trim();
+    const lower = NumericValues.resolveBound(lowerToken, scalar, "range", schema, message, field);
+    const upper = NumericValues.resolveBound(upperToken, scalar, "range", schema, message, field);
+    if (NumericValues.compare(lower.value, upper.value) > 0)
+      throw NumericValues.configurationError("INVALID_OPTION_VALUE", "range", schema.typeName, [
+        field.name,
+      ]);
+    return {
+      lower,
+      upper,
+      lowerInclusive: match[2] === "[",
+      upperInclusive: match[6] === "]",
+      display: `${match[1]}${match[2]}${Range.renderBound(match[3], lowerToken, lower)}${match[4]}${Range.renderBound(match[5], upperToken, upper)}${match[6]}${match[7]}`,
+    };
+  },
 
-function renderBound(raw: string, token: string, bound: ReturnType<typeof resolveBound>): string {
-  return bound.display === token ? raw : raw.replace(token, bound.display);
-}
+  /** Renders a parsed bound for use in a range diagnostic.
+   * @param raw Original range expression.
+   * @param token Text identifying the bound within the expression.
+   * @param bound Resolved numeric bound value.
+   * @returns The literal token or resolved numeric value shown to callers.
+   */
+  renderBound(raw: string, token: string, bound: ResolvedBound): string {
+    return bound.display === token ? raw : raw.replace(token, bound.display);
+  },
+} as const;

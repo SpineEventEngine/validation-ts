@@ -74,19 +74,18 @@ const optionRegistry = {
   when,
 } as const;
 
-/**
- * Type representing the names of all registered options.
- */
+/** Names a generated validation option extension registered by this package. */
 export type OptionName = keyof typeof optionRegistry;
+/** Maps every supported option name to its generated extension definition. */
 type OptionRegistry = typeof optionRegistry;
 
-/**
- * Gets a registered option extension by name.
- *
- * @param name The name of the option to retrieve.
- * @returns The registered option extension.
- * @internal
- */
-export function getRegisteredOption<N extends OptionName>(name: N): OptionRegistry[N] {
-  return optionRegistry[name];
-}
+/** Exposes generated option extensions by their stable validation names. */
+export const ValidationOptions = {
+  /** Retrieves the generated extension registered under an option name.
+   * @param name Name of the validation option extension to retrieve.
+   * @returns The extension associated with `name`.
+   */
+  get<N extends OptionName>(name: N): OptionRegistry[N] {
+    return optionRegistry[name];
+  },
+};

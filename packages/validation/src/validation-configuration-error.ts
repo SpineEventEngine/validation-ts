@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-/** Stable codes for invalid validation-option declarations. */
+/** Classifies why a validation option declaration cannot be applied. */
 export type ValidationConfigurationErrorCode =
   | "UNSUPPORTED_OPTION_TARGET"
   | "INVALID_OPTION_VALUE"
   | "UNKNOWN_FIELD_REFERENCE"
   | "INVALID_FIELD_REFERENCE";
 
-/** Data exposed by a validation configuration error. */
+/** Identifies the invalid option declaration used to create a configuration error. */
 export interface ValidationConfigurationErrorInit {
+  /** Classification of the invalid declaration. */
   code: ValidationConfigurationErrorCode;
+  /** Canonical validation option name without Proto parentheses. */
   option: string;
+  /** Fully qualified Proto type declaring the option. */
   typeName: string;
+  /** Optional Proto field-name path locating the option declaration. */
   fieldPath?: readonly string[];
+  /** Underlying reason supplied by option parsing or resolution. */
   cause?: unknown;
 }
 
@@ -36,12 +41,20 @@ export interface ValidationConfigurationErrorInit {
  * The `option` value is the canonical option name without Proto parentheses.
  */
 export class ValidationConfigurationError extends Error {
+  /** Classification of the invalid declaration. */
   readonly code: ValidationConfigurationErrorCode;
+  /** Canonical validation option name without Proto parentheses. */
   readonly option: string;
+  /** Fully qualified Proto type declaring the option. */
   readonly typeName: string;
+  /** Optional Proto field-name path locating the option declaration. */
   readonly fieldPath?: readonly string[];
+  /** Underlying reason supplied by option parsing or resolution. */
   readonly cause?: unknown;
 
+  /** Creates an error that identifies an invalid validation-option declaration.
+   * @param init Structured location and classification of the invalid declaration.
+   */
   constructor(init: ValidationConfigurationErrorInit) {
     super(
       `Invalid ${init.option} validation configuration for ${init.typeName}` +

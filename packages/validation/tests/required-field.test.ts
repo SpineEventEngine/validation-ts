@@ -41,17 +41,17 @@ import {
   ShippingAddressSchema,
   AccountCreationSchema,
   OptionalDataSchema,
-  InvalidRequireDirectNumericSchema,
+  InvalidRequireDirectNumericSchema as InvalidRequireNumericSchema,
   InvalidRequireParenthesesSchema,
   InvalidRequireUnknownSchema,
   InvalidRequireGrammarSchema,
   InvalidRequireBooleanSchema,
   InvalidRequireEmptySchema,
-  InvalidRequireLeadingPipeSchema,
-  InvalidRequireLeadingAndSchema,
-  InvalidRequireTrailingPipeSchema,
-  InvalidRequireTrailingAndSchema,
-  InvalidRequireEmptyGroupSchema,
+  InvalidRequireLeadingPipeSchema as InvalidRequirePipeSchema,
+  InvalidRequireLeadingAndSchema as InvalidRequireAndSchema,
+  InvalidRequireTrailingPipeSchema as InvalidRequirePipeEnd,
+  InvalidRequireTrailingAndSchema as InvalidRequireAndEnd,
+  InvalidRequireEmptyGroupSchema as InvalidRequireEmptyGroup,
   RequireOneofSchema,
 } from "./generated/test-required-field_pb.js";
 
@@ -418,12 +418,12 @@ describe("Required Field Option Validation", () => {
   describe("Configuration errors", () => {
     it("rejects a direct numeric field reference", () => {
       expect(() =>
-        validate(InvalidRequireDirectNumericSchema, create(InvalidRequireDirectNumericSchema)),
+        validate(InvalidRequireNumericSchema, create(InvalidRequireNumericSchema)),
       ).toThrow(
         expect.objectContaining({
           code: "INVALID_FIELD_REFERENCE",
           option: "require",
-          typeName: InvalidRequireDirectNumericSchema.typeName,
+          typeName: InvalidRequireNumericSchema.typeName,
           fieldPath: ["number"],
         }),
       );
@@ -467,12 +467,12 @@ describe("Required Field Option Validation", () => {
         }),
       );
       for (const schema of [
+        InvalidRequireEmptyGroup,
+        InvalidRequirePipeSchema,
+        InvalidRequireAndSchema,
+        InvalidRequirePipeEnd,
+        InvalidRequireAndEnd,
         InvalidRequireEmptySchema,
-        InvalidRequireLeadingPipeSchema,
-        InvalidRequireLeadingAndSchema,
-        InvalidRequireTrailingPipeSchema,
-        InvalidRequireTrailingAndSchema,
-        InvalidRequireEmptyGroupSchema,
       ]) {
         expect(() => validate(schema as any, create(schema as any))).toThrow(
           expect.objectContaining({

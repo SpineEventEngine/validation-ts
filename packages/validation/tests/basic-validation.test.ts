@@ -31,7 +31,7 @@
  */
 
 import { create } from "@bufbuild/protobuf";
-import { formatViolations, validate, Violations } from "../src/index.js";
+import { validate, Violations } from "../src/index.js";
 import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb.js";
 
 describe("Basic Validation", () => {
@@ -39,14 +39,14 @@ describe("Basic Validation", () => {
     expect(typeof validate).toBe("function");
   });
 
-  it("should export `formatViolations` function", () => {
-    expect(typeof formatViolations).toBe("function");
+  it("formats violations through the public Violations owner", () => {
+    expect(typeof Violations.formatAll).toBe("function");
   });
 });
 
 describe("Format Violations", () => {
   it('should return "No violations" for empty array', () => {
-    const result = formatViolations([]);
+    const result = Violations.formatAll([]);
     expect(result).toBe("No violations");
   });
 
@@ -61,7 +61,7 @@ describe("Format Violations", () => {
     });
     const messageViolation = create(ConstraintViolationSchema, { typeName: "example.User" });
 
-    expect(formatViolations([fieldViolation, messageViolation])).toBe(
+    expect(Violations.formatAll([fieldViolation, messageViolation])).toBe(
       "1. example.User.email: Invalid not-an-email\n2. example.User.unknown: Validation failed",
     );
     expect(Violations.failurePath(fieldViolation)).toBe("email");

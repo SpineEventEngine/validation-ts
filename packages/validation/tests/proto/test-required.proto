@@ -27,61 +27,70 @@ syntax = "proto3";
 
 package spine.validation.testing.required_suite;
 
-// Test messages for the `(required)` and `(if_missing)` validation options.
-//
-// This file contains test cases for required field validation across different
-// field types (strings, numbers, messages, enums, repeated fields) and custom
-// error messages via the `(if_missing)` option.
-
 import "spine/options.proto";
-
-// Tests required field validation on various field types.
+// Fixture `RequiredFields` exercises `(required)`.
 message RequiredFields {
+    // Validates `name` with `(required) = true`.
     string name = 1 [(required) = true];
+    // Provides an optional scalar control beside required fields.
     int32 age = 2;
+    // Validates `address` with `(required) = true`.
     Address address = 3 [(required) = true];
+    // Validates `status` with `(required) = true`.
     Status status = 4 [(required) = true];
+    // Validates `tags` with `(required) = true`.
     repeated string tags = 5 [(required) = true];
+    // Validates `payload` with `(required) = true`.
     bytes payload = 6 [(required) = true];
+    // Validates `scores` with `(required) = true`.
     map<string, int32> scores = 7 [(required) = true];
 }
 
+// Deliberately applies `(required)` to an unsupported int32 target.
 message InvalidRequiredNumeric {
+    // Is the unsupported int32 target for `(required)`.
     int32 age = 1 [(required) = true];
 }
 
+// Deliberately applies `(required)` to an unsupported bool target.
 message InvalidRequiredBoolean {
+    // Is the unsupported bool target for `(required)`.
     bool enabled = 1 [(required) = true];
 }
-
-// Nested message for testing required message fields.
+// Provides nested address input for the required-message case.
 message Address {
+    // Supplies the unconstrained street component of the address.
     string street = 1;
+    // Supplies the unconstrained city component of the address.
     string city = 2;
 }
-
-// Enum for testing required enum fields.
+// Identifies the required account status in `RequiredFields`.
 enum Status {
+    // Is the default unset status rejected by `(required)`.
     STATUS_UNSPECIFIED = 0;
+    // Represents an active status that satisfies `(required)`.
     STATUS_ACTIVE = 1;
+    // Represents an inactive status that still satisfies `(required)`.
     STATUS_INACTIVE = 2;
 }
-
-// Tests custom error messages via the `(if_missing)` option.
+// Fixture `CustomErrorMessages` exercises `(required)`.
 message CustomErrorMessages {
+    // Validates `username` with `(required) = true`.
     string username = 1 [
         (required) = true,
         (if_missing).error_msg = "Username is mandatory for account creation."
     ];
 
+    // Validates `email` with `(required) = true`.
     string email = 2 [
         (required) = true,
         (if_missing).error_msg = "Email address must be provided."
     ];
 }
-
-// Tests optional fields without required constraints.
+// Provides fields that remain optional without `(required)`.
 message OptionalFields {
+    // Supplies an optional text control.
     string nickname = 1;
+    // Supplies an optional numeric control.
     int32 score = 2;
 }

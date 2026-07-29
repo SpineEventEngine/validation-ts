@@ -2,11 +2,11 @@ import { create } from "@bufbuild/protobuf";
 import { anyUnpack, StringValueSchema } from "@bufbuild/protobuf/wkt";
 import { ValidationConfigurationError, Violations, validate } from "@spine-event-engine/validation";
 
-import { runExampleScenarios } from "../src/scenarios.js";
+import { ExampleScenarios } from "../src/scenarios.js";
 import { InvalidRequiredTargetSchema } from "../src/generated/testing/invalid_configuration_pb.js";
 
 function scenario(name: string) {
-  const value = runExampleScenarios().find((item) => item.name === name);
+  const value = ExampleScenarios.run().find((item) => item.name === name);
   if (!value) throw new Error(`Missing example scenario: ${name}`);
   return value;
 }

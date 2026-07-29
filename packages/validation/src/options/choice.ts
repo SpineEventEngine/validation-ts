@@ -21,35 +21,46 @@ import type { DescMessage, Message } from "@bufbuild/protobuf";
 
 import type { ConstraintViolation } from "../generated/spine/validate/validation_error_pb.js";
 import { ChoiceOptionSchema, default_message } from "../generated/spine/options_pb.js";
-import { getRegisteredOption } from "../options-registry.js";
-import { isOneofPresent } from "../presence.js";
-import { createConstraintViolation, type ValidationContext } from "../validation-contract.js";
+import { ValidationOptions } from "../options-registry.js";
+import { Presence } from "../presence.js";
+import { ViolationFactory, type ValidationContext } from "../validation-contract.js";
 
-function defaultMessage(): string | undefined {
-  return getOption(ChoiceOptionSchema, default_message);
-}
+/** Owns `(choice)` option validation. */
+export const Choice = {
+  /** Adds violations for required oneof groups that have no selected member.
+   * @param context Root type and path carried into created violations.
+   * @param schema Descriptor whose oneof declarations carry `(choice)` options.
+   * @param message Candidate message whose oneof presence is inspected.
+   * @param violations Mutable collection receiving failed choice diagnostics.
+   */
+  validate(
+    context: ValidationContext,
+    schema: DescMessage,
+    message: Message,
+    violations: ConstraintViolation[],
+  ): void {
+    const choiceOption = ValidationOptions.get("choice");
+    if (!choiceOption) return;
 
-/** Validates required oneof groups in descriptor order. */
-export function validateChoiceOptions(
-  context: ValidationContext,
-  schema: DescMessage,
-  message: Message,
-  violations: ConstraintViolation[],
-): void {
-  const choiceOption = getRegisteredOption("choice");
-  if (!choiceOption) return;
+    for (const oneof of schema.oneofs) {
+      if (!hasOption(oneof, choiceOption)) continue;
+      const option = getOption(oneof, choiceOption);
+      if (!option.required || Presence.isOneof(oneof, message)) continue;
 
-  for (const oneof of schema.oneofs) {
-    if (!hasOption(oneof, choiceOption)) continue;
-    const option = getOption(oneof, choiceOption);
-    if (!option.required || isOneofPresent(oneof, message)) continue;
+      violations.push(
+        ViolationFactory.create(context, undefined, undefined, {
+          customMessage: option.errorMsg,
+          defaultMessage: Choice.defaultMessage(),
+          placeholders: { "group.path": oneof.name, "parent.type": context.rootTypeName },
+        }),
+      );
+    }
+  },
 
-    violations.push(
-      createConstraintViolation(context, undefined, undefined, {
-        customMessage: option.errorMsg,
-        defaultMessage: defaultMessage(),
-        placeholders: { "group.path": oneof.name, "parent.type": context.rootTypeName },
-      }),
-    );
-  }
-}
+  /** Retrieves the extension-level fallback message for `(choice)` violations.
+   * @returns The configured fallback template, when the option schema supplies one.
+   */
+  defaultMessage(): string | undefined {
+    return getOption(ChoiceOptionSchema, default_message);
+  },
+} as const;

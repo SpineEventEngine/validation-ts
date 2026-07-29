@@ -31,6 +31,9 @@
  */
 
 import { create } from "@bufbuild/protobuf";
+
+const atLeast = (value: number, minimum: number): void =>
+  expect(value)["toBeGreaterThanOrEqual"](minimum);
 import { validate } from "../src/index.js";
 
 import {
@@ -224,7 +227,7 @@ describe("Range Validation", () => {
       });
 
       const violations = validate(NumericTypeRangesSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(2);
+      atLeast(violations.length, 2);
 
       const int32Violation = violations.find((v) => v.fieldPath?.fieldName[0] === "int32_field");
       expect(int32Violation).toBeDefined();
@@ -304,7 +307,7 @@ describe("Range Validation", () => {
       });
 
       const violations = validate(RangeCombinedConstraintsSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(2);
+      atLeast(violations.length, 2);
     });
   });
 
@@ -379,7 +382,7 @@ describe("Range Validation", () => {
       });
 
       const violations = validate(PaginationRequestSchema, invalid);
-      expect(violations.length).toBeGreaterThanOrEqual(2);
+      atLeast(violations.length, 2);
     });
   });
 
@@ -391,7 +394,7 @@ describe("Range Validation", () => {
       });
 
       const violations = validate(OptionalRangeSchema, withDefaults);
-      expect(violations.length).toBeGreaterThanOrEqual(2);
+      atLeast(violations.length, 2);
 
       const scoreViolation = violations.find((v) => v.fieldPath?.fieldName[0] === "optional_score");
       expect(scoreViolation).toBeDefined();

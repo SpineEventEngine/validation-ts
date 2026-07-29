@@ -30,46 +30,62 @@ package test;
 
 import "spine/options.proto";
 
-// Test message with required choice option.
+// Requires one checkout payment instrument.
 message PaymentMethod {
+    // Requires exactly one supported payment instrument.
     oneof method {
         option (choice).required = true;
 
+        // Supplies a credit-card payment reference.
         string credit_card = 1;
+        // Supplies a bank-account payment reference.
         string bank_account = 2;
+        // Supplies a PayPal payment reference.
         string paypal = 3;
     }
 }
 
-// Test message with custom error message.
+// Requires a contact channel and verifies its custom missing-choice message.
 message ContactMethod {
+    // Requires either an email address or a phone number.
     oneof contact {
         option (choice).required = true;
         option (choice).error_msg = "You must provide a contact method (email or phone).";
 
+        // Supplies the email contact channel.
         string email = 1;
+        // Supplies the phone contact channel.
         string phone = 2;
     }
 }
 
-// Test message with optional oneof (choice.required = false).
+// Exercises a delivery-method choice that may be omitted.
 message ShippingOption {
+    // Allows at most one delivery speed without requiring a selection.
     oneof delivery {
         option (choice).required = false;
 
+        // Selects standard delivery.
         bool standard = 1;
+        // Selects express delivery.
         bool express = 2;
+        // Selects overnight delivery.
         bool overnight = 3;
     }
 }
 
+// Exercises two independently required oneof groups in one message.
 message MultipleRequiredChoices {
+    // Requires the first choice group to receive a value.
     oneof first {
         option (choice).required = true;
+        // Supplies the required count for the first group.
         int32 count = 1;
     }
+    // Requires the second choice group to receive a value.
     oneof second {
         option (choice).required = true;
+        // Supplies the required enabled flag for the second group.
         bool enabled = 2;
     }
 }

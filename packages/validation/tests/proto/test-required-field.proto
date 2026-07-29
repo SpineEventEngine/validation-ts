@@ -27,115 +27,172 @@ syntax = "proto3";
 
 package spine.validation.testing.requiredfield_suite;
 
-// Test messages for the `(require)` message-level validation option.
-//
-// This file contains test cases for the `(require)` constraint that
-// requires specific combinations of fields using boolean logic (OR, AND, and
-// parentheses for grouping). The constraint is specified at the message level.
-
 import "spine/options.proto";
-
-// Tests simple OR logic: at least one field must be set.
+// Fixture `UserIdentifier` exercises `(require)`.
 message UserIdentifier {
     option (require).fields = "id | email";
 
+    // Supplies the first alternative required identifier.
     string id = 1;
+    // Supplies the second alternative required identifier.
     string email = 2;
 }
-
-// Tests AND logic: both fields must be set together.
+// Fixture `ContactInfo` exercises `(require)`.
 message ContactInfo {
     option (require).fields = "phone & country_code";
 
+    // Supplies the required phone conjunct.
     string phone = 1;
+    // Supplies the required country-code conjunct.
     string country_code = 2;
 }
-
-// Tests complex OR with AND groups.
+// Fixture `PersonName` exercises `(require)`.
 message PersonName {
     option (require).fields = "given_name | honorific_prefix & family_name";
 
+    // Supplies the prefix operand in the secondary name group.
     string honorific_prefix = 1;
+    // Supplies the standalone given-name alternative.
     string given_name = 2;
+    // Supplies an unconstrained middle-name control.
     string middle_name = 3;
+    // Supplies the family-name operand paired with the prefix.
     string family_name = 4;
+    // Supplies an unconstrained honorific-suffix control.
     string honorific_suffix = 5;
 }
-
-// Tests multiple OR alternatives.
+// Fixture `PaymentMethod` exercises `(require)`.
 message PaymentMethod {
     option (require).fields = "credit_card | bank_account | paypal_email";
 
+    // Supplies the credit-card alternative.
     string credit_card = 1;
+    // Supplies the bank-account alternative.
     string bank_account = 2;
+    // Supplies the PayPal-email alternative.
     string paypal_email = 3;
 }
-
-// Tests multiple AND requirements.
+// Fixture `ShippingAddress` exercises `(require)`.
 message ShippingAddress {
     option (require).fields = "street & city & postal_code & country";
 
+    // Supplies the required street operand.
     string street = 1;
+    // Supplies the required city operand.
     string city = 2;
+    // Supplies the required postal-code operand.
     string postal_code = 3;
+    // Supplies the required country operand.
     string country = 4;
+    // Supplies an optional state control outside the required group.
     string state = 5;
 }
-
-// Tests complex nested logic with grouping.
+// Fixture `AccountCreation` exercises `(require)`.
 message AccountCreation {
     option (require).fields = "username & password | oauth_token";
 
+    // Supplies the username conjunct in the credential alternative.
     string username = 1;
+    // Supplies the password conjunct in the credential alternative.
     string password = 2;
+    // Supplies the OAuth-token alternative.
     string oauth_token = 3;
 }
-
-// Tests message without required_field constraint (all fields optional).
+// Provides controls omitted from every `(require)` expression.
 message OptionalData {
+    // Supplies the first unconstrained optional control.
     string field1 = 1;
+    // Supplies the second unconstrained optional control.
     string field2 = 2;
+    // Supplies the numeric unconstrained optional control.
     int32 field3 = 3;
 }
 
+// Deliberately tests invalid configuration `(require).fields = "number"`.
 message InvalidRequireDirectNumeric {
     option (require).fields = "number";
+    // Is the unsupported numeric operand named by `(require).fields`.
     int32 number = 1;
 }
 
+// Deliberately tests invalid configuration `(require).fields = "(name)"`.
 message InvalidRequireParentheses {
     option (require).fields = "(name)";
+    // Is the operand wrapped by the unsupported parenthesized expression.
     string name = 1;
 }
 
+// Deliberately tests invalid configuration `(require).fields = "missing"`.
 message InvalidRequireUnknown {
     option (require).fields = "missing";
+    // Provides the available field while `missing` remains unresolved.
     string name = 1;
 }
 
+// Deliberately tests invalid configuration `(require).fields = "name && other"`.
 message InvalidRequireGrammar {
     option (require).fields = "name && other";
+    // Supplies the left operand around the invalid doubled ampersand.
     string name = 1;
+    // Supplies the right operand around the invalid doubled ampersand.
     string other = 2;
 }
 
+// Deliberately tests invalid configuration `(require).fields = "enabled"`.
 message InvalidRequireBoolean {
     option (require).fields = "enabled";
+    // Is the unsupported boolean operand named by `(require).fields`.
     bool enabled = 1;
 }
 
-message InvalidRequireEmpty { option (require).fields = ""; string name = 1; }
-message InvalidRequireLeadingPipe { option (require).fields = "|name"; string name = 1; }
-message InvalidRequireLeadingAnd { option (require).fields = "&name"; string name = 1; }
-message InvalidRequireTrailingPipe { option (require).fields = "name|"; string name = 1; }
-message InvalidRequireTrailingAnd { option (require).fields = "name&"; string name = 1; }
-message InvalidRequireEmptyGroup { option (require).fields = "name||other"; string name = 1; string other = 2; }
+// Deliberately tests invalid configuration `(require).fields = ""`.
+message InvalidRequireEmpty {
+    option (require).fields = "";
+    // Names the field omitted by the empty `(require).fields` expression.
+    string name = 1;
+}
+// Deliberately tests invalid configuration `(require).fields = "|name"`.
+message InvalidRequireLeadingPipe {
+    option (require).fields = "|name";
+    // Names the operand after the leading pipe in `(require).fields`.
+    string name = 1;
+}
+// Deliberately tests invalid configuration `(require).fields = "&name"`.
+message InvalidRequireLeadingAnd {
+    option (require).fields = "&name";
+    // Names the operand after the leading ampersand in `(require).fields`.
+    string name = 1;
+}
+// Deliberately tests invalid configuration `(require).fields = "name|"`.
+message InvalidRequireTrailingPipe {
+    option (require).fields = "name|";
+    // Names the operand before the trailing pipe in `(require).fields`.
+    string name = 1;
+}
+// Deliberately tests invalid configuration `(require).fields = "name&"`.
+message InvalidRequireTrailingAnd {
+    option (require).fields = "name&";
+    // Names the operand before the trailing ampersand in `(require).fields`.
+    string name = 1;
+}
+// Deliberately tests invalid configuration `(require).fields = "name||other"`.
+message InvalidRequireEmptyGroup {
+    option (require).fields = "name||other";
+    // Names the operand before the empty disjunction group.
+    string name = 1;
+    // Names the operand after the empty disjunction group.
+    string other = 2;
+}
 
+// Fixture `RequireOneof` exercises `(require)`.
 message RequireOneof {
     option (require).fields = "selection";
 
+    // Selects the `selection` alternative for this fixture.
     oneof selection {
+        // Supplies the numeric member of the required oneof selection.
         int32 numeric_value = 1;
+        // Supplies the boolean member of the required oneof selection.
         bool boolean_value = 2;
     }
 }
