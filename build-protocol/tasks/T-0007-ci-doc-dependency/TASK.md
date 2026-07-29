@@ -47,8 +47,8 @@ Approved plan: Human instruction to address the attached CI failure on
 | Role/function                | Agent ID                  | Expected model  | Expected reasoning | Scope                                                  | Status    |
 | ---------------------------- | ------------------------- | --------------- | ------------------ | ------------------------------------------------------ | --------- |
 | Implementation               | `/root/t0007_implementer` | `gpt-5.6-terra` | medium             | Own regression test, root manifest, lockfile, and logs | Completed |
-| Style/maintainability review | `/root/t0007_style`       | `gpt-5.6-terra` | high               | Test quality, dependency ownership, minimality         | Planned   |
-| Reliability review           | `/root/t0007_reliability` | `gpt-5.6-terra` | high               | Clean-install determinism and CI-path reliability      | Planned   |
+| Style/maintainability review | `/root/t0007_style`       | `gpt-5.6-terra` | high               | Test quality, dependency ownership, minimality         | Completed |
+| Reliability review           | `/root/t0007_reliability` | `gpt-5.6-terra` | high               | Clean-install determinism and CI-path reliability      | Completed |
 
 ## Scope And Ownership
 
@@ -73,30 +73,34 @@ Approved plan: Human instruction to address the attached CI failure on
 
 ## Verification
 
-| Command                                                  | Result                                                                          |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `node --test scripts/check-documentation.test.mjs` (RED) | Failed as expected: root `devDependencies` lacks `@bufbuild/protobuf` `2.13.0`. |
-| `pnpm install --frozen-lockfile`                         | Passed; frozen lockfile supplied the new direct root development dependency.    |
-| `pnpm docs:check`                                        | Passed: regression suite, TypeDoc, and maintained documentation checker.        |
-| `pnpm format:check`                                      | Passed after formatting the two T-0007 durable records.                         |
-| `git diff --check`                                       | Passed.                                                                         |
+| Command                                                                    | Result                                                                          |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `node --test scripts/check-documentation.test.mjs` (RED)                   | Failed as expected: root `devDependencies` lacks `@bufbuild/protobuf` `2.13.0`. |
+| `pnpm install --frozen-lockfile`                                           | Passed; frozen lockfile supplied the new direct root development dependency.    |
+| `pnpm docs:check`                                                          | Passed: regression suite, TypeDoc, and maintained documentation checker.        |
+| `pnpm format:check`                                                        | Passed after formatting the two T-0007 durable records.                         |
+| `git diff --check`                                                         | Passed.                                                                         |
+| `pnpm verify`                                                              | Passed: all canonical gates, 17 files / 319 tests, and packed consumer.         |
+| External clean checkout: frozen install, generation, and `pnpm docs:check` | Passed without access to the parent checkout or stale root modules.             |
 
-Coverage: unchanged runtime surface; canonical coverage gate still applies.
+Coverage: 94.71% statements, 91.51% branches, 99.19% functions, and 95.96%
+lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer                  | Disposition | Evidence                                                                               |
-| ----------------------- | ------------------------- | ----------- | -------------------------------------------------------------------------------------- |
-| Style/maintainability   | `/root/t0007_style`       | Pending     |                                                                                        |
-| Documentation           | N/A                       | Pending     | No maintained documentation content changes.                                           |
-| TypeScript/API          | N/A                       | Pending     | No package source, declaration, export, or public API changes.                         |
-| Performance/reliability | `/root/t0007_reliability` | Pending     |                                                                                        |
-| Security                | N/A                       | Pending     | Existing exact locked package/version; no dependency graph or runtime exposure change. |
+| Concern                 | Reviewer                  | Disposition        | Evidence                                                                                  |
+| ----------------------- | ------------------------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| Style/maintainability   | `/root/t0007_style`       | Correction pending | Dependency ownership and test are clean; durable verification evidence needed one update. |
+| Documentation           | N/A                       | N/A                | No maintained documentation content changes.                                              |
+| TypeScript/API          | N/A                       | N/A                | No package source, declaration, export, or public API changes.                            |
+| Performance/reliability | `/root/t0007_reliability` | Clean              | Frozen install, lock importer, clean Ubuntu path, and layout-independent guard reviewed.  |
+| Security                | N/A                       | N/A                | Existing exact locked package/version; no dependency graph or runtime exposure change.    |
 
 ## Findings
 
-| ID  | Severity | Accepted? | Resolution |
-| --- | -------- | --------- | ---------- |
+| ID    | Severity | Accepted? | Resolution                                                                                     |
+| ----- | -------- | --------- | ---------------------------------------------------------------------------------------------- |
+| T7-R1 | P2       | Yes       | Record the completed full gate and external clean-checkout evidence in the task and work logs. |
 
 ## Integration
 
@@ -109,6 +113,6 @@ Coverage: unchanged runtime surface; canonical coverage gate still applies.
 
 ## Open Risks And Follow-Up
 
-| Risk                                                                   | Owner        | Route                                                           | Disposition | Review point               |
-| ---------------------------------------------------------------------- | ------------ | --------------------------------------------------------------- | ----------- | -------------------------- |
-| Clean CI may expose another previously hoisted package after this fix. | Orchestrator | Run the entire frozen-install gate and remote Actions workflow. | Open        | Before integration closure |
+| Risk                                                                   | Owner        | Route                                                           | Disposition                                   | Review point               |
+| ---------------------------------------------------------------------- | ------------ | --------------------------------------------------------------- | --------------------------------------------- | -------------------------- |
+| Clean CI may expose another previously hoisted package after this fix. | Orchestrator | Run the entire frozen-install gate and remote Actions workflow. | Locally resolved; remote confirmation pending | Before integration closure |
