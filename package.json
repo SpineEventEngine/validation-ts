@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "check:node": "node scripts/check-node-version.mjs",
+    "source:check": "node scripts/check-source-conventions.mjs",
     "generate": "pnpm --filter @spine-event-engine/validation generate && pnpm --filter @spine-event-engine/validation generate:tests && pnpm --filter @spine-event-engine/example-smoke generate",
     "build": "pnpm generate && tsc -b",
     "typecheck": "pnpm generate && pnpm typecheck:generated",
