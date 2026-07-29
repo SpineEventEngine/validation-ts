@@ -66,12 +66,13 @@ Approved plan: Human instruction to address the remaining
 
 - The implementation owner owns `.github/workflows/build.yml`,
   `.github/workflows/publish.yml`, the workflow regression under `scripts/`,
-  the root verification script entry, this task record, and the T-0008 work
-  log.
+  the root verification script entry, direct test-only `yaml` dependency and
+  root lock importer, this task record, and the T-0008 work log.
 - The orchestrator owns upstream verification, review aggregation, final gates,
   Git integration, remote synchronization, warning inspection, and cleanup.
 - Excluded: action SHA-pinning policy migration, workflow restructuring,
-  pnpm/Node upgrades, publishing behavior changes, dependency changes,
+  pnpm/Node upgrades, publishing behavior changes, dependencies other than the
+  approved direct test-only `yaml@2.9.0`,
   publication, runtime code, and `master`.
 
 ## Decisions And Questions
@@ -89,6 +90,12 @@ Approved plan: Human instruction to address the remaining
   `uses:` values, and fails if it finds no workflow files or no pnpm setup
   references. Focused fixtures cover accepted `@v6`, rejected other versions,
   both extensions, and non-vacuity.
+- Re-review proved the hand-written lexical scanner was incomplete: it missed
+  quoted keys, multiline/nested flow maps, and could false-trigger on scalar
+  content. This concrete evidence supersedes the earlier no-dependency plan.
+  The guard now uses the maintained `yaml@2.9.0` package as a direct root
+  test-only dependency, parsing each workflow semantically and walking exact
+  `uses` keys recursively; the pre-existing lock resolution is reused.
 - No material human questions remain.
 
 ## Verification
@@ -103,6 +110,7 @@ Approved plan: Human instruction to address the remaining
 | `git diff --check`                                          | Passed; workflow diff contains exactly the three approved major-tag substitutions.      |
 | Independent `pnpm verify`                                   | Passed: six workflow-policy tests, 17 files / 319 tests, and every canonical gate.      |
 | Review-correction focused guard                             | Passed: 9/9 cases, including block-scalar, flow-mapping, and comment boundaries.        |
+| Frozen install and semantic-parser focused guard            | Passed: `pnpm install --frozen-lockfile`; 14/14 guard cases.                            |
 
 Coverage: 94.71% statements, 91.51% branches, 99.19% functions, and 95.96%
 lines.
@@ -119,22 +127,27 @@ lines.
 
 ## Findings
 
-| ID    | Severity    | Accepted? | Resolution                                                                                                                                                   |
-| ----- | ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| T8-R1 | P2 style    | Yes       | The line regex matched `uses:` text inside YAML literal/folded scalar bodies. Replaced it with an indentation-aware extractor; corrected, re-review pending. |
-| T8-R2 | P2 security | Yes       | The line regex omitted `uses:` fields in YAML flow mappings, including after another key. Added top-level flow-map extraction; corrected, re-review pending. |
+| ID    | Severity       | Accepted? | Resolution                                                                                                                                                                                                                                                |
+| ----- | -------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T8-R1 | P2 style       | Yes       | The line regex matched `uses:` text inside YAML literal/folded scalar bodies. Semantic YAML parsing now treats those bodies as scalar values; corrected, re-review pending.                                                                               |
+| T8-R2 | P2 security    | Yes       | The line regex omitted `uses:` fields in YAML flow mappings, including after another key. Recursive semantic traversal now finds every exact `uses` key; corrected, re-review pending.                                                                    |
+| T8-R3 | P2 correctness | Yes       | Re-review rejected the partial lexical extractor: quoted keys, multiline/nested flow maps, and quoted scalar boundaries remained incomplete. Replaced with semantic `yaml@2.9.0` parsing and recursive exact-key traversal; corrected, re-review pending. |
 
 ## Implementation Self-Review
 
 - Changed only the owned workflow scalars, root script wiring, workflow-policy
-  regression, and T-0008 durable records; no runtime package source, lockfile,
-  immutable Proto, public documentation, or unrelated project-plan file was edited.
+  regression, direct test-only `yaml@2.9.0` metadata/root importer, and T-0008
+  durable records; no runtime package source, lock graph node, immutable Proto,
+  public documentation, or unrelated project-plan file was edited.
 - Workflow diff retains all existing triggers, permissions, environments, job and
   step order, Node setup/cache settings, pnpm version, install flags, and commands;
   only the three `pnpm/action-setup` refs changed from `@v4` to `@v6`.
 - The fixture-backed Node test discovers both workflow extensions, quoted and
   unquoted `uses:` values, rejects every non-`v6` pnpm setup reference, and fails
   closed when workflows or pnpm setup references are absent.
+- The semantic parser is direct test-only tooling; it recursively walks parsed
+  values with a `WeakSet`, reports malformed YAML with its workflow path, and
+  reuses the already locked `yaml@2.9.0` graph node.
 
 ## Integration
 
