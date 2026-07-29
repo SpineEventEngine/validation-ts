@@ -203,6 +203,18 @@ function expectFailure(root, expression) {
     );
     expectFailure(root, /Prohibited historical workflow language/);
 
+    writeReadme(root, withPublicImport("The frozen contract has an intake record."));
+    expectFailure(root, /Prohibited historical workflow language/);
+
+    writeReadme(root, withPublicImport("A shared-envelope uses a legacy adapter."));
+    expectFailure(root, /Prohibited historical workflow language/);
+
+    writeReadme(root, withPublicImport("The implementation seams follow approved direction."));
+    expectFailure(root, /Prohibited historical workflow language/);
+
+    writeReadme(root, withPublicImport("Use `pnpm install --frozen-lockfile`."));
+    assert.equal(checkDocumentation({ root }).length, 4);
+
     writeReadme(root, "{field}");
     expectFailure(root, /Stale unnamespaced placeholder/);
 

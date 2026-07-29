@@ -1,7 +1,7 @@
 # Architecture
 
 The [package guide](../README.md) describes the public interface. This page
-maps the repository-owned implementation seams.
+maps the repository-owned source areas.
 
 | Area                         | Responsibility                                                                           |
 | ---------------------------- | ---------------------------------------------------------------------------------------- |
@@ -14,8 +14,8 @@ maps the repository-owned implementation seams.
 | `packages/example/`          | Runnable consumer schemas, scenarios, console presentation, and tests.                   |
 | `scripts/`                   | Deterministic documentation, source, package, and generated-output checks.               |
 
-Generated TypeScript is disposable and ignored. Frozen Spine Proto inputs are
-verified by provenance and checksum; they are not a local style-editing target.
+Generated TypeScript is disposable and ignored. Official Spine Proto files are
+copied unchanged and checked by checksum; they are not a local style-editing target.
 
 ## Runtime flow
 
@@ -34,11 +34,10 @@ The current order is deterministic but not a public compatibility guarantee.
 
 ## Sources of truth
 
-When changing behavior or a claim, use explicit approved direction first, then
-the frozen upstream Proto documentation at its recorded revision, the current
-technical specification, runtime code and behavior tests, and finally this
-reference. The JVM implementation is consulted only when an approved comparison
-requires it.
+When changing behavior or a claim, read the official upstream Proto
+documentation at the version used here, the current technical specification,
+and runtime code and behavior tests. This reference summarizes those sources.
+Consult the JVM implementation only when a direct behavior comparison is needed.
 
 The validation contract documents the open Java `Pattern` boundary: this
 runtime uses ECMAScript `RegExp` and neither implements nor promises Java

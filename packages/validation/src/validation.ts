@@ -171,7 +171,7 @@ export type { FieldPath } from "./generated/spine/base/field_path_pb.js";
  * Traversal follows declaration order and the internal validator order, but
  * callers must not treat that order as a public compatibility guarantee.
  *
- * Shared-envelope validators retain the root entry type, a complete path of
+ * Validators using the standard `ConstraintViolation` structure retain the root entry type, a complete path of
  * Proto field names, and a descriptor-packed offending value when one exists.
  * Their diagnostic is always present; an option without a custom or default
  * message produces an empty template string. `(pattern)` is the documented

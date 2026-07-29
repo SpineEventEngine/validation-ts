@@ -20,7 +20,7 @@ const publicPackage = "@spine-event-engine/validation";
 const previewInstall = /(?:pnpm|npm)\s+(?:add|install)\s+[^\n]*@spine-event-engine\/validation@/;
 const exactPreview = /@spine-event-engine\/validation@\d+\.\d+\.\d+-snapshot\.\d+/;
 const historicalWorkflowLanguage =
-  /\b(?:implementation[- ]history|chat(?:\s+transcript)?|task(?:\s+(?:record|log|branch|history))?)\b/i;
+  /(?:\bimplementation[- ]history\b|\bchat(?:\s+transcript)?\b|\btask(?:\s+(?:record|log|branch|history))?\b|(?<!-)\bfrozen\b|\bprovenance\b|\bintake record\b|\bshared-envelope\b|\blegacy (?:adapter|behavior)\b|\bimplementation seams\b|\bapproved (?:direction|comparison)\b)/i;
 
 /** Returns maintained Markdown files, excluding generated TypeDoc and task-history records. */
 export function findMaintainedMarkdown(root) {

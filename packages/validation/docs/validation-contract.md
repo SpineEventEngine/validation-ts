@@ -3,7 +3,7 @@
 The [package guide](../README.md) is the consumer entry point. This reference
 defines the currently implemented Spine option surface.
 
-The frozen [upstream options source](../proto/spine/options.proto) defines
+The official [upstream options source](../proto/spine/options.proto) defines
 option intent. Runtime code and generated-schema tests define implemented
 TypeScript behavior where it differs. `validate(schema, message)` returns
 ordered `ConstraintViolation` records for invalid data and throws
@@ -14,17 +14,17 @@ public compatibility promise.
 
 ## Violations
 
-For shared-envelope validators, `typeName` is the fully qualified entry schema
+For validators that use the standard `ConstraintViolation` structure, `typeName` is the fully qualified entry schema
 name even for nested leaves. `fieldPath.fieldName` contains unqualified Proto
 names joined by dots, without list indices or map keys. Message `(require)` and
 oneof `(choice)` failures have an empty path. `fieldValue` is a descriptor-packed
-`Any` when an offending value exists. `message` is present for shared-envelope
+`Any` when an offending value exists. `message` is present for these validators
 validators and may have an empty template.
 
 `Violations.failurePath()` returns the dot-separated path or `"unknown"`.
 `Violations.formatMessage()` substitutes the template map, and
 `Violations.formatAll()` produces the numbered collection presentation. Custom
-`error_msg` overrides a default. Shared-envelope placeholders use namespaced
+`error_msg` overrides a default. These placeholders use namespaced
 keys such as `${field.path}`, `${field.type}`, `${field.value}`, and
 `${parent.type}`.
 
@@ -33,14 +33,14 @@ keys such as `${field.path}`, `${field.type}`, `${field.value}`, and
 | Option            | Valid target and behavior                                                                                                                                                                                                                |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `(required)`      | Message, enum, string, bytes, repeated, and map fields. It rejects absent or default presence targets; numeric and boolean scalars are unsupported.                                                                                      |
-| `(pattern)`       | String fields evaluated with ECMAScript `RegExp`. The legacy adapter has different nested path/template normalization; use a static `error_msg` when portable diagnostics matter.                                                        |
+| `(pattern)`       | String fields evaluated with ECMAScript `RegExp`. Pattern results can use a different nested path and template shape; use a static `error_msg` when portable diagnostics matter.                                                         |
 | `(min)` / `(max)` | Singular or repeated numeric scalars with exact inclusive/exclusive bounds and supported field references.                                                                                                                               |
 | `(range)`         | Singular or repeated numeric scalars using bracket notation, with inclusive/exclusive endpoints.                                                                                                                                         |
 | `(when)`          | `Timestamp` and Spine `YearMonth`, `LocalDate`, `LocalDateTime`, deprecated `OffsetDateTime`, or `ZonedDateTime`, including lists/maps. `TIME_UNDEFINED` disables it; singular defaults are skipped and collection elements are checked. |
 | `(distinct)`      | Repeated or map fields; one violation per duplicated Protobuf-ES equality class.                                                                                                                                                         |
 | `(validate)`      | Singular/repeated/map message values and known `Any` payloads; returns descendant leaves only.                                                                                                                                           |
 | `(goes)`          | A presence-supported field whose named companion must also be present.                                                                                                                                                                   |
-| `(require)`       | Message expression using `                                                                                                                                                                                                               | `alternatives and`&` conjunctions over fields or oneof names. |
+| `(require)`       | Message expression using `\|` alternatives and `&` conjunctions over fields or oneof names.                                                                                                                                              |
 | `(choice)`        | Oneof; when `required = true`, rejects no selected member.                                                                                                                                                                               |
 
 `(validate)` preserves the root type name for nested leaves. Empty and unknown
@@ -70,7 +70,7 @@ parentheses.
 | `INVALID_FIELD_REFERENCE`   | A named field exists but cannot serve as that option's target.      |
 
 The human-readable error message is not a stable parsing surface. `(pattern)`
-retains its legacy behavior: unsupported targets are ignored and malformed
+handles unsupported targets by ignoring them and malformed
 regular expressions produce an ordinary violation.
 
 ## Limitations
@@ -79,7 +79,7 @@ Use `(choice)` instead of deprecated `(is_required)` and `(require)` instead
 of deprecated `(required_field)`. `(set_once)`, `(if_set_again)`, `(if_invalid)`,
 and deprecated `msg_format` are unsupported.
 
-Frozen documentation uses Java `Pattern` as its syntax baseline. The runtime
+Official Spine documentation uses Java `Pattern` as its syntax baseline. The runtime
 uses ECMAScript `RegExp`, does not contain a Java-pattern engine, and does not
 promise Java dialect, flags, or full-match equivalence. Use portable, anchored
 expressions.

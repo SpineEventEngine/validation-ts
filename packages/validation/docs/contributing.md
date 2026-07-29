@@ -25,8 +25,8 @@ build output, the executable example, package contents, and diff checks.
 ## Source inputs
 
 Do not edit generated TypeScript. Run `pnpm generate` after changing
-project-owned Proto inputs. Frozen upstream Proto sources are immutable;
-`pnpm proto:verify` checks their recorded provenance and checksum.
+project-owned Proto inputs. Official upstream Proto sources are copied
+unchanged; `pnpm proto:verify` checks their recorded checksum.
 
 Runtime behavior changes use a focused failing test before implementation, then
 the smallest passing change. Validation tests use generated schemas rather than
