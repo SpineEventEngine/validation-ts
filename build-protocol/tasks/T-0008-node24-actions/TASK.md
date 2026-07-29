@@ -101,8 +101,10 @@ Approved plan: Human instruction to address the remaining
 | `pnpm format:check`                                         | Passed after formatting the assigned task record and new regression.                    |
 | Verify-script presence check                                | Passed: root `verify` invokes `pnpm test:workflow-pnpm-action-setup`.                   |
 | `git diff --check`                                          | Passed; workflow diff contains exactly the three approved major-tag substitutions.      |
+| Independent `pnpm verify`                                   | Passed: six workflow-policy tests, 17 files / 319 tests, and every canonical gate.      |
 
-Coverage: unchanged runtime surface; the canonical coverage gate still applies.
+Coverage: 94.71% statements, 91.51% branches, 99.19% functions, and 95.96%
+lines.
 
 ## Review Dispositions
 
