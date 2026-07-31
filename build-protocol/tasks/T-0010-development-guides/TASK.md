@@ -1,6 +1,6 @@
 # T-0010: Restore Beginner And Development Guides
 
-Status: In Progress
+Status: Verification
 Classification: Standard
 Baseline: `60fd57ec66d73d769f0ce4029846ad3726e3e41e`
 Branch: `task/T-0010-development-guides`
@@ -64,10 +64,10 @@ snapshot-bump plan on 2026-07-31
 | Role/function                  | Agent ID                         | Expected model  | Expected reasoning | Scope                                                                                    | Status   |
 | ------------------------------ | -------------------------------- | --------------- | ------------------ | ---------------------------------------------------------------------------------------- | -------- |
 | Implementation                 | `/root/t0010_docs`               | `gpt-5.6-terra` | medium             | Own maintained README, development, contribution, protocol, and task-record changes      | Complete |
-| Documentation review           | `/root/t0010_docs_review`        | `gpt-5.6-terra` | medium             | Beginner-reader test, guide completeness, commands, examples, and navigation             | Pending  |
-| Style/maintainability review   | `/root/t0010_style_review`       | `gpt-5.6-terra` | high               | Structure, duplication, durable policy placement, and historical-log boundary            | Pending  |
-| TypeScript/API review          | `/root/t0010_api_review`         | `gpt-5.6-terra` | high               | Package names, versions, public API claims, supported environments, and install guidance | Pending  |
-| Performance/reliability review | `/root/t0010_reliability_review` | `gpt-5.6-terra` | high               | Copy-ready commands, clean-checkout sequencing, gates, commit isolation, and delivery    | Pending  |
+| Documentation review           | `/root/t0010_docs_review`        | `gpt-5.6-terra` | medium             | Beginner-reader test, guide completeness, commands, examples, and navigation             | Complete |
+| Style/maintainability review   | `/root/t0010_style_review`       | `gpt-5.6-terra` | high               | Structure, duplication, durable policy placement, and historical-log boundary            | Complete |
+| TypeScript/API review          | `/root/t0010_api_review`         | `gpt-5.6-terra` | high               | Package names, versions, public API claims, supported environments, and install guidance | Complete |
+| Performance/reliability review | `/root/t0010_reliability_review` | `gpt-5.6-terra` | high               | Copy-ready commands, clean-checkout sequencing, gates, commit isolation, and delivery    | Complete |
 | Security review                | N/A                              | `gpt-5.6-terra` | high               | No dependency, trust-boundary, runtime-input, or release publication change              | N/A      |
 
 ## Scope And Ownership
@@ -100,24 +100,27 @@ snapshot-bump plan on 2026-07-31
 
 ## Verification
 
-| Command                                                                                                                      | Result                                                                                                                       |
-| ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `corepack pnpm install --frozen-lockfile`                                                                                    | Passed from the committed lockfile after approved network access.                                                            |
-| `corepack pnpm test:validation` through initial `pnpm test`                                                                  | Passed 17 files and 312 tests.                                                                                               |
-| Initial `corepack pnpm test:example` before build                                                                            | Failed because the fresh worktree had no validation-package `dist`; recorded as a setup sequencing requirement.              |
-| `corepack pnpm build`                                                                                                        | Passed and created the workspace build output.                                                                               |
-| `corepack pnpm test:example` after build                                                                                     | Passed 1 file and 8 tests.                                                                                                   |
-| `pnpm docs:check`                                                                                                            | Passed: documentation checker regression tests, TypeDoc generation, and 8 maintained Markdown files.                         |
-| `pnpm source:check`                                                                                                          | Passed.                                                                                                                      |
-| `git diff --check`                                                                                                           | Passed.                                                                                                                      |
-| `pnpm --filter @spine-event-engine/example-smoke test`                                                                       | Failed: the package-local Vitest process finds no tests under the root include pattern; guides now use build then root test. |
-| `pnpm build && pnpm test:example`                                                                                            | Passed: build completed and the example suite passed 1 file and 8 tests.                                                     |
-| Corrected `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, and `git diff --check`                                | Passed.                                                                                                                      |
-| RED: `node scripts/check-documentation.test.mjs`                                                                             | Failed as expected: the new `corepack enable pnpm` fixture was accepted before checker implementation.                       |
-| GREEN: `node scripts/check-documentation.test.mjs`                                                                           | Passed after the direct-Corepack and build-before-example-test checker rule.                                                 |
-| Final `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, `pnpm build && pnpm test:example`, and `git diff --check` | Passed; the example suite passed 1 file and 8 tests.                                                                         |
-| `corepack pnpm install --frozen-lockfile` after the `.7` version bump | Blocked by DNS `ENOTFOUND` while restoring the cold local store; no lockfile change. The orchestrator will run docs, formatting, package, and full gates with approved network access. |
-| Final `git diff --check` | Passed. |
+| Command                                                                                                                      | Result                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `corepack pnpm install --frozen-lockfile`                                                                                    | Passed from the committed lockfile after approved network access.                                                                                                                      |
+| `corepack pnpm test:validation` through initial `pnpm test`                                                                  | Passed 17 files and 312 tests.                                                                                                                                                         |
+| Initial `corepack pnpm test:example` before build                                                                            | Failed because the fresh worktree had no validation-package `dist`; recorded as a setup sequencing requirement.                                                                        |
+| `corepack pnpm build`                                                                                                        | Passed and created the workspace build output.                                                                                                                                         |
+| `corepack pnpm test:example` after build                                                                                     | Passed 1 file and 8 tests.                                                                                                                                                             |
+| `pnpm docs:check`                                                                                                            | Passed: documentation checker regression tests, TypeDoc generation, and 8 maintained Markdown files.                                                                                   |
+| `pnpm source:check`                                                                                                          | Passed.                                                                                                                                                                                |
+| `git diff --check`                                                                                                           | Passed.                                                                                                                                                                                |
+| `pnpm --filter @spine-event-engine/example-smoke test`                                                                       | Failed: the package-local Vitest process finds no tests under the root include pattern; guides now use build then root test.                                                           |
+| `pnpm build && pnpm test:example`                                                                                            | Passed: build completed and the example suite passed 1 file and 8 tests.                                                                                                               |
+| Corrected `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, and `git diff --check`                                | Passed.                                                                                                                                                                                |
+| RED: `node scripts/check-documentation.test.mjs`                                                                             | Failed as expected: the new `corepack enable pnpm` fixture was accepted before checker implementation.                                                                                 |
+| GREEN: `node scripts/check-documentation.test.mjs`                                                                           | Passed after the direct-Corepack and build-before-example-test checker rule.                                                                                                           |
+| Final `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, `pnpm build && pnpm test:example`, and `git diff --check` | Passed; the example suite passed 1 file and 8 tests.                                                                                                                                   |
+| `corepack pnpm install --frozen-lockfile` after the `.7` version bump                                                        | Blocked by DNS `ENOTFOUND` while restoring the cold local store; no lockfile change. The orchestrator will run docs, formatting, package, and full gates with approved network access. |
+| Final `git diff --check`                                                                                                     | Passed.                                                                                                                                                                                |
+| Network-enabled post-bump `corepack pnpm install --frozen-lockfile`                                                          | Passed with the unchanged lockfile; all 192 packages were reused from the restored store.                                                                                              |
+| Post-registry-correction docs, source, formatting, and diff checks                                                           | Passed after formatting this active task record.                                                                                                                                       |
+| `corepack pnpm package:check`                                                                                                | Passed: packed 112 files, installed local `2.0.0-snapshot.7`, compiled the consumer, and loaded the ESM API.                                                                           |
 
 Coverage: No runtime or test change in this implementation tranche; pending the
 final full gate.
@@ -130,21 +133,22 @@ final full gate.
 - Added the development guide and rewrote the contribution guide, with
   package, documentation-index, example, and root navigation links.
 - Corrected maintained pnpm/Vitest/ESM policy and command references in the
-  active governance and immutable-Proto guidance. The exact published install
-  example remains `2.0.0-snapshot.6`; no manifest version changed.
+  active governance and immutable-Proto guidance. Consumer docs now state that
+  the renamed package is not public on npm and show only a conditional future
+  snapshot command.
 - Added the isolated synchronized-manifest version-commit rule to current
   governance and contributor guidance. The orchestrator retains the later
   version-only commit.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer                         | Disposition | Evidence                                                           |
-| ----------------------- | -------------------------------- | ----------- | ------------------------------------------------------------------ |
-| Style/maintainability   | `/root/t0010_style_review`       | Complete    | Consolidated correction batch accepted.                            |
-| Documentation           | `/root/t0010_docs_review`        | Complete    | Beginner guide, navigation, and workflow corrections accepted.     |
-| TypeScript/API          | `/root/t0010_api_review`         | Complete    | P1 registry correction accepted; version commit verified unchanged. |
-| Performance/reliability | `/root/t0010_reliability_review` | Complete    | Clean-host and example-test command corrections accepted.          |
-| Security                | N/A                              | N/A         | No security-sensitive scope.                                       |
+| Concern                 | Reviewer                         | Disposition | Evidence                                                                |
+| ----------------------- | -------------------------------- | ----------- | ----------------------------------------------------------------------- |
+| Style/maintainability   | `/root/t0010_style_review`       | Clean       | Corrected structure, canonical policy, and copy-ready sample confirmed. |
+| Documentation           | `/root/t0010_docs_review`        | Clean       | Beginner and maintainer reader tests passed after targeted correction.  |
+| TypeScript/API          | `/root/t0010_api_review`         | Clean       | Registry wording, local package contract, and isolated bump confirmed.  |
+| Performance/reliability | `/root/t0010_reliability_review` | Clean       | Direct Corepack, Proto, checker, and command corrections confirmed.     |
+| Security                | N/A                              | N/A         | No security-sensitive scope.                                            |
 
 ## Findings
 
@@ -179,11 +183,11 @@ final full gate.
 
 ## Open Risks And Follow-Up
 
-| Risk                                                                                                          | Owner                  | Route                                                                                                                         | Disposition | Review point              |
-| ------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------- |
-| Copy-ready commands omit a required clean-checkout prerequisite.                                              | Implementation owner   | Run focused commands in the isolated worktree and reliability review                                                          | Open        | Before review convergence |
-| Beginner documentation drifts into maintainer or internal terminology.                                        | Documentation reviewer | Fresh-reader questions and editorial review                                                                                   | Open        | Documentation review      |
-| Maintained protocol still contradicts the pnpm/Vitest/ESM baseline.                                           | Implementation owner   | Targeted current-document scan and style review                                                                               | Open        | Before full gate          |
-| Version metadata is mixed with unrelated documentation changes.                                               | Orchestrator           | Inspect the exact version commit tree and subject                                                                             | Open        | Before task push          |
-| Repository-wide formatting includes a pre-existing active project-plan edit outside implementation ownership. | Orchestrator           | Format or disposition that edit before final verification                                                                     | Open        | Before full gate          |
-| Package-scoped example test resolves no files because its Vitest include is rooted at the workspace.          | Maintainers            | Keep user guidance on the verified build-then-root-test sequence; change the package script only in a dedicated tooling task. | Open        | Future tooling work       |
+| Risk                                                                                                          | Owner                  | Route                                                                                                                         | Disposition | Review point                                              |
+| ------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------- |
+| Copy-ready commands omit a required clean-checkout prerequisite.                                              | Implementation owner   | Run focused commands in the isolated worktree and reliability review                                                          | Closed      | Direct-Corepack/order checker and targeted review passed. |
+| Beginner documentation drifts into maintainer or internal terminology.                                        | Documentation reviewer | Fresh-reader questions and editorial review                                                                                   | Closed      | Final reader matrix passed.                               |
+| Maintained protocol still contradicts the pnpm/Vitest/ESM baseline.                                           | Implementation owner   | Targeted current-document scan and style review                                                                               | Closed      | Current guidance and style review agree.                  |
+| Version metadata is mixed with unrelated documentation changes.                                               | Orchestrator           | Inspect the exact version commit tree and subject                                                                             | Closed      | `0d852fd` changes only the three manifest version fields. |
+| Repository-wide formatting includes a pre-existing active project-plan edit outside implementation ownership. | Orchestrator           | Format or disposition that edit before final verification                                                                     | Closed      | The T-0010 records and project-plan row are formatted.    |
+| Package-scoped example test resolves no files because its Vitest include is rooted at the workspace.          | Maintainers            | Keep user guidance on the verified build-then-root-test sequence; change the package script only in a dedicated tooling task. | Open        | Future tooling work                                       |
