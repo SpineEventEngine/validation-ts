@@ -233,7 +233,7 @@ accepted, or justified N/A disposition.
 
 ## Verification
 
-Use focused tests in inner loops. Run `npm run verify` once after review
+Use focused tests in inner loops. Run `pnpm verify` once after review
 converges when runtime code, tests, public contracts, dependencies, generated
 artifacts, publishing, CI, or shared tooling changes.
 
@@ -244,11 +244,11 @@ The full gate must cover:
 - Protobuf generation and immutable-source provenance;
 - TypeScript build/typechecking;
 - ESLint and formatting;
-- Jest tests and coverage;
+- Vitest tests and coverage;
 - TypeDoc/API generation;
 - project-owned Proto lint;
 - generated-output cleanliness;
-- npm package contents and an installable consumer smoke test; and
+- published-package contents and an installable consumer smoke test; and
 - `git diff --check`.
 
 Coverage initially enforces:
@@ -296,6 +296,14 @@ Standard and high-risk task records include:
 Keep chronological commands in `work-logs/` and immutable review evidence in
 `reviews/`. Never record credentials, tokens, auth headers, sensitive payloads,
 or unnecessary local personal paths.
+
+## Framework Version Changes
+
+Every root framework-version change must be an isolated version-only commit.
+Update the root, `packages/validation`, and `packages/example` manifest
+versions together, with no documentation, source, dependency, lockfile, or
+generated-output changes in that commit. Its exact subject is
+`Bump version -> <version>`.
 
 Do not create record-only commits merely to name the immediately preceding
 commit. Git history is durable evidence.

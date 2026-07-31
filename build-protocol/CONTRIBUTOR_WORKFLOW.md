@@ -39,3 +39,11 @@
 
 Never merge or push `master` without an explicit human request for that release
 boundary.
+
+## Framework Version Changes
+
+Make every root framework-version change in an isolated version-only commit.
+Update the root, `packages/validation`, and `packages/example` manifests
+together, and do not include documentation, source, dependency, lockfile, or
+generated-output changes. Use the exact commit subject
+`Bump version -> <version>`.

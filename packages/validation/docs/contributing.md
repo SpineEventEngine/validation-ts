@@ -1,44 +1,76 @@
-# Development guide
+# Contributing to Spine Validation for TypeScript
 
-The [package guide](../README.md) is for consumers. This reference covers
-repository development.
+Thank you for improving `@spine-event-engine/validation`. This guide explains
+how to prepare a reviewable repository change. For setup, scripts, and extension
+workflows, start with the [development guide](development.md). The
+[package guide](../README.md) remains the consumer-facing API reference.
 
-Use Node.js 24 or later and the committed pnpm version. From the workspace
-root, install the lockfile and run the focused checks you need:
+## Before You Change Code
 
-```sh
-corepack pnpm install --frozen-lockfile
-pnpm generate
+1. Read [`AGENTS.md`](../../../AGENTS.md), the active work record, and the
+   applicable protocol documents under [`build-protocol/`](../../../build-protocol/).
+2. Confirm the branch, worktree, ownership, and existing Git changes. Preserve
+   unrelated work.
+3. Keep immutable vendored Spine Proto files unchanged. An upstream intake is a
+   separately approved workflow; see the development guide.
+4. For a runtime change, add or adjust a focused failing behavior test before
+   the implementation, then make the smallest passing change.
+
+## Keep A Change Reviewable
+
+- Keep consumer documentation, examples, and public API declarations aligned
+  with any public behavior change.
+- Regenerate generated TypeScript with `pnpm generate`; do not edit generated
+  output by hand.
+- Use runnable example schemas only for valid configurations. Keep deliberately
+  invalid declarations in test-only fixtures.
+- Record work and delivery-log evidence at meaningful resumability boundaries.
+- Do not modify earlier review, decision, or delivery evidence.
+
+## Run The Right Checks
+
+Run focused checks while working, then use the complete gate when the active
+work item requires it:
+
+```bash
+pnpm source:check
+pnpm format:check
+pnpm docs:check
 pnpm test:validation
 pnpm test:example
-pnpm docs:check
-pnpm source:check
-pnpm typecheck:generated
-pnpm lint
-pnpm format:check
+pnpm verify
 ```
 
-`pnpm verify` runs the complete local and CI gate, including generation,
-typechecking, linting, formatting, coverage, docs, Proto verification and lint,
-build output, the executable example, package contents, and diff checks.
+`pnpm docs:check` validates maintained Markdown links and TypeScript examples,
+checks public imports and documentation rules, and generates TypeDoc. The full
+`pnpm verify` gate also checks Node, Proto source integrity, deterministic generation,
+types, linting, coverage, Proto linting, builds, the executable example,
+package contents, and the Git diff.
 
-## Source inputs
+## Version Changes
 
-Do not edit generated TypeScript. Run `pnpm generate` after changing
-project-owned Proto inputs. Official upstream Proto sources are copied
-unchanged; `pnpm proto:verify` checks their recorded checksum.
+A root framework-version change is its own commit. Change the root,
+`packages/validation`, and `packages/example` manifest versions together, and
+make no other file change in that commit. Its subject must be exactly:
 
-Runtime behavior changes use a focused failing test before implementation, then
-the smallest passing change. Validation tests use generated schemas rather than
-mocks. Keep invalid declarations in test fixtures and keep runnable example
-schemas valid.
+```text
+Bump version -> <version>
+```
 
-## Documentation and API checks
+Do not combine a version change with documentation, source, dependency, or
+generated-output work. The lockfile does not encode workspace manifest versions.
 
-`pnpm docs:check` checks maintained links, TypeScript fences, public imports,
-diagnostic placeholders, preview-install presentation, and TypeDoc. It also
-requires package-local reference pages to link back to the package guide.
-`pnpm source:check` verifies project-owned TypeScript and Proto conventions.
+## Submit For Review
 
-For repository governance, branch policy, review, and integration details, use
-the internal [contributor workflow](../../../build-protocol/CONTRIBUTOR_WORKFLOW.md).
+Before handing off, inspect `git status`, `git diff --check`, the diff, and the
+active work record. Include the commands run and their results, any limitations,
+and the next action in the current work log. The orchestrator collects the
+required review wave, handles integration into `dev`, and performs remote
+synchronization. Do not merge or push `master` without explicit human approval.
+
+## Need Help?
+
+Open a focused issue or work record with the behavior you expected, the minimal
+Proto or TypeScript reproduction, the command and output, and the environment
+(Node and pnpm versions). Do not include credentials, tokens, or sensitive
+message payloads.

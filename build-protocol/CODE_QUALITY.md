@@ -18,9 +18,9 @@
 - Document public exports with TSDoc that TypeDoc can render.
 - Keep package metadata, exports, declarations, examples, and README imports
   consistent with `@spine-event-engine/validation`.
-- npm, Jest, and CommonJS remain until an approved migration.
+- Use pnpm 11.9.0, Vitest, and ESM for workspace development and CI.
 - Generated Protobuf-ES output is ignored and regenerated.
-- `package-lock.json` is committed; CI uses `npm ci`.
+- `pnpm-lock.yaml` is committed; clean installs use `corepack pnpm install --frozen-lockfile`.
 - Pin development Node through `.node-version` and enforce supported engines.
 
 ## Source Layout
@@ -39,7 +39,7 @@
   clarity.
 - Generated sources, coverage, distributions, API output, worktrees, and
   immutable vendored Proto files are excluded from inappropriate checks.
-- `npm run format:check` and `npm run lint` are required gates.
+- `pnpm format:check` and `pnpm lint` are required gates.
 
 ## Testing
 
@@ -47,7 +47,7 @@
 - Add integration tests for combinations and nested field paths.
 - Every bug fix receives a regression test.
 - Public package changes receive a package-contents and consumer-install test.
-- Keep test compilation strict; do not weaken TypeScript only for Jest.
+- Keep test compilation strict; do not weaken TypeScript only for Vitest.
 - The enforced coverage gate is at least 90% statements, branches, functions,
   and lines.
 
@@ -97,9 +97,16 @@ Before adding or upgrading a library, record:
 
 - current stable version and source;
 - maintenance and Node/TypeScript support;
-- compatibility with the retained npm/Jest/CommonJS stack;
+- compatibility with the pnpm/Vitest/ESM workspace stack;
 - why an existing dependency or platform feature is insufficient; and
 - the rejected alternatives that materially affected the choice.
 
 Pin development tools in the lockfile. Public runtime compatibility belongs in
 peer dependencies and engines.
+
+## Framework Versions
+
+Every root framework-version change is an isolated version-only commit. Change
+the root, `packages/validation`, and `packages/example` manifest versions
+together and make no other file changes in that commit. Its exact subject is
+`Bump version -> <version>`.

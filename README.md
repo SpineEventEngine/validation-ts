@@ -64,7 +64,8 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 ## 🚀 Getting Started
 
 See the [package guide](packages/validation/README.md), the
-[development reference](packages/validation/docs/README.md), and the
+[development reference](packages/validation/docs/README.md), the
+[development guide](packages/validation/docs/development.md), and the
 [executable example](packages/example/README.md).
 
 **Quick install:**
@@ -147,9 +148,10 @@ pnpm verify
 
 ## 🤝 Contributing
 
-See the [development guide](packages/validation/docs/contributing.md) for
-local commands, generated inputs, documentation checks, and repository
-delivery practices.
+See the [contribution guide](packages/validation/docs/contributing.md) for
+review and delivery practices, and the
+[development guide](packages/validation/docs/development.md) for local setup,
+generated inputs, extension workflows, and verification.
 
 ---
 

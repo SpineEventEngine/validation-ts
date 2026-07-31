@@ -413,8 +413,11 @@ and values outside that range throw `RangeError`.
 
 ## Testing and Development
 
-The repository uses pnpm, Vitest, Buf, TypeScript, and Node.js 24. Run focused
-commands from the workspace root:
+The repository uses pnpm, Vitest, Buf, TypeScript, and Node.js 24. The
+[development guide](docs/development.md) covers the clean installation order,
+supported environments, scripts, extension workflows, and troubleshooting.
+The [contribution guide](docs/contributing.md) covers review and delivery.
+Run focused commands from the workspace root:
 
 ```bash
 pnpm generate
@@ -458,8 +461,9 @@ diagnostics, numeric grammar, and time conversion rules.
 
 ## Contributing
 
-See the [development guide](docs/contributing.md) for local setup, generated
-inputs, documentation checks, and delivery practices.
+See the [development guide](docs/development.md) for local setup, generated
+inputs, extension workflows, and verification. See the
+[contribution guide](docs/contributing.md) for review and delivery practices.
 
 ## License
 
