@@ -124,8 +124,7 @@ contains architecture, exact validation behavior, and local development notes.
 git clone <repository-url>
 cd validation-ts
 
-# Install the committed dependency graph
-corepack enable pnpm
+# Install with the pinned pnpm release without installing a system shim
 corepack pnpm install --frozen-lockfile
 ```
 
@@ -136,17 +135,17 @@ a cold pnpm store may then download the packages in the committed lockfile.
 
 ```bash
 # Run the complete local and CI quality gate
-pnpm verify
+corepack pnpm verify
 ```
 
 ### Workspace Scripts
 
-| Command        | Description                                                                           |
-| -------------- | ------------------------------------------------------------------------------------- |
-| `pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
-| `pnpm build`   | Build the package and example                                                         |
-| `pnpm test`    | Run validation-package and executable-example Vitest tests                            |
-| `pnpm example` | Run the example project                                                               |
+| Command                 | Description                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `corepack pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
+| `corepack pnpm build`   | Build the package and example                                                         |
+| `corepack pnpm test`    | Run validation-package and executable-example Vitest tests                            |
+| `corepack pnpm example` | Run the example project                                                               |
 
 ---
 

@@ -22,7 +22,6 @@ From the repository root, use the Node.js version in
 [`.node-version`](../../.node-version):
 
 ```bash
-corepack enable pnpm
 corepack pnpm install --frozen-lockfile
 ```
 
@@ -32,7 +31,7 @@ a cold pnpm store may then download the locked packages.
 ### Run the example
 
 ```bash
-pnpm example
+corepack pnpm example
 ```
 
 This generates TypeScript from `.proto` files, builds the validation package and
@@ -41,8 +40,8 @@ example, then prints the runnable scenarios.
 ### Run the example tests
 
 ```bash
-pnpm build
-pnpm test:example
+corepack pnpm build
+corepack pnpm test:example
 ```
 
 This clean-checkout-safe sequence builds validation `dist`, generates example

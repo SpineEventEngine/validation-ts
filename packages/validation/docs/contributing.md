@@ -8,11 +8,11 @@ The [package guide](../README.md) is the consumer-facing API reference.
 
 1. Create a branch from `dev` and check `git status` before editing. Keep
    unrelated changes out of your pull request.
-2. Use Node.js 24.18.0 from [`.node-version`](../../../.node-version), then run
-   `corepack enable pnpm` before the first bare `pnpm` command.
-3. Install with `corepack pnpm install --frozen-lockfile`. A cold Corepack cache
-   may need network access for pnpm; a cold pnpm store may then download the
-   locked packages.
+2. Use Node.js 24.18.0 from [`.node-version`](../../../.node-version).
+3. Install with `corepack pnpm install --frozen-lockfile`, then use
+   `corepack pnpm` for repository commands. Direct invocation avoids installing
+   a system shim beside Node. A cold Corepack cache may need network access for
+   pnpm; a cold pnpm store may then download the locked packages.
 4. Do not edit generated TypeScript or immutable vendored Spine Proto files.
 
 For runtime behavior, write or change a focused failing test first, make the
@@ -25,16 +25,17 @@ Run focused checks while working. From a clean checkout, build before the root
 example test:
 
 ```bash
-pnpm build
-pnpm test:example
+corepack pnpm build
+corepack pnpm test:example
 ```
 
-`pnpm build` creates the validation package’s `dist` output needed by root
-`pnpm test:example`. Before opening a pull request, run the checks appropriate
-to the change; `pnpm verify` is the complete local gate.
+`corepack pnpm build` creates the validation package’s `dist` output needed by
+root `corepack pnpm test:example`. Before opening a pull request, run the
+checks appropriate to the change; `corepack pnpm verify` is the complete local
+gate.
 
 Update public API declarations, package documentation, and executable examples
-with any consumer-visible behavior. `pnpm docs:check` validates maintained
+with any consumer-visible behavior. `corepack pnpm docs:check` validates maintained
 Markdown links and TypeScript examples, checks public imports and documentation
 rules, and generates TypeDoc.
 

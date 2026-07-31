@@ -49,6 +49,26 @@ function expectFailure(root, expression) {
   assert.throws(() => checkDocumentation({ root }), expression);
 }
 
+function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup }) {
+  writeReadme(root, withPublicImport(rootSetup));
+  writeFileSync(
+    join(root, "packages", "example", "README.md"),
+    ["# Example", "", exampleSetup].join("\n"),
+  );
+  writeFileSync(
+    join(root, "packages", "validation", "docs", "development.md"),
+    ["# Development", "", "See the [package guide](../README.md).", "", developmentSetup].join(
+      "\n",
+    ),
+  );
+  writeFileSync(
+    join(root, "packages", "validation", "docs", "contributing.md"),
+    ["# Contributing", "", "See the [package guide](../README.md).", "", developmentSetup].join(
+      "\n",
+    ),
+  );
+}
+
 {
   const root = createFixture();
   try {
@@ -351,6 +371,45 @@ function expectFailure(root, expression) {
       "/** legacy adapter. */\nexport const first = 1;\n",
     );
     expectFailure(root, /packages\/validation\/src\/a-first\.ts/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = createFixture();
+  try {
+    const directSetup =
+      "```bash\ncorepack pnpm install --frozen-lockfile\ncorepack pnpm build\ncorepack pnpm test:example\n```";
+    writeRepositoryGuides(root, {
+      rootSetup: directSetup,
+      exampleSetup: directSetup,
+      developmentSetup: directSetup,
+    });
+    assert.equal(checkDocumentation({ root }).length, 6);
+
+    writeRepositoryGuides(root, {
+      rootSetup: "```bash\ncorepack enable pnpm\ncorepack pnpm install --frozen-lockfile\n```",
+      exampleSetup: directSetup,
+      developmentSetup: directSetup,
+    });
+    expectFailure(root, /must not use corepack enable pnpm/);
+
+    writeRepositoryGuides(root, {
+      rootSetup:
+        "Run `corepack pnpm install --frozen-lockfile`.\n\n```bash\npnpm install --frozen-lockfile\n```",
+      exampleSetup: directSetup,
+      developmentSetup: directSetup,
+    });
+    expectFailure(root, /must begin with corepack pnpm/);
+
+    writeRepositoryGuides(root, {
+      rootSetup:
+        "```bash\ncorepack pnpm install --frozen-lockfile\ncorepack pnpm test:example\n```",
+      exampleSetup: directSetup,
+      developmentSetup: directSetup,
+    });
+    expectFailure(root, /must run corepack pnpm build before corepack pnpm test:example/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

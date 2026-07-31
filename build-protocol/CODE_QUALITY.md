@@ -20,8 +20,8 @@
   consistent with `@spine-event-engine/validation`.
 - Use pnpm 11.9.0, Vitest, and ESM for workspace development and CI.
 - Generated Protobuf-ES output is ignored and regenerated.
-- `pnpm-lock.yaml` is committed; clean installs enable pnpm with Corepack, then
-  use `corepack pnpm install --frozen-lockfile`.
+- `pnpm-lock.yaml` is committed; clean installs directly invoke
+  `corepack pnpm install --frozen-lockfile` without installing a system shim.
 - Pin development Node through `.node-version` and enforce supported engines.
 
 ## Source Layout

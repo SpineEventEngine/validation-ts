@@ -36,16 +36,15 @@ installation is needed. Use pnpm rather than creating a `package-lock.json`.
 From a fresh checkout at the repository root:
 
 ```bash
-corepack enable pnpm
 corepack pnpm install --frozen-lockfile
-pnpm build
-pnpm test:validation
-pnpm test:example
+corepack pnpm build
+corepack pnpm test:validation
+corepack pnpm test:example
 ```
 
-`corepack enable pnpm` exposes the pinned pnpm command for later bare `pnpm`
-commands. On a cold host, Corepack may need network access to obtain pnpm 11.9.0;
-a cold pnpm store then needs network access to download the packages locked in
+Direct `corepack pnpm` invocation avoids installing a system shim beside Node.
+On a cold host, Corepack may need network access to obtain pnpm 11.9.0; a cold
+pnpm store then needs network access to download the packages locked in
 [pnpm-lock.yaml](../../../pnpm-lock.yaml). The lockfile remains the dependency
 authority.
 
@@ -78,22 +77,22 @@ either; run the relevant script.
 
 Run these commands from the repository root after the clean installation steps.
 
-| Command                    | Use it for                                                          |
-| -------------------------- | ------------------------------------------------------------------- |
-| `pnpm generate`            | Generate package, test, and example Protobuf-ES schemas.            |
-| `pnpm build`               | Generate schemas and compile TypeScript project references.         |
-| `pnpm typecheck:generated` | Build and typecheck package and example tests.                      |
-| `pnpm test:validation`     | Generate schemas and run validation-package Vitest tests.           |
-| `pnpm test:example`        | Run example tests after `pnpm build` has created validation `dist`. |
-| `pnpm docs:check`          | Check maintained docs and examples and generate TypeDoc.            |
-| `pnpm source:check`        | Check project-owned TypeScript and Proto conventions.               |
-| `pnpm proto:verify`        | Verify immutable upstream Proto checksums and source metadata.      |
-| `pnpm proto:lint`          | Lint project-owned Proto while honoring immutable-input exceptions. |
-| `pnpm format:check`        | Check Prettier formatting without modifying files.                  |
-| `pnpm lint`                | Run ESLint.                                                         |
-| `pnpm verify`              | Run the complete local and CI gate.                                 |
+| Command                             | Use it for                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| `corepack pnpm generate`            | Generate package, test, and example Protobuf-ES schemas.                     |
+| `corepack pnpm build`               | Generate schemas and compile TypeScript project references.                  |
+| `corepack pnpm typecheck:generated` | Build and typecheck package and example tests.                               |
+| `corepack pnpm test:validation`     | Generate schemas and run validation-package Vitest tests.                    |
+| `corepack pnpm test:example`        | Run example tests after `corepack pnpm build` has created validation `dist`. |
+| `corepack pnpm docs:check`          | Check maintained docs and examples and generate TypeDoc.                     |
+| `corepack pnpm source:check`        | Check project-owned TypeScript and Proto conventions.                        |
+| `corepack pnpm proto:verify`        | Verify local immutable Proto checksums against the recorded manifest.        |
+| `corepack pnpm proto:lint`          | Lint project-owned Proto while honoring immutable-input exceptions.          |
+| `corepack pnpm format:check`        | Check Prettier formatting without modifying files.                           |
+| `corepack pnpm lint`                | Run ESLint.                                                                  |
+| `corepack pnpm verify`              | Run the complete local and CI gate.                                          |
 
-`pnpm verify` includes Node compatibility, Proto source integrity, generation,
+`corepack pnpm verify` includes Node compatibility, Proto checksum verification, generation,
 typechecking, source and formatting checks, linting, deterministic generation,
 coverage, documentation, Proto linting, build output, the executable example,
 package contents, and Git-diff checks.
@@ -120,7 +119,7 @@ immutable upstream Proto file.
    with `ValidationClock.set()` and validates `TimeValidationSchema` created by
    the fixture. Start with the expected field path and diagnostic shape, not an
    implementation detail.
-4. Run `pnpm generate`. This refreshes the generated extension module at
+4. Run `corepack pnpm generate`. This refreshes the generated extension module at
    `packages/validation/src/generated/spine/time_options_pb.ts` and the test
    fixture module at `packages/validation/tests/generated/test-when_pb.ts`.
    Generated files are output, not editing targets.
@@ -145,11 +144,11 @@ immutable upstream Proto file.
 Run the sequence below after each relevant step:
 
 ```bash
-pnpm generate
-pnpm exec vitest run packages/validation/tests/when.test.ts
-pnpm test:validation
-pnpm proto:lint
-pnpm docs:check
+corepack pnpm generate
+corepack pnpm exec vitest run packages/validation/tests/when.test.ts
+corepack pnpm test:validation
+corepack pnpm proto:lint
+corepack pnpm docs:check
 ```
 
 ### Modify existing behavior test-first
@@ -159,20 +158,26 @@ failure instead of the current accepted boundary. In
 `packages/validation/tests/when.test.ts`, change the first test’s final
 assertion before changing source:
 
-```ts
+```text
 import { create } from "@bufbuild/protobuf";
-import { expect } from "vitest";
-import { validate } from "@spine-event-engine/validation";
+import { ValidationClock } from "../src/clock.js";
+import { validate } from "../src/index.js";
+import { TimeValidationSchema } from "../tests/generated/test-when_pb.js";
 
-declare const TimeValidationSchema: any;
 const now = { seconds: 1_704_067_200n, nanos: 0 };
 
-const message = create(TimeValidationSchema, {
-  pastTimestamp: now,
-  futureTimestamp: now,
-});
+beforeEach(() => ValidationClock.set(() => now));
+afterEach(() => ValidationClock.set());
 
-expect(validate(TimeValidationSchema, message)).toHaveLength(2);
+it("rejects equality with now", () => {
+  const message = create(TimeValidationSchema, {
+    pastTimestamp: now,
+    futureTimestamp: now,
+    disabled: { seconds: 0n, nanos: 0 },
+  });
+
+  expect(validate(TimeValidationSchema, message)).toHaveLength(2);
+});
 ```
 
 That assertion fails against the current behavior. The smallest implementation
@@ -181,10 +186,10 @@ target is the `valid` comparison in `When.validate` in
 comparison, then rerun:
 
 ```bash
-pnpm generate
-pnpm exec vitest run packages/validation/tests/when.test.ts
-pnpm exec vitest run packages/validation/tests/when-contract.test.ts
-pnpm test:validation
+corepack pnpm generate
+corepack pnpm exec vitest run packages/validation/tests/when.test.ts
+corepack pnpm exec vitest run packages/validation/tests/when-contract.test.ts
+corepack pnpm test:validation
 ```
 
 Use generated schemas and real descriptors instead of mocks. Add an integration
@@ -196,16 +201,18 @@ For a project-owned fixture, edit a file under
 `packages/validation/tests/proto/` or `packages/example/proto/`, then run:
 
 ```bash
-pnpm generate
-pnpm proto:lint
-pnpm test:validation
+corepack pnpm generate
+corepack pnpm proto:lint
+corepack pnpm test:validation
 ```
 
 Never edit vendored Spine inputs such as `spine/options.proto`,
-`spine/time_options.proto`, or `spine/time/time.proto`. A new or replacement
-input must be retrieved byte-for-byte at an exact upstream commit and recorded
-with its repository, commit, path, URL, retrieval date, local path, and SHA-256
-in the source manifest. Then run `pnpm proto:verify`, generation, and linting.
+`spine/time_options.proto`, or `spine/time/time.proto`. Before fetching,
+changing, or recording a vendored file or its manifest entry, obtain separate
+approval for immutable-Proto intake and compatibility review. The approved
+intake retrieves the input byte-for-byte at an exact upstream commit and records
+its repository, commit, path, URL, retrieval date, local path, and SHA-256 in
+the source manifest. Then run `corepack pnpm proto:verify`, generation, and linting.
 See [the immutable Proto guide](../../../build-protocol/proto/README.md).
 
 ### Update a public API
@@ -216,10 +223,10 @@ See [the immutable Proto guide](../../../build-protocol/proto/README.md).
 3. Run:
 
 ```bash
-pnpm generate
-pnpm typecheck:generated
-pnpm test:validation
-pnpm docs:check
+corepack pnpm generate
+corepack pnpm typecheck:generated
+corepack pnpm test:validation
+corepack pnpm docs:check
 ```
 
 ### Update the executable example
@@ -231,10 +238,10 @@ pnpm docs:check
 3. Run:
 
 ```bash
-pnpm generate
-pnpm build
-pnpm test:example
-pnpm docs:check
+corepack pnpm generate
+corepack pnpm build
+corepack pnpm test:example
+corepack pnpm docs:check
 ```
 
 Invalid option declarations belong only under `packages/example/proto/testing/`.
@@ -246,8 +253,8 @@ Invalid option declarations belong only under `packages/example/proto/testing/`.
 2. Run:
 
 ```bash
-pnpm docs:check
-pnpm format:check
+corepack pnpm docs:check
+corepack pnpm format:check
 git diff --check
 ```
 
@@ -259,12 +266,12 @@ git diff --check
 2. Refresh the lockfile and verify the exact workspace:
 
 ```bash
-pnpm install --lockfile-only
-pnpm install --frozen-lockfile
-pnpm typecheck:generated
-pnpm test:validation
-pnpm build
-pnpm test:example
+corepack pnpm install --lockfile-only
+corepack pnpm install --frozen-lockfile
+corepack pnpm typecheck:generated
+corepack pnpm test:validation
+corepack pnpm build
+corepack pnpm test:example
 ```
 
 Do not edit the lockfile by hand. Explain why the dependency is needed and
@@ -276,16 +283,16 @@ Follow the concise version-change rule in [the contribution guide](contributing.
 
 ## Troubleshooting
 
-| Symptom                                            | Likely cause and resolution                                                                                    |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `pnpm` is not found                                | Run `corepack enable pnpm`, then retry.                                                                        |
-| Corepack cannot obtain pnpm                        | Connect the host to the network so Corepack can download the pinned pnpm release.                              |
-| Install cannot find packages                       | Connect the host to the network so pnpm can fill its cold package store.                                       |
-| Example root test cannot resolve validation `dist` | Run `pnpm build`, then rerun `pnpm test:example`.                                                              |
-| Generated imports or fixtures are missing          | Run `pnpm generate`; never add generated files manually.                                                       |
-| `pnpm proto:verify` reports a checksum mismatch    | Restore the immutable file; use the separate intake procedure for an intended upstream replacement.            |
-| A docs TypeScript snippet fails                    | Import only public package exports and use ESM `.js` relative imports.                                         |
-| A time check differs by zone or range              | Read the `(when)` conversion details in the validation contract and include the exact input in a focused test. |
+| Symptom                                                  | Likely cause and resolution                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| pnpm is not available as a shell command                 | Run the command as `corepack pnpm <script>`; this does not install a system shim.                              |
+| Corepack cannot obtain pnpm                              | Connect the host to the network so Corepack can download the pinned pnpm release.                              |
+| Install cannot find packages                             | Connect the host to the network so pnpm can fill its cold package store.                                       |
+| Example root test cannot resolve validation `dist`       | Run `corepack pnpm build`, then rerun `corepack pnpm test:example`.                                            |
+| Generated imports or fixtures are missing                | Run `corepack pnpm generate`; never add generated files manually.                                              |
+| `corepack pnpm proto:verify` reports a checksum mismatch | Restore the immutable file; use the separate approved intake procedure for an intended upstream replacement.   |
+| A docs TypeScript snippet fails                          | Import only public package exports and use ESM `.js` relative imports.                                         |
+| A time check differs by zone or range                    | Read the `(when)` conversion details in the validation contract and include the exact input in a focused test. |
 
 ## Verification Before a Pull Request
 
@@ -293,7 +300,7 @@ Inspect the diff and run the checks that cover the change. For broad changes,
 run the complete gate:
 
 ```bash
-pnpm verify
+corepack pnpm verify
 ```
 
 The contribution guide explains branches, commits, pull requests, and the

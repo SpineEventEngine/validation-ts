@@ -56,7 +56,7 @@ snapshot-bump plan on 2026-07-31
 | `subagent-driven-development`    | Yes       | Use one documentation owner followed by focused specialist review.                          |
 | `requesting-code-review`         | Yes       | Review reader fit, maintained policy, package metadata, and reliability before integration. |
 | `verification-before-completion` | Yes       | Require fresh focused and complete evidence before commits, merge, and completion.          |
-| `test-driven-development`        | No        | No runtime behavior or verification implementation is being added.                          |
+| `test-driven-development`        | Yes       | Add the clean-host/order checker behavior with a verified RED/GREEN cycle.                  |
 | `implement`                      | No        | The approved repository plan and project-specific subagent cycle already define execution.  |
 
 ## Agent Dispatch
@@ -98,19 +98,22 @@ snapshot-bump plan on 2026-07-31
 
 ## Verification
 
-| Command                                                                                       | Result                                                                                                                       |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `corepack pnpm install --frozen-lockfile`                                                     | Passed from the committed lockfile after approved network access.                                                            |
-| `corepack pnpm test:validation` through initial `pnpm test`                                   | Passed 17 files and 312 tests.                                                                                               |
-| Initial `corepack pnpm test:example` before build                                             | Failed because the fresh worktree had no validation-package `dist`; recorded as a setup sequencing requirement.              |
-| `corepack pnpm build`                                                                         | Passed and created the workspace build output.                                                                               |
-| `corepack pnpm test:example` after build                                                      | Passed 1 file and 8 tests.                                                                                                   |
-| `pnpm docs:check`                                                                             | Passed: documentation checker regression tests, TypeDoc generation, and 8 maintained Markdown files.                         |
-| `pnpm source:check`                                                                           | Passed.                                                                                                                      |
-| `git diff --check`                                                                            | Passed.                                                                                                                      |
-| `pnpm --filter @spine-event-engine/example-smoke test`                                        | Failed: the package-local Vitest process finds no tests under the root include pattern; guides now use build then root test. |
-| `pnpm build && pnpm test:example`                                                             | Passed: build completed and the example suite passed 1 file and 8 tests.                                                     |
-| Corrected `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, and `git diff --check` | Passed.                                                                                                                      |
+| Command                                                                                                                      | Result                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `corepack pnpm install --frozen-lockfile`                                                                                    | Passed from the committed lockfile after approved network access.                                                            |
+| `corepack pnpm test:validation` through initial `pnpm test`                                                                  | Passed 17 files and 312 tests.                                                                                               |
+| Initial `corepack pnpm test:example` before build                                                                            | Failed because the fresh worktree had no validation-package `dist`; recorded as a setup sequencing requirement.              |
+| `corepack pnpm build`                                                                                                        | Passed and created the workspace build output.                                                                               |
+| `corepack pnpm test:example` after build                                                                                     | Passed 1 file and 8 tests.                                                                                                   |
+| `pnpm docs:check`                                                                                                            | Passed: documentation checker regression tests, TypeDoc generation, and 8 maintained Markdown files.                         |
+| `pnpm source:check`                                                                                                          | Passed.                                                                                                                      |
+| `git diff --check`                                                                                                           | Passed.                                                                                                                      |
+| `pnpm --filter @spine-event-engine/example-smoke test`                                                                       | Failed: the package-local Vitest process finds no tests under the root include pattern; guides now use build then root test. |
+| `pnpm build && pnpm test:example`                                                                                            | Passed: build completed and the example suite passed 1 file and 8 tests.                                                     |
+| Corrected `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, and `git diff --check`                                | Passed.                                                                                                                      |
+| RED: `node scripts/check-documentation.test.mjs`                                                                             | Failed as expected: the new `corepack enable pnpm` fixture was accepted before checker implementation.                       |
+| GREEN: `node scripts/check-documentation.test.mjs`                                                                           | Passed after the direct-Corepack and build-before-example-test checker rule.                                                 |
+| Final `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, `pnpm build && pnpm test:example`, and `git diff --check` | Passed; the example suite passed 1 file and 8 tests.                                                                         |
 
 Coverage: No runtime or test change in this implementation tranche; pending the
 final full gate.
@@ -152,7 +155,12 @@ final full gate.
 | F-007 | P2       | Yes       | Added explicit Ubuntu CI verification and Linux/macOS/WSL guidance, with native Windows clearly unverified.                                                              |
 | F-008 | P2       | Yes       | Reduced the package README’s maintainer command list to concise guide links.                                                                                             |
 | F-009 | P2       | Yes       | Made `BUILD_PROTOCOL.md` the canonical version rule and replaced duplicate policy copies with references.                                                                |
-| F-010 | P2       | Yes       | Added `corepack enable pnpm` and cold-cache network guidance to clean-host setup sequences.                                                                              |
+| F-010 | P2       | Yes       | Replaced shim setup with direct `corepack pnpm` and cold-cache network guidance in clean-host sequences.                                                                 |
+| F-011 | P2       | Yes       | Replaced the `(when)` illustration with real current schema and clock imports, fixed clock lifecycle, and a deliberately failing equality assertion.                     |
+| F-012 | P2       | Yes       | Replaced shim-installation guidance with direct `corepack pnpm` command blocks and cold-cache explanation.                                                               |
+| F-013 | P2       | Yes       | Clarified that Proto verification checks local immutable file checksums against the recorded manifest.                                                                   |
+| F-014 | P2       | Yes       | Required separate immutable-Proto intake approval and compatibility review before vendored input or manifest changes.                                                    |
+| F-015 | P2       | Yes       | Added RED/GREEN checker regression coverage for direct Corepack setup and build-before-root-example-test ordering.                                                       |
 
 ## Integration
 

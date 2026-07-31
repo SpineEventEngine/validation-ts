@@ -22,6 +22,12 @@ const previewInstall = /(?:pnpm|npm)\s+(?:add|install)\s+[^\n]*@spine-event-engi
 const exactPreview = /@spine-event-engine\/validation@\d+\.\d+\.\d+-snapshot\.\d+/;
 const historicalWorkflowLanguage =
   /(?:\bimplementation[- ]history\b|\bchat(?:\s+transcript)?\b|\btask(?:\s+(?:record|log|branch|history))?\b|(?<!-)\bfrozen\b|\bprovenance\b|\bintake record\b|\bshared-envelope\b|\blegacy (?:adapter|behavior)\b|\bimplementation seams\b|\bapproved (?:direction|comparison)\b)/i;
+const repositorySetupGuides = [
+  "README.md",
+  "packages/example/README.md",
+  "packages/validation/docs/development.md",
+  "packages/validation/docs/contributing.md",
+];
 
 /** Returns maintained Markdown files, excluding generated TypeDoc and protocol records. */
 export function findMaintainedMarkdown(root) {
@@ -66,6 +72,30 @@ function checkPreviewInstallSequences(content, file) {
           `Exact preview install in ${file} must be in a separately labelled alternative section`,
         );
     }
+  }
+}
+
+/** Checks direct-Corepack setup and clean example-test ordering in repository guides. */
+function checkRepositorySetup(root, file, content) {
+  const relativePath = relative(root, file);
+  if (!repositorySetupGuides.includes(relativePath)) return;
+  if (!repositorySetupGuides.every((guide) => existsSync(resolve(root, guide)))) return;
+  if (/\bcorepack enable pnpm\b/.test(content))
+    throw new Error(`Repository guide ${file} must not use corepack enable pnpm`);
+  if (!/corepack pnpm install --frozen-lockfile/.test(content))
+    throw new Error(`Repository guide ${file} must include direct corepack pnpm setup`);
+
+  for (const match of content.matchAll(shellFence)) {
+    const commands = executableLines(match[1]);
+    for (const command of commands) {
+      if (/^pnpm\s/.test(command))
+        throw new Error(`Repository command in ${file} must begin with corepack pnpm`);
+    }
+    const exampleTest = commands.indexOf("corepack pnpm test:example");
+    if (exampleTest !== -1 && !commands.slice(0, exampleTest).includes("corepack pnpm build"))
+      throw new Error(
+        `Repository guide ${file} must run corepack pnpm build before corepack pnpm test:example`,
+      );
   }
 }
 
@@ -330,6 +360,7 @@ export function checkDocumentation({ root }) {
     if (stalePlaceholder.test(content))
       throw new Error(`Stale unnamespaced placeholder in ${file}`);
     checkPreviewInstallSequences(content, file);
+    checkRepositorySetup(root, file, content);
     publicImportCount += checkTypeScriptFences(
       [...content.matchAll(typeScriptFence)].map((fence) => fence[1]),
       file,
