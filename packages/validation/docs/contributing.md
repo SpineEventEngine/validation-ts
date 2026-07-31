@@ -1,44 +1,68 @@
-# Development guide
+# Contributing to Spine Validation for TypeScript
 
-The [package guide](../README.md) is for consumers. This reference covers
-repository development.
+Thank you for improving `@spine-event-engine/validation`. For setup, commands,
+and detailed change recipes, start with the [development guide](development.md).
+The [package guide](../README.md) is the consumer-facing API reference.
 
-Use Node.js 24 or later and the committed pnpm version. From the workspace
-root, install the lockfile and run the focused checks you need:
+## Prepare Your Change
 
-```sh
-corepack pnpm install --frozen-lockfile
-pnpm generate
-pnpm test:validation
-pnpm test:example
-pnpm docs:check
-pnpm source:check
-pnpm typecheck:generated
-pnpm lint
-pnpm format:check
+1. Create a branch from `dev` and check `git status` before editing. Keep
+   unrelated changes out of your pull request.
+2. Use Node.js 24.18.0 from [`.node-version`](../../../.node-version).
+3. Install with `corepack pnpm install --frozen-lockfile`, then use
+   `corepack pnpm` for repository commands. Direct invocation avoids installing
+   a system shim beside Node. A cold Corepack cache may need network access for
+   pnpm; a cold pnpm store may then download the locked packages.
+4. Do not edit generated TypeScript or immutable vendored Spine Proto files.
+
+For runtime behavior, write or change a focused failing test first, make the
+smallest passing change, and keep valid example schemas separate from invalid
+test fixtures.
+
+## Test and Document
+
+Run focused checks while working. From a clean checkout, build before the root
+example test:
+
+```bash
+corepack pnpm build
+corepack pnpm test:example
 ```
 
-`pnpm verify` runs the complete local and CI gate, including generation,
-typechecking, linting, formatting, coverage, docs, Proto verification and lint,
-build output, the executable example, package contents, and diff checks.
+`corepack pnpm build` creates the validation package’s `dist` output needed by
+root `corepack pnpm test:example`. Before opening a pull request, run the
+checks appropriate to the change; `corepack pnpm verify` is the complete local
+gate.
 
-## Source inputs
+Update public API declarations, package documentation, and executable examples
+with any consumer-visible behavior. `corepack pnpm docs:check` validates maintained
+Markdown links and TypeScript examples, checks public imports and documentation
+rules, and generates TypeDoc.
 
-Do not edit generated TypeScript. Run `pnpm generate` after changing
-project-owned Proto inputs. Official upstream Proto sources are copied
-unchanged; `pnpm proto:verify` checks their recorded checksum.
+## Commit and Open a Pull Request
 
-Runtime behavior changes use a focused failing test before implementation, then
-the smallest passing change. Validation tests use generated schemas rather than
-mocks. Keep invalid declarations in test fixtures and keep runnable example
-schemas valid.
+Write focused conventional commits. Target pull requests at `dev`, describe the
+behavior change and checks run, and request review after the branch is ready.
+Do not merge or push `master` without explicit human approval.
 
-## Documentation and API checks
+## Version Changes
 
-`pnpm docs:check` checks maintained links, TypeScript fences, public imports,
-diagnostic placeholders, preview-install presentation, and TypeDoc. It also
-requires package-local reference pages to link back to the package guide.
-`pnpm source:check` verifies project-owned TypeScript and Proto conventions.
+For a root framework-version change, update the `version` field—and only that
+field—in all three synchronized manifests: root `package.json`,
+`packages/validation/package.json`, and `packages/example/package.json`. Make
+that change in an isolated version-only commit with this exact subject:
 
-For repository governance, branch policy, review, and integration details, use
-the internal [contributor workflow](../../../build-protocol/CONTRIBUTOR_WORKFLOW.md).
+```text
+Bump version -> <version>
+```
+
+Do not combine the version change with source, documentation, dependency,
+lockfile, or generated-output work. The lockfile does not encode workspace
+manifest versions. The full policy is in
+[`BUILD_PROTOCOL.md`](../../../build-protocol/BUILD_PROTOCOL.md#framework-version-changes).
+
+## Need Help?
+
+Open an issue with the expected behavior, a minimal Proto or TypeScript
+reproduction, the command and output, and the Node and pnpm versions. Do not
+include credentials, tokens, or sensitive message payloads.

@@ -1,33 +1,86 @@
-# Spine Validation TypeScript example
+# Spine Validation TypeScript - Example Project
 
-An executable Protobuf-ES consumer of
-`@spine-event-engine/validation`, not a second validator implementation.
+A standalone example demonstrating runtime validation of Protobuf messages
+with [Spine Validation](https://github.com/SpineEventEngine/validation/) constraints.
 
-It demonstrates generated user and product schemas, formatted diagnostics,
-duplicate-tag equality classes, leaf-only nested failures, known
-`google.protobuf.Any` payloads, and accepted/rejected `(when)` timestamps.
-Runnable schemas intentionally contain no invalid option targets.
+## What This Example Shows
 
-## Run
+- ✅ Defining Protobuf messages with Spine Validation options.
+- ✅ Validating messages at runtime and formatting violations.
+- ✅ Programmatically handling validation violations.
+- ✅ Required values, patterns, ranges, distinct collections, nested messages,
+  known `Any` payloads, and Spine Time `(when)` checks.
 
-From the workspace root:
+For public API details and option-by-option behavior, read the
+[package guide](../validation/README.md).
 
-```sh
+## Quick Start
+
+### Install dependencies
+
+From the repository root, use the Node.js version in
+[`.node-version`](../../.node-version):
+
+```bash
 corepack pnpm install --frozen-lockfile
-pnpm example
 ```
 
-The command generates schemas, builds the package and example, then prints
-eight deterministic scenarios. Run the example tests with:
+On a cold host, Corepack may need network access for the pinned pnpm release;
+a cold pnpm store may then download the locked packages.
 
-```sh
-pnpm test:example
+### Run the example
+
+```bash
+corepack pnpm example
 ```
 
-For consumer setup and option semantics, start with the
-[package guide](../validation/README.md). Repository-only development material
-is in the [development reference](../validation/docs/README.md).
+This generates TypeScript from `.proto` files, builds the validation package and
+example, then prints the runnable scenarios.
+
+### Run the example tests
+
+```bash
+corepack pnpm build
+corepack pnpm test:example
+```
+
+This clean-checkout-safe sequence builds validation `dist`, generates example
+schemas, and runs the example’s Vitest tests.
+
+## Scenarios
+
+The console shows messages with missing user values, duplicate tags, an invalid
+email pattern, accepted and rejected timestamp `(when)` constraints, a product
+at its exact minimum price, nested category leaf violations, and known
+`google.protobuf.Any` payload leaf violations.
+
+The runnable schemas are in [`proto/`](proto/), scenarios are in
+[`src/scenarios.ts`](src/scenarios.ts), and assertions are in
+[`tests/scenarios.test.ts`](tests/scenarios.test.ts).
+
+`proto/testing/invalid_configuration.proto` is tests-only. It demonstrates a
+configuration error and is not a console scenario or runnable example schema.
+
+## Time Options
+
+`proto/user.proto` imports `spine/time_options.proto` and applies `(when)` to
+two `google.protobuf.Timestamp` fields:
+
+```protobuf
+google.protobuf.Timestamp issued_at = 6 [(when).in = PAST];
+google.protobuf.Timestamp expires_at = 7 [(when).in = FUTURE];
+```
+
+The example includes one message that satisfies both rules and one that violates
+both. See the [validation contract](../validation/docs/validation-contract.md)
+for supported Spine Time message types and conversion details.
+
+## Next Steps
+
+- [Package guide](../validation/README.md) — install and use the library.
+- [Development guide](../validation/docs/development.md) — build, test, and extend the workspace.
+- [Contribution guide](../validation/docs/contributing.md) — prepare a pull request.
 
 ## License
 
-Apache-2.0.
+Apache License 2.0.

@@ -39,3 +39,8 @@
 
 Never merge or push `master` without an explicit human request for that release
 boundary.
+
+## Framework Version Changes
+
+Follow [Framework Version Changes](BUILD_PROTOCOL.md#framework-version-changes)
+in the build protocol.

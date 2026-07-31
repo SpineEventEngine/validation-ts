@@ -64,23 +64,14 @@ to add runtime validation to your Protobuf-based TypeScript applications:
 ## 🚀 Getting Started
 
 See the [package guide](packages/validation/README.md), the
-[development reference](packages/validation/docs/README.md), and the
+[development reference](packages/validation/docs/README.md), the
+[development guide](packages/validation/docs/development.md), and the
 [executable example](packages/example/README.md).
 
-**Quick install:**
-
-```bash
-npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-```
-
-### Alternative: exact preview version
-
-```bash
-npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
-```
-
-The `snapshot` dist-tag moves as preview releases are published; use the exact
-version command for a reproducible install.
+`@spine-event-engine/validation` is not yet available from the public npm
+registry. See the [package guide](packages/validation/README.md) for the API
+and release status, or run the [executable example](packages/example/README.md)
+from this repository.
 
 ---
 
@@ -123,33 +114,37 @@ contains architecture, exact validation behavior, and local development notes.
 git clone <repository-url>
 cd validation-ts
 
-# Install the committed dependency graph
+# Install with the pinned pnpm release without installing a system shim
 corepack pnpm install --frozen-lockfile
 ```
+
+On a cold host, Corepack may need network access for the pinned pnpm release;
+a cold pnpm store may then download the packages in the committed lockfile.
 
 ### Build & Test
 
 ```bash
 # Run the complete local and CI quality gate
-pnpm verify
+corepack pnpm verify
 ```
 
 ### Workspace Scripts
 
-| Command        | Description                                                                           |
-| -------------- | ------------------------------------------------------------------------------------- |
-| `pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
-| `pnpm build`   | Build the package and example                                                         |
-| `pnpm test`    | Run validation-package and executable-example Vitest tests                            |
-| `pnpm example` | Run the example project                                                               |
+| Command                 | Description                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `corepack pnpm verify`  | Run generation, typechecking, lint, format, coverage, docs, Proto, and package checks |
+| `corepack pnpm build`   | Build the package and example                                                         |
+| `corepack pnpm test`    | Run validation-package and executable-example Vitest tests                            |
+| `corepack pnpm example` | Run the example project                                                               |
 
 ---
 
 ## 🤝 Contributing
 
-See the [development guide](packages/validation/docs/contributing.md) for
-local commands, generated inputs, documentation checks, and repository
-delivery practices.
+See the [contribution guide](packages/validation/docs/contributing.md) for
+review and delivery practices, and the
+[development guide](packages/validation/docs/development.md) for local setup,
+generated inputs, extension workflows, and verification.
 
 ---
 

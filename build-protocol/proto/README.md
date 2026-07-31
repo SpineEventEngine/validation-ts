@@ -17,7 +17,7 @@ retrieval from the recorded commit, compatibility review, and manifest update.
 Run:
 
 ```bash
-npm run proto:verify
+corepack pnpm proto:verify
 ```
 
 Never edit a frozen Proto to satisfy local Buf style. Every module uses the

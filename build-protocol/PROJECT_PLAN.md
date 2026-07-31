@@ -2,17 +2,18 @@
 
 ## Active Milestone
 
-| ID     | Milestone                                                                         | Status   |
-| ------ | --------------------------------------------------------------------------------- | -------- |
-| T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | Complete |
-| T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | Complete |
-| T-0003 | Modernize the example, execute it in CI, and build agent-ready documentation.     | Complete |
-| T-0004 | Adopt the current Spine TS pnpm, Vitest, TypeScript, and ESM build stack.         | Complete |
-| T-0005 | Remove generated-code patching and strengthen runtime type boundaries.            | Complete |
-| T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Complete |
-| T-0007 | Restore clean-CI documentation compilation after the pnpm migration.              | Complete |
-| T-0008 | Move pnpm workflow setup to its supported Node 24 action runtime.                 | Complete |
-| T-0009 | Restore package guidance and enforce concise, documented source conventions.      | Complete |
+| ID     | Milestone                                                                         | Status      |
+| ------ | --------------------------------------------------------------------------------- | ----------- |
+| T-0001 | Install the modern agentic build protocol and reproducible verification baseline. | Complete    |
+| T-0002 | Correct non-regex validation semantics and reach universal 90% coverage.          | Complete    |
+| T-0003 | Modernize the example, execute it in CI, and build agent-ready documentation.     | Complete    |
+| T-0004 | Adopt the current Spine TS pnpm, Vitest, TypeScript, and ESM build stack.         | Complete    |
+| T-0005 | Remove generated-code patching and strengthen runtime type boundaries.            | Complete    |
+| T-0006 | Implement the frozen Spine `(when)` time-validation contract.                     | Complete    |
+| T-0007 | Restore clean-CI documentation compilation after the pnpm migration.              | Complete    |
+| T-0008 | Move pnpm workflow setup to its supported Node 24 action runtime.                 | Complete    |
+| T-0009 | Restore package guidance and enforce concise, documented source conventions.      | Complete    |
+| T-0010 | Restore beginner guidance, add developer documentation, and govern version bumps. | In Progress |
 
 ## Accepted Follow-Up Boundaries
 

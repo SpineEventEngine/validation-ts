@@ -120,8 +120,14 @@ behavioral comparison.
 Do not claim completion without fresh evidence. The canonical full gate is:
 
 ```bash
-npm run verify
+pnpm verify
 ```
+
+## Version Changes
+
+Follow the normative [Framework Version Changes](build-protocol/BUILD_PROTOCOL.md#framework-version-changes)
+rule. Root framework-version updates are isolated version-only commits with the
+exact subject `Bump version -> <version>`.
 
 Runtime or test changes must preserve the enforced baseline of at least 80%
 statements, 80% lines, 70% branches, and 90% functions. Reach 90% across all
