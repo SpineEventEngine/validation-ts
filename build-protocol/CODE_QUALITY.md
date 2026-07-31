@@ -20,7 +20,8 @@
   consistent with `@spine-event-engine/validation`.
 - Use pnpm 11.9.0, Vitest, and ESM for workspace development and CI.
 - Generated Protobuf-ES output is ignored and regenerated.
-- `pnpm-lock.yaml` is committed; clean installs use `corepack pnpm install --frozen-lockfile`.
+- `pnpm-lock.yaml` is committed; clean installs enable pnpm with Corepack, then
+  use `corepack pnpm install --frozen-lockfile`.
 - Pin development Node through `.node-version` and enforce supported engines.
 
 ## Source Layout
@@ -106,7 +107,5 @@ peer dependencies and engines.
 
 ## Framework Versions
 
-Every root framework-version change is an isolated version-only commit. Change
-the root, `packages/validation`, and `packages/example` manifest versions
-together and make no other file changes in that commit. Its exact subject is
-`Bump version -> <version>`.
+Follow [Framework Version Changes](BUILD_PROTOCOL.md#framework-version-changes)
+in the build protocol.

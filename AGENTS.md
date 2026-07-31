@@ -125,11 +125,9 @@ pnpm verify
 
 ## Version Changes
 
-Every root framework-version change is an isolated version-only commit. Update
-the root, `packages/validation`, and `packages/example` manifest versions
-together; do not include documentation, source, dependency, lockfile, or
-generated-output changes. The commit subject must be exactly
-`Bump version -> <version>`.
+Follow the normative [Framework Version Changes](build-protocol/BUILD_PROTOCOL.md#framework-version-changes)
+rule. Root framework-version updates are isolated version-only commits with the
+exact subject `Bump version -> <version>`.
 
 Runtime or test changes must preserve the enforced baseline of at least 80%
 statements, 80% lines, 70% branches, and 90% functions. Reach 90% across all

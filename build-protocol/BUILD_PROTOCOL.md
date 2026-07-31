@@ -300,9 +300,9 @@ or unnecessary local personal paths.
 ## Framework Version Changes
 
 Every root framework-version change must be an isolated version-only commit.
-Update the root, `packages/validation`, and `packages/example` manifest
-versions together, with no documentation, source, dependency, lockfile, or
-generated-output changes in that commit. Its exact subject is
+Only the `version` fields in root `package.json`,
+`packages/validation/package.json`, and `packages/example/package.json` may
+change in that commit; they change together. Its exact subject is
 `Bump version -> <version>`.
 
 Do not create record-only commits merely to name the immediately preceding

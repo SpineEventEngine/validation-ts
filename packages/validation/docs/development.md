@@ -1,58 +1,61 @@
 # Development Guide
 
-This guide is for maintainers and automated contributors working in this
-repository. For installing and using the published library, use the
-[package guide](../README.md). For the review handoff, use the
-[contribution guide](contributing.md).
+This guide is for people maintaining this repository. To install and use the
+published library, see the [package guide](../README.md). To prepare a pull
+request, see the [contribution guide](contributing.md).
 
 ## System Requirements
 
-Development and CI use Node.js 24.18.0, recorded in
-[`.node-version`](../../../.node-version). The workspace declares Node 24 or
-later and pins pnpm 11.9.0 through the root `packageManager` field. Enable pnpm
-through Corepack; do not substitute npm or create a `package-lock.json`.
+The published package supports Node.js 24 or later. Repository development is
+verified with Node.js 24.18.0, recorded in
+[`.node-version`](../../../.node-version), and pnpm 11.9.0, pinned by the root
+`packageManager` field. The workspace is ESM, uses Vitest, and generates
+Protobuf-ES v2 schemas.
 
-The checked-in lockfile, [pnpm-lock.yaml](../../../pnpm-lock.yaml), is the
-install authority. Network access is needed only when the local pnpm store does
-not already contain the locked packages. Buf and `protoc-gen-es` are workspace
-development dependencies, so no global installation is needed.
+GitHub Actions verifies the repository on Ubuntu. Its POSIX-oriented scripts are
+suitable for Linux and macOS, and for Windows through WSL. Native Windows is not
+CI-verified. This is development-environment guidance, not a restriction on the
+published package’s Node.js runtime support.
 
 ### Supported and verified environments
 
-| Surface          | Supported                    | Verified in this repository |
-| ---------------- | ---------------------------- | --------------------------- |
-| Node.js          | 24 or later                  | 24.18.0                     |
-| Package manager  | pnpm 11.9.0 through Corepack | 11.9.0                      |
-| Module format    | ESM                          | ESM                         |
-| Test runner      | Vitest                       | Vitest 4.1.9                |
-| Protobuf runtime | Protobuf-ES v2               | `@bufbuild/protobuf` 2.13.0 |
+| Surface                   | Supported                            | Verified here               |
+| ------------------------- | ------------------------------------ | --------------------------- |
+| Published package runtime | Node.js 24 or later                  | Node.js 24.18.0             |
+| Repository development    | Linux, macOS, or Windows through WSL | Ubuntu                      |
+| Package manager           | pnpm 11.9.0 through Corepack         | pnpm 11.9.0                 |
+| Module format             | ESM                                  | ESM                         |
+| Test runner               | Vitest                               | Vitest 4.1.9                |
+| Protobuf runtime          | Protobuf-ES v2                       | `@bufbuild/protobuf` 2.13.0 |
 
-The published package supports Node 24 or later. The exact development tool
-versions above are the locked, verified workspace baseline; update them only
-through an approved dependency change.
+Buf and `protoc-gen-es` are workspace development dependencies; no global
+installation is needed. Use pnpm rather than creating a `package-lock.json`.
 
 ## Clean Installation and Build Order
 
 From a fresh checkout at the repository root:
 
 ```bash
+corepack enable pnpm
 corepack pnpm install --frozen-lockfile
 pnpm build
 pnpm test:validation
 pnpm test:example
 ```
 
-`pnpm build` first generates all schemas and then builds the TypeScript project
-references. `pnpm test:example` needs the validation package’s `dist` output;
-run `pnpm build` first in a clean worktree, or use the package-level example
-test command, which builds that dependency itself:
+`corepack enable pnpm` exposes the pinned pnpm command for later bare `pnpm`
+commands. On a cold host, Corepack may need network access to obtain pnpm 11.9.0;
+a cold pnpm store then needs network access to download the packages locked in
+[pnpm-lock.yaml](../../../pnpm-lock.yaml). The lockfile remains the dependency
+authority.
 
-```bash
-pnpm --filter @spine-event-engine/example-smoke test
-```
+`pnpm build` generates schemas before compiling TypeScript project references.
+Root `pnpm test:example` expects the validation package’s `dist` directory, so
+the ordered `pnpm build` then `pnpm test:example` sequence is safe in a clean
+checkout.
 
-Use `pnpm example` to build and run the console example, or `pnpm example:run`
-after a workspace build when you only want to execute its compiled output.
+Use `pnpm example` to build and run the console example. Use `pnpm example:run`
+only after a workspace build when you want to run compiled output.
 
 ## Repository Layout
 
@@ -62,26 +65,26 @@ validation-ts/
 │   ├── validation/       published package: source, tests, Proto inputs, and docs
 │   └── example/          executable consumer and its Vitest scenarios
 ├── scripts/              repository verification and documentation checks
-├── build-protocol/       current work, review, quality, and delivery policy
+├── build-protocol/       repository governance and release policy
 ├── pnpm-lock.yaml        locked workspace dependency graph
 └── package.json          workspace scripts and pinned package-manager version
 ```
 
-Generated TypeScript is intentionally ignored under package `src/generated/`
-and test generated directories. Distribution output is also generated. Do not
-hand-edit either; use the relevant script.
+Generated TypeScript is ignored under package `src/generated/` and test
+generated directories. Distribution output is also generated. Do not hand-edit
+either; run the relevant script.
 
 ## Commands
 
-Run commands from the repository root unless a workflow says otherwise.
+Run these commands from the repository root after the clean installation steps.
 
 | Command                    | Use it for                                                          |
 | -------------------------- | ------------------------------------------------------------------- |
 | `pnpm generate`            | Generate package, test, and example Protobuf-ES schemas.            |
-| `pnpm build`               | Generate schemas and compile all TypeScript project references.     |
-| `pnpm typecheck:generated` | Build and typecheck generated-aware package and example tests.      |
+| `pnpm build`               | Generate schemas and compile TypeScript project references.         |
+| `pnpm typecheck:generated` | Build and typecheck package and example tests.                      |
 | `pnpm test:validation`     | Generate schemas and run validation-package Vitest tests.           |
-| `pnpm test:example`        | Generate schemas and run executable-example Vitest tests.           |
+| `pnpm test:example`        | Run example tests after `pnpm build` has created validation `dist`. |
 | `pnpm docs:check`          | Check maintained docs and examples and generate TypeDoc.            |
 | `pnpm source:check`        | Check project-owned TypeScript and Proto conventions.               |
 | `pnpm proto:verify`        | Verify immutable upstream Proto checksums and source metadata.      |
@@ -97,42 +100,99 @@ package contents, and Git-diff checks.
 
 ## Copy-ready Workflows
 
-### Add a validation option
+### Add a newly supported official validation option
 
-Use this workflow for a supported new option or for an extension of the option
-registry. Public or serialized validation semantics need the planning and review
-level specified by `build-protocol/BUILD_PROTOCOL.md`.
+There is no consumer registration API. A newly supported official Spine option
+follows the repository-owned pattern used by `(when)`; it does not alter an
+immutable upstream Proto file.
+
+1. Confirm the option is defined by the official Proto input already vendored
+   under `packages/validation/proto/spine/`. `(when)` is defined by
+   `packages/validation/proto/spine/time_options.proto`. If the official input
+   is absent or must change, stop: it needs the separate immutable-Proto intake
+   described below.
+2. Add the smallest valid declaration to
+   `packages/validation/tests/proto/test-when.proto` (or a new project-owned
+   fixture beside it). For `(when)`, `TimeValidation.future_timestamp` declares
+   `google.protobuf.Timestamp future_timestamp = 2 [(when).in = FUTURE];`.
+3. Add a failing generated-schema test in
+   `packages/validation/tests/when.test.ts`. The existing model fixes the clock
+   with `ValidationClock.set()` and validates `TimeValidationSchema` created by
+   the fixture. Start with the expected field path and diagnostic shape, not an
+   implementation detail.
+4. Run `pnpm generate`. This refreshes the generated extension module at
+   `packages/validation/src/generated/spine/time_options_pb.ts` and the test
+   fixture module at `packages/validation/tests/generated/test-when_pb.ts`.
+   Generated files are output, not editing targets.
+5. Import the generated extension in
+   `packages/validation/src/options-registry.ts` and add its stable name to
+   `optionRegistry`. `(when)` imports `when` from
+   `./generated/spine/time_options_pb.js` and registers it as `when`.
+6. Implement the option owner under `packages/validation/src/options/`; the
+   `(when)` owner is `packages/validation/src/options/when.ts` and reads its
+   extension with `ValidationOptions.get("when")`. Add the narrowest validation,
+   configuration-error, and diagnostic behavior needed by the test.
+7. Wire field-level behavior into the ordered `fieldValidators` array in
+   `packages/validation/src/validation.ts`. `(when)` calls `When.validate`.
+   Use `ValidationOrchestration.adaptAllFieldsValidator()` only when the option
+   already evaluates all fields together, as `(pattern)` does; ordinary
+   field-level options do not need a new orchestration abstraction.
+8. Update the [package guide](../README.md),
+   [validation contract](validation-contract.md), and the executable example
+   when the option is useful to consumers. Add public TSDoc only if an exported
+   API changes.
+
+Run the sequence below after each relevant step:
 
 ```bash
 pnpm generate
 pnpm exec vitest run packages/validation/tests/when.test.ts
+pnpm test:validation
+pnpm proto:lint
+pnpm docs:check
 ```
 
-Vitest does not use Jest’s `--runInBand` flag. Select the relevant test file
-with its path, as in the command above.
+### Modify existing behavior test-first
 
-Start by adding a behavior-focused test and the smallest project-owned Proto
-fixture needed to make it fail. Add the option implementation and registry
-wiring, regenerate schemas, and run the same focused test. Update the package
-README, [validation contract](validation-contract.md), example where it helps
-consumers, and public TSDoc if the public API changes.
+For a concrete `(when)` example, suppose equality with the clock must become a
+failure instead of the current accepted boundary. In
+`packages/validation/tests/when.test.ts`, change the first test’s final
+assertion before changing source:
 
-### Modify runtime behavior
+```ts
+import { create } from "@bufbuild/protobuf";
+import { expect } from "vitest";
+import { validate } from "@spine-event-engine/validation";
+
+declare const TimeValidationSchema: any;
+const now = { seconds: 1_704_067_200n, nanos: 0 };
+
+const message = create(TimeValidationSchema, {
+  pastTimestamp: now,
+  futureTimestamp: now,
+});
+
+expect(validate(TimeValidationSchema, message)).toHaveLength(2);
+```
+
+That assertion fails against the current behavior. The smallest implementation
+target is the `valid` comparison in `When.validate` in
+`packages/validation/src/options/when.ts`; update only the relevant inclusive
+comparison, then rerun:
 
 ```bash
-pnpm exec vitest run packages/validation/tests/<relevant-test>.test.ts
+pnpm generate
+pnpm exec vitest run packages/validation/tests/when.test.ts
+pnpm exec vitest run packages/validation/tests/when-contract.test.ts
 pnpm test:validation
 ```
 
-Keep the first command narrowly focused while demonstrating the changed
-behavior. Then run the package suite. Use generated schemas and real descriptors
-instead of mocks; add an integration test when traversal, nesting, message
-paths, or option composition is involved. Do not change runtime behavior solely
-to make an example convenient.
+Use generated schemas and real descriptors instead of mocks. Add an integration
+test when traversal, nesting, paths, or option composition changes.
 
-### Change Proto fixtures or immutable upstream inputs
+### Change project-owned Proto fixtures or immutable upstream inputs
 
-For a project-owned fixture, edit the appropriate file under
+For a project-owned fixture, edit a file under
 `packages/validation/tests/proto/` or `packages/example/proto/`, then run:
 
 ```bash
@@ -143,64 +203,98 @@ pnpm test:validation
 
 Never edit vendored Spine inputs such as `spine/options.proto`,
 `spine/time_options.proto`, or `spine/time/time.proto`. A new or replacement
-upstream input requires a separately approved intake: resolve an exact upstream
-commit, retrieve the raw file byte-for-byte, record repository, commit, path,
-URL, retrieval date, local path, and SHA-256 in the source manifest, then
-run `pnpm proto:verify`, generation, and linting. The immutable-input policy is
-also summarized in [the immutable Proto guide](../../../build-protocol/proto/README.md).
+input must be retrieved byte-for-byte at an exact upstream commit and recorded
+with its repository, commit, path, URL, retrieval date, local path, and SHA-256
+in the source manifest. Then run `pnpm proto:verify`, generation, and linting.
+See [the immutable Proto guide](../../../build-protocol/proto/README.md).
 
-### Update public API, documentation, examples, or dependencies
+### Update a public API
 
-For a public API change, update exports, declarations, package README examples,
-and TypeDoc together. `pnpm docs:check` compiles TypeScript fences, rejects
-non-public package imports, validates local links, and generates TypeDoc.
+1. Update `packages/validation/src/index.ts` and the affected exported source
+   declaration.
+2. Update the package README TypeScript example and public TSDoc together.
+3. Run:
 
-For an executable consumer change, update `packages/example/src/scenarios.ts`
-and its Vitest tests; keep invalid configuration fixtures under
-`packages/example/proto/testing/`, not in runnable schemas.
+```bash
+pnpm generate
+pnpm typecheck:generated
+pnpm test:validation
+pnpm docs:check
+```
 
-For a dependency change, follow the approved work item and record why the current
-dependency or platform feature is insufficient, compatibility with Node and
-TypeScript, and the verification result. Use pnpm so the lockfile stays
-authoritative.
+### Update the executable example
+
+1. Update the valid runnable Proto under `packages/example/proto/` and the
+   matching scenario in `packages/example/src/scenarios.ts`.
+2. Update `packages/example/tests/scenarios.test.ts` and
+   `packages/example/README.md`.
+3. Run:
+
+```bash
+pnpm generate
+pnpm build
+pnpm test:example
+pnpm docs:check
+```
+
+Invalid option declarations belong only under `packages/example/proto/testing/`.
+
+### Update documentation
+
+1. Update the consumer-facing package README, example README, or package-local
+   reference that owns the claim.
+2. Run:
+
+```bash
+pnpm docs:check
+pnpm format:check
+git diff --check
+```
+
+### Update a dependency
+
+1. Update the owning manifest: root `package.json` for shared tooling,
+   `packages/validation/package.json` for published-package dependencies, or
+   `packages/example/package.json` for example-only dependencies.
+2. Refresh the lockfile and verify the exact workspace:
+
+```bash
+pnpm install --lockfile-only
+pnpm install --frozen-lockfile
+pnpm typecheck:generated
+pnpm test:validation
+pnpm build
+pnpm test:example
+```
+
+Do not edit the lockfile by hand. Explain why the dependency is needed and
+check its Node.js and TypeScript compatibility before proposing the change.
 
 ### Change the framework version
 
-Treat every root framework-version change as a release-metadata boundary. Change
-the root, `packages/validation`, and `packages/example` manifest versions in one
-isolated version-only commit. The subject must be exactly:
-
-```text
-Bump version -> <version>
-```
-
-Do not include documentation, source, lockfile, generated-output, or dependency
-changes in that commit. The lockfile does not encode workspace manifest versions.
+Follow the concise version-change rule in [the contribution guide](contributing.md).
 
 ## Troubleshooting
 
 | Symptom                                            | Likely cause and resolution                                                                                    |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| pnpm rejects the Node version                      | Switch to the version in `.node-version`, then rerun the command.                                              |
-| Example root test cannot resolve validation `dist` | Run `pnpm build` first, or run `pnpm --filter @spine-event-engine/example-smoke test`.                         |
+| `pnpm` is not found                                | Run `corepack enable pnpm`, then retry.                                                                        |
+| Corepack cannot obtain pnpm                        | Connect the host to the network so Corepack can download the pinned pnpm release.                              |
+| Install cannot find packages                       | Connect the host to the network so pnpm can fill its cold package store.                                       |
+| Example root test cannot resolve validation `dist` | Run `pnpm build`, then rerun `pnpm test:example`.                                                              |
 | Generated imports or fixtures are missing          | Run `pnpm generate`; never add generated files manually.                                                       |
-| `pnpm proto:verify` reports a checksum mismatch    | Restore the immutable file; if upstream intake is intended, stop and use the approved intake workflow.         |
+| `pnpm proto:verify` reports a checksum mismatch    | Restore the immutable file; use the separate intake procedure for an intended upstream replacement.            |
 | A docs TypeScript snippet fails                    | Import only public package exports and use ESM `.js` relative imports.                                         |
 | A time check differs by zone or range              | Read the `(when)` conversion details in the validation contract and include the exact input in a focused test. |
 
-## Review and Verification
+## Verification Before a Pull Request
 
-Before review, inspect the owned diff, `git diff --check`, documentation links,
-and work-record evidence. Run the focused checks that cover the change. The
-orchestrator dispatches the required review concerns, aggregates findings, and
-performs integration; do not bypass those boundaries.
-
-Run the full gate when the active work item or protocol requires it:
+Inspect the diff and run the checks that cover the change. For broad changes,
+run the complete gate:
 
 ```bash
 pnpm verify
 ```
 
-Record the exact command result, coverage where applicable, limitations, and
-next action in the current work and delivery logs. Never merge or push `master`
-without explicit human approval.
+The contribution guide explains branches, commits, pull requests, and the
+restriction on `master`.

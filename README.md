@@ -125,8 +125,12 @@ git clone <repository-url>
 cd validation-ts
 
 # Install the committed dependency graph
+corepack enable pnpm
 corepack pnpm install --frozen-lockfile
 ```
+
+On a cold host, Corepack may need network access for the pinned pnpm release;
+a cold pnpm store may then download the packages in the committed lockfile.
 
 ### Build & Test
 

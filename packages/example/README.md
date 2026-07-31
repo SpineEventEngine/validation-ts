@@ -1,62 +1,68 @@
-# Spine Validation — Example Project
+# Spine Validation TypeScript - Example Project
 
-A small, runnable application that demonstrates validating Protobuf-ES v2
-messages with [Spine Validation](https://github.com/SpineEventEngine/validation/)
-constraints.
+A standalone example demonstrating runtime validation of Protobuf messages
+with [Spine Validation](https://github.com/SpineEventEngine/validation/) constraints.
 
-## 💡 What This Example Shows
+## What This Example Shows
 
-- ✅ Declaring Spine Validation options in `.proto` files.
-- ✅ Generating TypeScript with Buf and Protobuf-ES.
+- ✅ Defining Protobuf messages with Spine Validation options.
 - ✅ Validating messages at runtime and formatting violations.
-- ✅ Required values, patterns, numeric limits, ranges, distinct collections,
-  nested messages, and known `Any` payloads.
-- ✅ Spine Time `(when)` checks for timestamps in the past and future.
+- ✅ Programmatically handling validation violations.
+- ✅ Required values, patterns, ranges, distinct collections, nested messages,
+  known `Any` payloads, and Spine Time `(when)` checks.
 
-The source is deliberately small. Read the [package guide](../validation/README.md)
-for the public API and option-by-option behavior.
+For public API details and option-by-option behavior, read the
+[package guide](../validation/README.md).
 
-## 🚀 Quick Start
+## Quick Start
 
-From the repository root, use the Node.js version in [`.node-version`](../../.node-version)
-and the committed pnpm version:
+### Install dependencies
+
+From the repository root, use the Node.js version in
+[`.node-version`](../../.node-version):
 
 ```bash
+corepack enable pnpm
 corepack pnpm install --frozen-lockfile
+```
+
+On a cold host, Corepack may need network access for the pinned pnpm release;
+a cold pnpm store may then download the locked packages.
+
+### Run the example
+
+```bash
 pnpm example
 ```
 
-`pnpm example` builds the validation package, generates this example’s TypeScript,
-builds the example, and prints every scenario.
+This generates TypeScript from `.proto` files, builds the validation package and
+example, then prints the runnable scenarios.
 
-## 🎯 Scenarios
-
-The example runs a fixed, inspectable set of messages:
-
-- a user with missing required name and email values;
-- duplicate user tags and an invalid email pattern;
-- accepted and rejected timestamp `(when)` constraints;
-- a product at its inclusive minimum price;
-- leaf violations inside a nested category;
-- leaf violations within a known `google.protobuf.Any` payload; and
-- a test-only invalid option declaration that produces
-  `ValidationConfigurationError`.
-
-The runnable schemas are in [`proto/`](proto/), the scenarios are in
-[`src/scenarios.ts`](src/scenarios.ts), and their assertions are in
-[`tests/scenarios.test.ts`](tests/scenarios.test.ts).
-
-## 🧪 Run The Example Tests
+### Run the example tests
 
 ```bash
+pnpm build
 pnpm test:example
 ```
 
-The test command builds the validation package first, then generates the example
-schemas and runs its Vitest tests. If you only want the generated TypeScript,
-run `pnpm --filter @spine-event-engine/example-smoke generate`.
+This clean-checkout-safe sequence builds validation `dist`, generates example
+schemas, and runs the example’s Vitest tests.
 
-## 🕰️ Time Options
+## Scenarios
+
+The console shows messages with missing user values, duplicate tags, an invalid
+email pattern, accepted and rejected timestamp `(when)` constraints, a product
+at its exact minimum price, nested category leaf violations, and known
+`google.protobuf.Any` payload leaf violations.
+
+The runnable schemas are in [`proto/`](proto/), scenarios are in
+[`src/scenarios.ts`](src/scenarios.ts), and assertions are in
+[`tests/scenarios.test.ts`](tests/scenarios.test.ts).
+
+`proto/testing/invalid_configuration.proto` is tests-only. It demonstrates a
+configuration error and is not a console scenario or runnable example schema.
+
+## Time Options
 
 `proto/user.proto` imports `spine/time_options.proto` and applies `(when)` to
 two `google.protobuf.Timestamp` fields:
@@ -70,11 +76,11 @@ The example includes one message that satisfies both rules and one that violates
 both. See the [validation contract](../validation/docs/validation-contract.md)
 for supported Spine Time message types and conversion details.
 
-## 📚 Next Steps
+## Next Steps
 
 - [Package guide](../validation/README.md) — install and use the library.
 - [Development guide](../validation/docs/development.md) — build, test, and extend the workspace.
-- [Contribution guide](../validation/docs/contributing.md) — prepare a change for review.
+- [Contribution guide](../validation/docs/contributing.md) — prepare a pull request.
 
 ## License
 

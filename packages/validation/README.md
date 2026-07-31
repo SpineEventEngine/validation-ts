@@ -413,38 +413,10 @@ and values outside that range throw `RangeError`.
 
 ## Testing and Development
 
-The repository uses pnpm, Vitest, Buf, TypeScript, and Node.js 24. The
-[development guide](docs/development.md) covers the clean installation order,
-supported environments, scripts, extension workflows, and troubleshooting.
-The [contribution guide](docs/contributing.md) covers review and delivery.
-Run focused commands from the workspace root:
-
-```bash
-pnpm generate
-pnpm test:validation
-pnpm test:example
-pnpm docs:check
-pnpm source:check
-pnpm typecheck:generated
-pnpm lint
-pnpm format:check
-```
-
-`pnpm generate` refreshes generated schemas. `pnpm test:validation` exercises
-the package contract. `pnpm test:example` runs the executable consumer.
-`pnpm docs:check` compiles TypeScript examples, checks links and package
-imports, and generates TypeDoc. `pnpm source:check` checks project-owned source
-conventions.
-
-Run the complete local and CI gate with:
-
-```bash
-pnpm verify
-```
-
-The complete gate checks Node, official Proto file checksums, generation,
-typechecking, linting, formatting, coverage, TypeDoc, docs, Proto linting,
-build output, the example, package contents, and the Git diff.
+For setup, supported development environments, commands, and extension
+workflows, see the [development guide](docs/development.md). For branches,
+pull requests, and version commits, see the
+[contribution guide](docs/contributing.md).
 
 ## Architecture
 
