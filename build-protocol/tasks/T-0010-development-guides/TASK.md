@@ -1,6 +1,6 @@
 # T-0010: Restore Beginner And Development Guides
 
-Status: Ready for Integration
+Status: Complete
 Classification: Standard
 Baseline: `60fd57ec66d73d769f0ce4029846ad3726e3e41e`
 Branch: `task/T-0010-development-guides`
@@ -175,21 +175,30 @@ Coverage: 94.86% statements, 91.68% branches, 99.19% functions, and
 
 ## Integration
 
-- Task commits: `d149991`, `ed59cd2`, `b5f8d1c`, `6f10708`, `0d852fd`,
-  `8153221`, and `834c1a6`; final verification-record commit pending.
-- Task push: Pending.
-- `dev` merge: Pending.
-- Post-merge verification: Pending.
-- Remote refs: Pending.
-- Worktree and task-branch cleanup: Pending.
+- Final task head `f2ff606327d117f2a48bdf271339d0aa0614ec38` was pushed
+  to `origin/task/T-0010-development-guides`.
+- The task was merged into `dev` as
+  `0066571e7aaa16382d249ade4e27752a43fc94bc` and pushed.
+- Post-merge frozen installation and `corepack pnpm verify` passed with all
+  320 tests, coverage thresholds, documentation, package, example, Proto,
+  deterministic-generation, and Git checks.
+- GitHub Actions
+  [Verify #30648799174](https://github.com/SpineEventEngine/validation-ts/actions/runs/30648799174)
+  completed successfully for the exact merge commit.
+- Before this closure record, `origin/dev` matched the verified merge and
+  `origin/master` remained unchanged at
+  `24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- The clean task worktree was removed and the integrated local and remote task
+  branches were deleted. The user-owned `.pnpm-store/` and
+  `validation-ts.code-workspace` remain untouched.
 
 ## Open Risks And Follow-Up
 
-| Risk                                                                                                          | Owner                  | Route                                                                                                                         | Disposition | Review point                                              |
-| ------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------- |
-| Copy-ready commands omit a required clean-checkout prerequisite.                                              | Implementation owner   | Run focused commands in the isolated worktree and reliability review                                                          | Closed      | Direct-Corepack/order checker and targeted review passed. |
-| Beginner documentation drifts into maintainer or internal terminology.                                        | Documentation reviewer | Fresh-reader questions and editorial review                                                                                   | Closed      | Final reader matrix passed.                               |
-| Maintained protocol still contradicts the pnpm/Vitest/ESM baseline.                                           | Implementation owner   | Targeted current-document scan and style review                                                                               | Closed      | Current guidance and style review agree.                  |
-| Version metadata is mixed with unrelated documentation changes.                                               | Orchestrator           | Inspect the exact version commit tree and subject                                                                             | Closed      | `0d852fd` changes only the three manifest version fields. |
-| Repository-wide formatting includes a pre-existing active project-plan edit outside implementation ownership. | Orchestrator           | Format or disposition that edit before final verification                                                                     | Closed      | The T-0010 records and project-plan row are formatted.    |
-| Package-scoped example test resolves no files because its Vitest include is rooted at the workspace.          | Maintainers            | Keep user guidance on the verified build-then-root-test sequence; change the package script only in a dedicated tooling task. | Open        | Future tooling work                                       |
+| Risk                                                                                                          | Owner                  | Route                                                                                                                         | Disposition        | Review point                                              |
+| ------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------- |
+| Copy-ready commands omit a required clean-checkout prerequisite.                                              | Implementation owner   | Run focused commands in the isolated worktree and reliability review                                                          | Closed             | Direct-Corepack/order checker and targeted review passed. |
+| Beginner documentation drifts into maintainer or internal terminology.                                        | Documentation reviewer | Fresh-reader questions and editorial review                                                                                   | Closed             | Final reader matrix passed.                               |
+| Maintained protocol still contradicts the pnpm/Vitest/ESM baseline.                                           | Implementation owner   | Targeted current-document scan and style review                                                                               | Closed             | Current guidance and style review agree.                  |
+| Version metadata is mixed with unrelated documentation changes.                                               | Orchestrator           | Inspect the exact version commit tree and subject                                                                             | Closed             | `0d852fd` changes only the three manifest version fields. |
+| Repository-wide formatting includes a pre-existing active project-plan edit outside implementation ownership. | Orchestrator           | Format or disposition that edit before final verification                                                                     | Closed             | The T-0010 records and project-plan row are formatted.    |
+| Package-scoped example test resolves no files because its Vitest include is rooted at the workspace.          | Maintainers            | Keep user guidance on the verified build-then-root-test sequence; change the package script only in a dedicated tooling task. | Accepted follow-up | Future tooling work                                       |
