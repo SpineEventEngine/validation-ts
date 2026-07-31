@@ -68,20 +68,10 @@ See the [package guide](packages/validation/README.md), the
 [development guide](packages/validation/docs/development.md), and the
 [executable example](packages/example/README.md).
 
-**Quick install:**
-
-```bash
-npm install @spine-event-engine/validation@snapshot @bufbuild/protobuf
-```
-
-### Alternative: exact preview version
-
-```bash
-npm install @spine-event-engine/validation@2.0.0-snapshot.6 @bufbuild/protobuf
-```
-
-The `snapshot` dist-tag moves as preview releases are published; use the exact
-version command for a reproducible install.
+`@spine-event-engine/validation` is not yet available from the public npm
+registry. See the [package guide](packages/validation/README.md) for the API
+and release status, or run the [executable example](packages/example/README.md)
+from this repository.
 
 ---
 

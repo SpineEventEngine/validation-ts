@@ -87,8 +87,10 @@ snapshot-bump plan on 2026-07-31
 
 - `2.0.0-snapshot.7` is the next version under the established
   `2.0.0-snapshot.<increment>` scheme.
-- The exact version-install example remains at the latest published preview,
-  `2.0.0-snapshot.6`, until the next snapshot is published from `master`.
+- Public npm returned E404 for `@spine-event-engine/validation`; the renamed
+  package has not yet been published because `origin/master` retains the old
+  package layout and version. Consumer docs describe only a conditional future
+  snapshot install from `master`.
 - All three workspace manifests remain synchronized in the isolated version
   commit; the lockfile does not encode workspace manifest versions.
 - `packages/validation/README.md` is the primary navigation point for both new
@@ -114,6 +116,8 @@ snapshot-bump plan on 2026-07-31
 | RED: `node scripts/check-documentation.test.mjs`                                                                             | Failed as expected: the new `corepack enable pnpm` fixture was accepted before checker implementation.                       |
 | GREEN: `node scripts/check-documentation.test.mjs`                                                                           | Passed after the direct-Corepack and build-before-example-test checker rule.                                                 |
 | Final `pnpm docs:check`, `pnpm source:check`, `pnpm format:check`, `pnpm build && pnpm test:example`, and `git diff --check` | Passed; the example suite passed 1 file and 8 tests.                                                                         |
+| `corepack pnpm install --frozen-lockfile` after the `.7` version bump | Blocked by DNS `ENOTFOUND` while restoring the cold local store; no lockfile change. The orchestrator will run docs, formatting, package, and full gates with approved network access. |
+| Final `git diff --check` | Passed. |
 
 Coverage: No runtime or test change in this implementation tranche; pending the
 final full gate.
@@ -138,7 +142,7 @@ final full gate.
 | ----------------------- | -------------------------------- | ----------- | ------------------------------------------------------------------ |
 | Style/maintainability   | `/root/t0010_style_review`       | Complete    | Consolidated correction batch accepted.                            |
 | Documentation           | `/root/t0010_docs_review`        | Complete    | Beginner guide, navigation, and workflow corrections accepted.     |
-| TypeScript/API          | `/root/t0010_api_review`         | Pending     | Final package-metadata review follows the isolated version commit. |
+| TypeScript/API          | `/root/t0010_api_review`         | Complete    | P1 registry correction accepted; version commit verified unchanged. |
 | Performance/reliability | `/root/t0010_reliability_review` | Complete    | Clean-host and example-test command corrections accepted.          |
 | Security                | N/A                              | N/A         | No security-sensitive scope.                                       |
 
@@ -162,6 +166,7 @@ final full gate.
 | F-014 | P2       | Yes       | Required separate immutable-Proto intake approval and compatibility review before vendored input or manifest changes.                                                    |
 | F-015 | P2       | Yes       | Added RED/GREEN checker regression coverage for direct Corepack setup and build-before-root-example-test ordering.                                                       |
 | F-016 | P2       | Yes       | Replaced the resolving but noncanonical generated-schema import with the exact local path used by `when.test.ts`.                                                        |
+| F-017 | P1       | Yes       | Removed false public npm availability and exact-preview claims after public-registry E404 evidence; documented only a conditional future snapshot install from `master`. |
 
 ## Integration
 
