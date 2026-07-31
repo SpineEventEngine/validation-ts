@@ -1,6 +1,6 @@
 # T-0010: Restore Beginner And Development Guides
 
-Status: Verification
+Status: Ready for Integration
 Classification: Standard
 Baseline: `60fd57ec66d73d769f0ce4029846ad3726e3e41e`
 Branch: `task/T-0010-development-guides`
@@ -121,9 +121,10 @@ snapshot-bump plan on 2026-07-31
 | Network-enabled post-bump `corepack pnpm install --frozen-lockfile`                                                          | Passed with the unchanged lockfile; all 192 packages were reused from the restored store.                                                                                              |
 | Post-registry-correction docs, source, formatting, and diff checks                                                           | Passed after formatting this active task record.                                                                                                                                       |
 | `corepack pnpm package:check`                                                                                                | Passed: packed 112 files, installed local `2.0.0-snapshot.7`, compiled the consumer, and loaded the ESM API.                                                                           |
+| Final `corepack pnpm verify`                                                                                                 | Passed all canonical gates: 320 tests, docs, TypeDoc, Proto, deterministic generation, example, package, and Git checks.                                                               |
 
-Coverage: No runtime or test change in this implementation tranche; pending the
-final full gate.
+Coverage: 94.86% statements, 91.68% branches, 99.19% functions, and
+96.12% lines across 18 files and 320 tests.
 
 ## Implementation Evidence
 
@@ -174,7 +175,8 @@ final full gate.
 
 ## Integration
 
-- Task commits: Pending.
+- Task commits: `d149991`, `ed59cd2`, `b5f8d1c`, `6f10708`, `0d852fd`,
+  `8153221`, and `834c1a6`; final verification-record commit pending.
 - Task push: Pending.
 - `dev` merge: Pending.
 - Post-merge verification: Pending.
