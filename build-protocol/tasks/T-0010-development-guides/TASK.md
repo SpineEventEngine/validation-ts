@@ -134,13 +134,13 @@ final full gate.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer                         | Disposition | Evidence                                                       |
-| ----------------------- | -------------------------------- | ----------- | -------------------------------------------------------------- |
-| Style/maintainability   | `/root/t0010_style_review`       | Complete    | Consolidated correction batch accepted.                        |
-| Documentation           | `/root/t0010_docs_review`        | Complete    | Beginner guide, navigation, and workflow corrections accepted. |
-| TypeScript/API          | `/root/t0010_api_review`         | Complete    | Manifest/version and API claims corrected or confirmed.        |
-| Performance/reliability | `/root/t0010_reliability_review` | Complete    | Clean-host and example-test command corrections accepted.      |
-| Security                | N/A                              | N/A         | No security-sensitive scope.                                   |
+| Concern                 | Reviewer                         | Disposition | Evidence                                                           |
+| ----------------------- | -------------------------------- | ----------- | ------------------------------------------------------------------ |
+| Style/maintainability   | `/root/t0010_style_review`       | Complete    | Consolidated correction batch accepted.                            |
+| Documentation           | `/root/t0010_docs_review`        | Complete    | Beginner guide, navigation, and workflow corrections accepted.     |
+| TypeScript/API          | `/root/t0010_api_review`         | Pending     | Final package-metadata review follows the isolated version commit. |
+| Performance/reliability | `/root/t0010_reliability_review` | Complete    | Clean-host and example-test command corrections accepted.          |
+| Security                | N/A                              | N/A         | No security-sensitive scope.                                       |
 
 ## Findings
 
@@ -161,6 +161,7 @@ final full gate.
 | F-013 | P2       | Yes       | Clarified that Proto verification checks local immutable file checksums against the recorded manifest.                                                                   |
 | F-014 | P2       | Yes       | Required separate immutable-Proto intake approval and compatibility review before vendored input or manifest changes.                                                    |
 | F-015 | P2       | Yes       | Added RED/GREEN checker regression coverage for direct Corepack setup and build-before-root-example-test ordering.                                                       |
+| F-016 | P2       | Yes       | Replaced the resolving but noncanonical generated-schema import with the exact local path used by `when.test.ts`.                                                        |
 
 ## Integration
 

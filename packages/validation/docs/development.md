@@ -162,7 +162,7 @@ assertion before changing source:
 import { create } from "@bufbuild/protobuf";
 import { ValidationClock } from "../src/clock.js";
 import { validate } from "../src/index.js";
-import { TimeValidationSchema } from "../tests/generated/test-when_pb.js";
+import { TimeValidationSchema } from "./generated/test-when_pb.js";
 
 const now = { seconds: 1_704_067_200n, nanos: 0 };
 
