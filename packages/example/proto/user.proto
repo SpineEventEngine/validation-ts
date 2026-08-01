@@ -48,7 +48,7 @@ message User {
                      (pattern).regex = "^[A-Za-z][A-Za-z0-9 ]{1,49}$",
                      (pattern).error_msg = "Name must start with a letter and be 2-50 characters."];
 
-    // Stores the required email address with basic format validation.
+    // Stores the required account email address.
     string email = 3 [(required) = true,
                       (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
                       (pattern).error_msg = "Email must be valid."];
@@ -91,7 +91,7 @@ message GetUserRequest {
 
 // Returns the requested user and whether it was found.
 message GetUserResponse {
-    // Carries the nested user record for validation.
+    // Carries the account user record.
     User user = 1 [(validate) = true];
 
     // Indicates whether a matching user exists.

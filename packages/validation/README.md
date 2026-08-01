@@ -257,6 +257,12 @@ import "spine/time_options.proto";
 
 package example;
 
+// Identifies an account user.
+message UserId {
+  // Stores the required account user identifier text.
+  string value = 1 [(required) = true];
+}
+
 // Describes a shipping address.
 message Address {
   // Stores the shipping street.
@@ -273,8 +279,9 @@ message Address {
 message User {
   option (require).fields = "id | email";
 
-  // Stores the account identifier.
-  int32 id = 1 [(min).value = "1"];
+  // Stores the required account user identifier.
+  UserId id = 1 [(required) = true,
+             (validate) = true];
 
   // Stores the account name.
   string name = 2 [(required) = true];
@@ -322,6 +329,12 @@ message PaymentMethod {
   }
 }
 ```
+
+Use `UserId`, `ProductId`, and `CategoryId` for account, catalog, and category
+identifiers. Each ID is a domain message, so its `value` stays connected to what
+it identifies and can gain more ID details later. Provide an ID as
+`{ value: "user-ada" }`, `{ value: "prod-1" }`, or
+`{ value: "cat-keyboards" }`.
 
 For `(when)`, use `Timestamp` or a supported Spine Time message type and set
 the direction, for example `(when).in = FUTURE`.

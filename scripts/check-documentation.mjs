@@ -216,6 +216,18 @@ function checkCompleteProtoExample(root) {
     throw new Error("Complete Proto Example must demonstrate (when) with expires_at");
   if (/^\s*message\s+(\w+)\s*\{\s*\n(?:\s*\/\/[^\n]*\n)*\s*message\s+\1\s*\{/m.test(example))
     throw new Error("Complete Proto Example must not immediately duplicate a message declaration");
+  if (
+    !/^\/\/[^\n]+\nmessage\s+UserId\s*\{\s*\n\s*\/\/[^\n]+\n\s*string\s+value\s*=\s*1\s*\[\(required\)\s*=\s*true\];\s*\n\}/m.test(
+      example,
+    )
+  )
+    throw new Error("Complete Proto Example must declare a documented required UserId value");
+  if (
+    !/UserId\s+id\s*=\s*1\s*\[(?=[^\]]*\(required\)\s*=\s*true)(?=[^\]]*\(validate\)\s*=\s*true)[^\]]*\]/.test(
+      example,
+    )
+  )
+    throw new Error("Complete Proto Example must use a required validated UserId id");
 }
 
 function protoDeclaration(line) {
@@ -234,6 +246,44 @@ function protoDeclaration(line) {
   return undefined;
 }
 
+function protoStructure(lines) {
+  let inBlockComment = false;
+  return lines.map((line) => {
+    let result = "";
+    let quoted = false;
+    let escaped = false;
+    for (let index = 0; index < line.length; index += 1) {
+      const character = line[index];
+      const next = line[index + 1];
+      if (inBlockComment) {
+        if (character === "*" && next === "/") {
+          inBlockComment = false;
+          index += 1;
+        }
+        continue;
+      }
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (character === "\\") escaped = true;
+        else if (character === '"') quoted = false;
+        continue;
+      }
+      if (character === "/" && next === "/") break;
+      if (character === "/" && next === "*") {
+        inBlockComment = true;
+        index += 1;
+        continue;
+      }
+      if (character === '"') {
+        quoted = true;
+        continue;
+      }
+      result += character;
+    }
+    return result;
+  });
+}
+
 function findProtoDeclarationEnd(lines, start, block) {
   if (!block) {
     for (let index = start; index < lines.length; index += 1)
@@ -250,10 +300,62 @@ function findProtoDeclarationEnd(lines, start, block) {
 }
 
 /** Checks that maintained README Proto fences have comments and readable declaration spacing. */
+function requireProtoMatch(source, expression, description, file) {
+  if (!expression.test(source)) throw new Error(file + ": " + description);
+}
+
+function checkExampleDomainIds(root) {
+  const userProto = resolve(root, "packages/example/proto/user.proto");
+  const productProto = resolve(root, "packages/example/proto/product.proto");
+  const user = readFileSync(userProto, "utf8");
+  const product = readFileSync(productProto, "utf8");
+  const requiredValue = (source, id, file) =>
+    requireProtoMatch(
+      source,
+      new RegExp(
+        "message\\s+" +
+          id +
+          "\\s*\\{[^}]*?string\\s+value\\s*=\\s*1\\s*\\[[^\\]]*\\(required\\)\\s*=\\s*true[^\\]]*\\]",
+      ),
+      id + ".value must be required",
+      file,
+    );
+  const requiredValidatedField = (source, message, type, field, file) =>
+    requireProtoMatch(
+      source,
+      new RegExp(
+        "message\\s+" +
+          message +
+          "\\s*\\{[\\s\\S]*?" +
+          type +
+          "\\s+" +
+          field +
+          "\\s*=\\s*1\\s*\\[(?=[^\\]]*\\(required\\)\\s*=\\s*true)(?=[^\\]]*\\(validate\\)\\s*=\\s*true)[^\\]]*\\]",
+      ),
+      message + "." + field + " must be required and validate",
+      file,
+    );
+
+  requiredValue(user, "UserId", userProto);
+  requiredValue(product, "ProductId", productProto);
+  requireProtoMatch(
+    product,
+    /message\s+ProductId\s*\{[^}]*?\(pattern\)\.regex\s*=\s*"\^prod-\[0-9\]\+\$"/,
+    "ProductId.value must preserve the prod-[0-9]+ pattern",
+    productProto,
+  );
+  requiredValue(product, "CategoryId", productProto);
+  requiredValidatedField(user, "User", "UserId", "id", userProto);
+  requiredValidatedField(user, "GetUserRequest", "UserId", "user_id", userProto);
+  requiredValidatedField(product, "Product", "ProductId", "id", productProto);
+  requiredValidatedField(product, "Category", "CategoryId", "id", productProto);
+}
+
 function checkProtoFenceDocumentation(content, file) {
   if (basename(file) !== "README.md") return;
   for (const fence of content.matchAll(protobufFence)) {
     const lines = fence[1].split(/\r?\n/);
+    const structure = protoStructure(lines);
     const declarations = [];
     let depth = 0;
     for (let index = 0; index < lines.length; index += 1) {
@@ -268,11 +370,11 @@ function checkProtoFenceDocumentation(content, file) {
           ...declaration,
           depth,
           commentStart: index - 1,
-          end: findProtoDeclarationEnd(lines, index, declaration.block),
+          end: findProtoDeclarationEnd(structure, index, declaration.block),
         });
       }
-      depth += (lines[index].match(/\{/g) ?? []).length;
-      depth -= (lines[index].match(/\}/g) ?? []).length;
+      depth += (structure[index].match(/\{/g) ?? []).length;
+      depth -= (structure[index].match(/\}/g) ?? []).length;
     }
     for (let index = 1; index < declarations.length; index += 1) {
       const previous = declarations[index - 1];
@@ -467,6 +569,7 @@ export function checkDocumentation({ root }) {
     if (/\((?:is_required|required_field)\)/.test(readFileSync(resolve(root, proto), "utf8")))
       throw new Error(`Deprecated active option in ${proto}`);
   }
+  checkExampleDomainIds(root);
   if (publicImportCount === 0)
     throw new Error("Documentation must demonstrate a named public package import");
   return markdown;

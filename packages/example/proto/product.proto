@@ -65,8 +65,7 @@ message Product {
     google.protobuf.Timestamp created_at = 6;
 
     // Carries the validated category assigned to the product.
-    Category category = 7 [(required) = true,
-                           (validate) = true];
+    Category category = 7 [(validate) = true];
 
     // Sets the text color only when a highlight color is also supplied.
     Color text_color = 8 [(goes).with = "highlight_color"];
@@ -166,7 +165,7 @@ message ListProductsResponse {
     int32 total_count = 2 [(min).value = "0"];
 }
 
-// Wraps a resolvable Any value for catalog examples.
+// Wraps catalog account details for examples.
 message ProductEnvelope {
     // Carries the Any value whose account details are checked.
     google.protobuf.Any payload = 1 [(validate) = true];

@@ -64,15 +64,16 @@ and deterministic-check plan on 2026-08-01
 
 ## Agent Dispatch
 
-| Role/function                  | Agent ID                     | Expected model  | Expected reasoning | Scope                                                                                               | Status   |
-| ------------------------------ | ---------------------------- | --------------- | ------------------ | --------------------------------------------------------------------------------------------------- | -------- |
-| Requirements split             | `/root/t0011_requirements`   | `gpt-5.6-sol`   | high               | Confirm ordered slices and high-risk acceptance coverage                                            | Complete |
-| Implementation                 | `/root/t0011_implementation` | `gpt-5.6-terra` | medium             | Own checker tests/tooling, maintained READMEs, example Protos, scenarios, tests, and active records | Complete |
-| Style/maintainability review   | Pending dispatch             | `gpt-5.6-terra` | high               | Naming, schema organization, checker maintainability, and diff scope                                | Pending  |
-| Documentation review           | Pending dispatch             | `gpt-5.6-terra` | medium             | Beginner reader test, simple domain wording, completeness, spacing, and presentation                | Pending  |
-| TypeScript/API review          | Pending dispatch             | `gpt-5.6-terra` | high               | Generated message shapes, serialized example compatibility, and unchanged package API               | Pending  |
-| Performance/reliability review | Pending dispatch             | `gpt-5.6-terra` | high               | Deterministic checker behavior, gate coverage, generation, and delivery                             | Pending  |
-| Security review                | N/A                          | `gpt-5.6-terra` | high               | No dependency, credential, publishing, trust-boundary, or runtime-input security change             | N/A      |
+| Role/function                  | Agent ID                         | Expected model  | Expected reasoning | Scope                                                                                               | Status   |
+| ------------------------------ | -------------------------------- | --------------- | ------------------ | --------------------------------------------------------------------------------------------------- | -------- |
+| Requirements split             | `/root/t0011_requirements`       | `gpt-5.6-sol`   | high               | Confirm ordered slices and high-risk acceptance coverage                                            | Complete |
+| Implementation                 | `/root/t0011_implementation`     | `gpt-5.6-terra` | medium             | Own checker tests/tooling, maintained READMEs, example Protos, scenarios, tests, and active records | Complete |
+| Style/maintainability review   | `/root/t0011_style_review`       | `gpt-5.6-terra` | high               | Naming, schema organization, checker maintainability, and diff scope                                | Complete |
+| Documentation review           | `/root/t0011_docs_review`        | `gpt-5.6-terra` | medium             | Beginner reader test, simple domain wording, completeness, spacing, and presentation                | Complete |
+| TypeScript/API review          | `/root/t0011_api_review`         | `gpt-5.6-terra` | high               | Generated message shapes, serialized example compatibility, and unchanged package API               | Complete |
+| Performance/reliability review | `/root/t0011_reliability_review` | `gpt-5.6-terra` | high               | Deterministic checker behavior, gate coverage, generation, and delivery                             | Complete |
+| Correction batch               | `/root/t0011_implementation`     | `gpt-5.6-terra` | medium             | Resolve the complete accepted P1/P2 review wave and re-run affected focused checks                  | Complete |
+| Security review                | N/A                              | `gpt-5.6-terra` | high               | No dependency, credential, publishing, trust-boundary, or runtime-input security change             | N/A      |
 
 ## Scope And Ownership
 
@@ -111,6 +112,8 @@ and deterministic-check plan on 2026-08-01
 | Baseline network-enabled `corepack pnpm package:check`    | Passed; packed 112 files and loaded the installed ESM consumer.                                                                                                                                  |
 | Baseline `corepack pnpm git:check`                        | Passed.                                                                                                                                                                                          |
 | T-0011 focused implementation checks                      | Passed `generate`, checker tests/checker, example tests (10), immutable Proto verification (12 files), Proto lint, generated typecheck, build, source check, formatting, and `git diff --check`. |
+| Orchestrator correction verification                      | Passed checker tests/checker, source check, immutable Proto verification, Proto lint, formatting, build/generation, example tests (10), and `git diff --check`. |
+| T-0011 correction checks                                  | Passed checker tests/checker, generation, example tests (10), generated typecheck, immutable Proto verification (12 files), Proto lint, source check, formatting, and `git diff --check`.        |
 
 Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
 96.12% lines.
@@ -127,8 +130,12 @@ Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
 
 ## Findings
 
-| ID  | Severity | Accepted? | Resolution |
-| --- | -------- | --------- | ---------- |
+| ID    | Severity | Accepted? | Resolution                                                                                            |
+| ----- | -------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| F-001 | P1       | Yes       | Teach message IDs in the package and example READMEs; remove the remaining primitive README ID.       |
+| F-002 | P1       | Yes       | Add deterministic enforcement and negative tests for all three ID messages and four accepting fields. |
+| F-003 | P2       | Yes       | Ignore comments and quoted strings while tracking Proto-fence braces; add regressions.                |
+| F-004 | P2       | Yes       | Restore optional `Product.category` behavior and its category-free scenario.                          |
 
 ## Integration
 

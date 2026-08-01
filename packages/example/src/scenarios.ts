@@ -85,7 +85,6 @@ export const ExampleScenarios = {
           id: { value: "prod-1" },
           name: "Keyboard",
           price: 0.01,
-          category: { id: { value: "cat-keyboards" }, name: "Keyboards" },
         }),
       ),
       ExampleScenarios.result(
