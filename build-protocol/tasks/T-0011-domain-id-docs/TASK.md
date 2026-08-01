@@ -67,7 +67,7 @@ and deterministic-check plan on 2026-08-01
 | Role/function                  | Agent ID                     | Expected model  | Expected reasoning | Scope                                                                                               | Status   |
 | ------------------------------ | ---------------------------- | --------------- | ------------------ | --------------------------------------------------------------------------------------------------- | -------- |
 | Requirements split             | `/root/t0011_requirements`   | `gpt-5.6-sol`   | high               | Confirm ordered slices and high-risk acceptance coverage                                            | Complete |
-| Implementation                 | `/root/t0011_implementation` | `gpt-5.6-terra` | medium             | Own checker tests/tooling, maintained READMEs, example Protos, scenarios, tests, and active records | Running  |
+| Implementation                 | `/root/t0011_implementation` | `gpt-5.6-terra` | medium             | Own checker tests/tooling, maintained READMEs, example Protos, scenarios, tests, and active records | Complete |
 | Style/maintainability review   | Pending dispatch             | `gpt-5.6-terra` | high               | Naming, schema organization, checker maintainability, and diff scope                                | Pending  |
 | Documentation review           | Pending dispatch             | `gpt-5.6-terra` | medium             | Beginner reader test, simple domain wording, completeness, spacing, and presentation                | Pending  |
 | TypeScript/API review          | Pending dispatch             | `gpt-5.6-terra` | high               | Generated message shapes, serialized example compatibility, and unchanged package API               | Pending  |
@@ -132,7 +132,7 @@ Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
 
 ## Integration
 
-- Task commit:
+- Task commit: `79e7229ca5f3795fbc606b3a212837f50dec4175`
 - Task push:
 - `dev` merge:
 - Post-merge verification:
