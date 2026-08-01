@@ -67,7 +67,10 @@ configuration error and is not a console scenario or runnable example schema.
 two `google.protobuf.Timestamp` fields:
 
 ```protobuf
+// Stores the account issuance time.
 google.protobuf.Timestamp issued_at = 6 [(when).in = PAST];
+
+// Stores the account expiration time.
 google.protobuf.Timestamp expires_at = 7 [(when).in = FUTURE];
 ```
 

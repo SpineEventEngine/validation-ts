@@ -8,7 +8,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
@@ -17,6 +17,7 @@ const stalePlaceholder =
 const markdownLink = /\[[^\]]*\]\(([^)\s]+)\)/g;
 const typeScriptFence = /```(?:ts|typescript)\s*\r?\n([\s\S]*?)```/gi;
 const shellFence = /```(?:bash|sh|shell)\s*\r?\n([\s\S]*?)```/gi;
+const protobufFence = /```protobuf\s*\r?\n([\s\S]*?)```/gi;
 const publicPackage = "@spine-event-engine/validation";
 const previewInstall = /(?:pnpm|npm)\s+(?:add|install)\s+[^\n]*@spine-event-engine\/validation@/;
 const exactPreview = /@spine-event-engine\/validation@\d+\.\d+\.\d+-snapshot\.\d+/;
@@ -213,8 +214,79 @@ function checkCompleteProtoExample(root) {
     )
   )
     throw new Error("Complete Proto Example must demonstrate (when) with expires_at");
-  if (/^\s*message\s+(\w+)\s*\{\s*\n\s*message\s+\1\s*\{/m.test(example))
+  if (/^\s*message\s+(\w+)\s*\{\s*\n(?:\s*\/\/[^\n]*\n)*\s*message\s+\1\s*\{/m.test(example))
     throw new Error("Complete Proto Example must not immediately duplicate a message declaration");
+}
+
+function protoDeclaration(line) {
+  const message = /^\s*message\s+(\w+)\s*\{/.exec(line);
+  if (message) return { kind: "message", name: message[1], block: true };
+  const enumeration = /^\s*enum\s+(\w+)\s*\{/.exec(line);
+  if (enumeration) return { kind: "enum", name: enumeration[1], block: true };
+  const oneof = /^\s*oneof\s+(\w+)\s*\{/.exec(line);
+  if (oneof) return { kind: "oneof", name: oneof[1], block: true };
+  const enumValue = /^\s*([A-Z][A-Z0-9_]*)\s*=\s*\d+/.exec(line);
+  if (enumValue) return { kind: "enum value", name: enumValue[1], block: false };
+  const field = /^\s*(?:(?:repeated|optional)\s+)?(?:map<[^>]+>|[.\w]+)\s+(\w+)\s*=\s*\d+/.exec(
+    line,
+  );
+  if (field) return { kind: "field", name: field[1], block: false };
+  return undefined;
+}
+
+function findProtoDeclarationEnd(lines, start, block) {
+  if (!block) {
+    for (let index = start; index < lines.length; index += 1)
+      if (lines[index].includes(";")) return index;
+    return start;
+  }
+  let depth = 0;
+  for (let index = start; index < lines.length; index += 1) {
+    depth += (lines[index].match(/\{/g) ?? []).length;
+    depth -= (lines[index].match(/\}/g) ?? []).length;
+    if (depth === 0) return index;
+  }
+  return start;
+}
+
+/** Checks that maintained README Proto fences have comments and readable declaration spacing. */
+function checkProtoFenceDocumentation(content, file) {
+  if (basename(file) !== "README.md") return;
+  for (const fence of content.matchAll(protobufFence)) {
+    const lines = fence[1].split(/\r?\n/);
+    const declarations = [];
+    let depth = 0;
+    for (let index = 0; index < lines.length; index += 1) {
+      const declaration = protoDeclaration(lines[index]);
+      if (declaration) {
+        const comment = lines[index - 1]?.trim();
+        if (!comment?.startsWith("//") || comment.slice(2).trim() === "")
+          throw new Error(
+            `${file}: ${declaration.kind} ${declaration.name} requires a non-empty leading comment`,
+          );
+        declarations.push({
+          ...declaration,
+          depth,
+          commentStart: index - 1,
+          end: findProtoDeclarationEnd(lines, index, declaration.block),
+        });
+      }
+      depth += (lines[index].match(/\{/g) ?? []).length;
+      depth -= (lines[index].match(/\}/g) ?? []).length;
+    }
+    for (let index = 1; index < declarations.length; index += 1) {
+      const previous = declarations[index - 1];
+      const current = declarations[index];
+      if (previous.depth !== current.depth) continue;
+      const emptyLines = lines
+        .slice(previous.end + 1, current.commentStart)
+        .filter((line) => line.trim() === "").length;
+      if (emptyLines !== 1)
+        throw new Error(
+          `${file}: ${previous.kind} ${previous.name} must have exactly one empty line before ${current.kind} ${current.name}`,
+        );
+    }
+  }
 }
 
 function checkSourceTsDoc(root, index, publicExports) {
@@ -361,6 +433,7 @@ export function checkDocumentation({ root }) {
       throw new Error(`Stale unnamespaced placeholder in ${file}`);
     checkPreviewInstallSequences(content, file);
     checkRepositorySetup(root, file, content);
+    checkProtoFenceDocumentation(content, file);
     publicImportCount += checkTypeScriptFences(
       [...content.matchAll(typeScriptFence)].map((fence) => fence[1]),
       file,

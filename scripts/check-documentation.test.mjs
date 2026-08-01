@@ -297,6 +297,7 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
         "",
         "```protobuf",
         'import "google/protobuf/timestamp.proto";',
+        "// Describes an account user.",
         "message User {}",
         "```",
         "",
@@ -311,8 +312,11 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
         "",
         "```protobuf",
         'import "google/protobuf/timestamp.proto";',
+        "// Describes an account user.",
         "message User {",
+        "// Describes a duplicate account user.",
         "message User {",
+        "  // Stores the account expiration time.",
         "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
         "}",
         "```",
@@ -328,7 +332,9 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
         "",
         "```protobuf",
         'import "google/protobuf/timestamp.proto";',
+        "// Describes an account user.",
         "message User {",
+        "  // Stores the account expiration time.",
         "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
         "}",
         "```",
@@ -336,6 +342,61 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
       ].join("\n"),
     );
     assert.equal(checkDocumentation({ root }).length, 4);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = createFixture();
+  try {
+    const documentedFence = [
+      "```protobuf",
+      "// Describes an account user.",
+      "message User {",
+      "  // Stores the account identifier.",
+      "  string id = 1;",
+      "",
+      "  // Lists account roles.",
+      "  enum Role {",
+      "    // Marks a user without a selected role.",
+      "    ROLE_UNSPECIFIED = 0;",
+      "",
+      "    // Marks a regular account user.",
+      "    ROLE_MEMBER = 1;",
+      "  }",
+      "",
+      "  // Selects one contact method.",
+      "  oneof contact {",
+      "    // Stores an email address.",
+      "    string email = 2;",
+      "",
+      "    // Stores a phone number.",
+      "    string phone = 3;",
+      "  }",
+      "}",
+      "```",
+    ].join("\n");
+    writeReadme(root, withPublicImport(documentedFence));
+    assert.equal(checkDocumentation({ root }).length, 3);
+
+    writeReadme(
+      root,
+      withPublicImport(documentedFence.replace("  // Stores the account identifier.\n", "")),
+    );
+    expectFailure(root, /README\.md.*field id.*leading comment/);
+
+    writeReadme(
+      root,
+      withPublicImport(documentedFence.replace("  string id = 1;\n\n", "  string id = 1;\n")),
+    );
+    expectFailure(root, /README\.md.*field id.*exactly one empty line/);
+
+    writeReadme(
+      root,
+      withPublicImport(documentedFence.replace("  string id = 1;\n\n", "  string id = 1;\n\n\n")),
+    );
+    expectFailure(root, /README\.md.*field id.*exactly one empty line/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
