@@ -4,6 +4,7 @@ import { ValidationConfigurationError, Violations, validate } from "@spine-event
 
 import { ExampleScenarios } from "../src/scenarios.js";
 import { InvalidRequiredTargetSchema } from "../src/generated/testing/invalid_configuration_pb.js";
+import { GetUserRequestSchema, UserSchema } from "../src/generated/user_pb.js";
 
 function scenario(name: string) {
   const value = ExampleScenarios.run().find((item) => item.name === name);
@@ -15,11 +16,30 @@ describe("runnable validation scenarios", () => {
   it("reports missing User values with an exact root, paths, and diagnostics", () => {
     const value = scenario("missing user values");
     expect(value.typeName).toBe("example.User");
-    expect(value.fieldPaths).toEqual(["name", "email"]);
+    expect(value.fieldPaths).toEqual(["id", "name", "email"]);
     expect(value.violations.map(Violations.formatMessage)).toEqual([
+      "The field `example.User.id` of the type `example.UserId` must have a non-default value.",
       "The field `example.User.name` of the type `string` must have a non-default value.",
       "The field `example.User.email` of the type `string` must have a non-default value.",
     ]);
+  });
+
+  it("rejects both an absent user ID and a present empty user ID", () => {
+    expect(validate(UserSchema, create(UserSchema)).map(Violations.failurePath)).toContain("id");
+    expect(
+      validate(UserSchema, create(UserSchema, { id: { value: "" } })).map(Violations.failurePath),
+    ).toContain("id");
+  });
+
+  it("rejects both an absent request ID and a present empty request ID", () => {
+    expect(
+      validate(GetUserRequestSchema, create(GetUserRequestSchema)).map(Violations.failurePath),
+    ).toEqual(["user_id"]);
+    expect(
+      validate(GetUserRequestSchema, create(GetUserRequestSchema, { userId: { value: "" } })).map(
+        Violations.failurePath,
+      ),
+    ).toEqual(["user_id"]);
   });
 
   it("reports one duplicate equality class with its packed representative and diagnostics", () => {
@@ -71,7 +91,7 @@ describe("runnable validation scenarios", () => {
   it("keeps known Any payload reports as prefixed leaves under the envelope root", () => {
     const value = scenario("known Any payload leaf violations");
     expect(value.typeName).toBe("example.ProductEnvelope");
-    expect(value.fieldPaths).toEqual(["payload.name", "payload.email"]);
+    expect(value.fieldPaths).toEqual(["payload.id", "payload.name", "payload.email"]);
   });
 
   it("exposes the public configuration-error shape for a test-only invalid target", () => {

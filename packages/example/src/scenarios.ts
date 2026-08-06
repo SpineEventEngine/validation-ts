@@ -31,13 +31,13 @@ export const ExampleScenarios = {
       ExampleScenarios.result(
         "missing user values",
         UserSchema,
-        create(UserSchema, { id: 1, role: Role.USER }),
+        create(UserSchema, { role: Role.USER }),
       ),
       ExampleScenarios.result(
         "duplicate user tags",
         UserSchema,
         create(UserSchema, {
-          id: 1,
+          id: { value: "user-ada" },
           name: "Ada Lovelace",
           email: "ada@example.test",
           role: Role.USER,
@@ -48,7 +48,7 @@ export const ExampleScenarios = {
         "invalid user email pattern",
         UserSchema,
         create(UserSchema, {
-          id: 1,
+          id: { value: "user-ada" },
           name: "Ada Lovelace",
           email: "not-an-email",
           role: Role.USER,
@@ -58,7 +58,7 @@ export const ExampleScenarios = {
         "past and future time constraints",
         UserSchema,
         create(UserSchema, {
-          id: 1,
+          id: { value: "user-ada" },
           name: "Ada Lovelace",
           email: "ada@example.test",
           role: Role.USER,
@@ -70,7 +70,7 @@ export const ExampleScenarios = {
         "violated past and future time constraints",
         UserSchema,
         create(UserSchema, {
-          id: 1,
+          id: { value: "user-ada" },
           name: "Ada Lovelace",
           email: "ada@example.test",
           role: Role.USER,
@@ -81,23 +81,27 @@ export const ExampleScenarios = {
       ExampleScenarios.result(
         "product at its exact minimum price",
         ProductSchema,
-        create(ProductSchema, { id: "prod-1", name: "Keyboard", price: 0.01 }),
+        create(ProductSchema, {
+          id: { value: "prod-1" },
+          name: "Keyboard",
+          price: 0.01,
+        }),
       ),
       ExampleScenarios.result(
         "nested product category leaf violations",
         ProductSchema,
         create(ProductSchema, {
-          id: "prod-2",
+          id: { value: "prod-2" },
           name: "Keyboard",
           price: 1,
-          category: { id: 0, name: "", context: "present" },
+          category: { id: { value: "" }, name: "", context: "present" },
         }),
       ),
       ExampleScenarios.result(
         "known Any payload leaf violations",
         ProductEnvelopeSchema,
         create(ProductEnvelopeSchema, {
-          payload: anyPack(UserSchema, create(UserSchema, { id: 1, role: Role.USER })),
+          payload: anyPack(UserSchema, create(UserSchema, { role: Role.USER })),
         }),
       ),
     ];

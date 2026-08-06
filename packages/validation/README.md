@@ -63,17 +63,25 @@ syntax = "proto3";
 
 import "spine/options.proto";
 
+// Describes an account user.
 message User {
+  // Stores the required account name.
   string name = 1 [
     (required) = true,
     (if_missing).error_msg = "Name is required."
   ];
+
+  // Stores the required account email address.
   string email = 2 [
     (required) = true,
     (pattern).regex = "^[^@]+@[^@]+\\.[^@]+$",
     (pattern).error_msg = "Email must be valid."
   ];
+
+  // Stores the account age for eligibility checks.
   int32 age = 3 [(range).value = "[13..120]"];
+
+  // Lists unique labels for the account.
   repeated string tags = 4 [
     (distinct) = true,
     (if_has_duplicates).error_msg = "Tags must be unique."
@@ -249,37 +257,84 @@ import "spine/time_options.proto";
 
 package example;
 
+// Identifies an account user.
+message UserId {
+  // Stores the required account user identifier text.
+  string value = 1 [(required) = true];
+}
+
+// Describes a shipping address.
 message Address {
+  // Stores the shipping street.
   string street = 1 [(required) = true];
+
+  // Stores the shipping city.
   string city = 2 [(required) = true];
+
+  // Stores the shipping postal code.
   string zip_code = 3 [(pattern).regex = "^[0-9]{5}$"];
 }
 
+// Describes an account user.
 message User {
   option (require).fields = "id | email";
 
-  int32 id = 1 [(min).value = "1"];
+  // Stores the required account user identifier.
+  UserId id = 1 [(required) = true,
+             (validate) = true];
+
+  // Stores the account name.
   string name = 2 [(required) = true];
+
+  // Stores the account email address.
   string email = 3 [(pattern).regex = "^[^@]+@[^@]+\\.[^@]+$"];
+
+  // Stores the account age.
   int32 age = 4 [(range).value = "[13..120]"];
+
+  // Lists account labels without duplicates.
   repeated string tags = 5 [(distinct) = true];
+
+  // Stores account preferences without duplicate values.
   map<string, string> preferences = 6 [(distinct) = true];
+
+  // Stores the shipping address.
   Address address = 7 [(validate) = true];
+
+  // Stores additional account details.
   google.protobuf.Any details = 8 [(validate) = true];
+
+  // Stores the shipping tracking number.
   string tracking_number = 9 [(goes).with = "carrier"];
+
+  // Stores the shipping carrier.
   string carrier = 10 [(goes).with = "tracking_number"];
+
+  // Stores the account expiration time.
   google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];
 }
 
+// Describes a checkout payment method.
 message PaymentMethod {
+  // Selects one checkout payment option.
   oneof method {
     option (choice).required = true;
     option (choice).error_msg = "Payment method is required.";
+
+    // Stores a card token for checkout.
     string card_token = 1;
+
+    // Stores a bank account for checkout.
     string bank_account = 2;
   }
 }
 ```
+
+Use `UserId`, `ProductId`, and `CategoryId` for account, catalog, and category
+identifiers. Each ID is a domain message, so its `value` stays connected to what
+it identifies and can gain more ID details later. Provide an ID as
+`{ value: "user-ada" }`, `{ value: "prod-1" }`, or
+`{ value: "cat-keyboards" }`.
 
 For `(when)`, use `Timestamp` or a supported Spine Time message type and set
 the direction, for example `(when).in = FUTURE`.
@@ -314,8 +369,12 @@ other options report the entry type and full field path. Use a static
 ### Field dependencies
 
 ```protobuf
+// Describes shipping details for an order.
 message ShippingDetails {
+  // Stores the shipment tracking number.
   string tracking_number = 1 [(goes).with = "carrier"];
+
+  // Stores the shipment carrier.
   string carrier = 2 [(goes).with = "tracking_number"];
 }
 ```
@@ -323,10 +382,17 @@ message ShippingDetails {
 ### Required field combinations
 
 ```protobuf
+// Describes ways to contact an account user.
 message ContactInfo {
   option (require).fields = "phone & country_code | email";
+
+  // Stores the contact phone number.
   string phone = 1;
+
+  // Stores the contact country code.
   string country_code = 2;
+
+  // Stores the contact email address.
   string email = 3;
 }
 ```
@@ -336,10 +402,16 @@ This accepts either `email` or both `phone` and `country_code`.
 ### Oneof constraints
 
 ```protobuf
+// Describes a checkout payment choice.
 message Payment {
+  // Selects one checkout payment option.
   oneof method {
     option (choice).required = true;
+
+    // Stores a payment card.
     string card = 1;
+
+    // Stores a bank payment reference.
     string bank = 2;
   }
 }

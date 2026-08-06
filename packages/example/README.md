@@ -14,6 +14,14 @@ with [Spine Validation](https://github.com/SpineEventEngine/validation/) constra
 For public API details and option-by-option behavior, read the
 [package guide](../validation/README.md).
 
+## Domain IDs
+
+The account, catalog, and category identifiers use `UserId`, `ProductId`, and
+`CategoryId` messages. A domain message keeps an ID connected to what it names
+and leaves room for future ID details. Set an ID with its `value`, such as
+`{ value: "user-ada" }`, `{ value: "prod-1" }`, or
+`{ value: "cat-keyboards" }`.
+
 ## Quick Start
 
 ### Install dependencies
@@ -67,7 +75,10 @@ configuration error and is not a console scenario or runnable example schema.
 two `google.protobuf.Timestamp` fields:
 
 ```protobuf
+// Stores the account issuance time.
 google.protobuf.Timestamp issued_at = 6 [(when).in = PAST];
+
+// Stores the account expiration time.
 google.protobuf.Timestamp expires_at = 7 [(when).in = FUTURE];
 ```
 

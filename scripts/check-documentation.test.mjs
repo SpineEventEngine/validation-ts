@@ -31,8 +31,25 @@ function createFixture() {
   writeFileSync(join(root, "docs", "target.md"), "# Target\n");
   writeFileSync(join(root, "packages", "example", "proto", "user.proto"), 'syntax = "proto3";\n');
   writeFileSync(
+    join(root, "packages", "example", "proto", "user.proto"),
+    [
+      'syntax = "proto3";',
+      "message UserId { string value = 1 [(required) = true]; }",
+      "message User { UserId id = 1 [(required) = true, (validate) = true]; }",
+      "message GetUserRequest { UserId user_id = 1 [(required) = true, (validate) = true]; }",
+      "",
+    ].join("\n"),
+  );
+  writeFileSync(
     join(root, "packages", "example", "proto", "product.proto"),
-    'syntax = "proto3";\n',
+    [
+      'syntax = "proto3";',
+      'message ProductId { string value = 1 [(required) = true, (pattern).regex = "^prod-[0-9]+$"]; }',
+      "message Product { ProductId id = 1 [(required) = true, (validate) = true]; }",
+      "message CategoryId { string value = 1 [(required) = true]; }",
+      "message Category { CategoryId id = 1 [(required) = true, (validate) = true]; }",
+      "",
+    ].join("\n"),
   );
   return root;
 }
@@ -288,7 +305,16 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
     );
     expectFailure(root, /Deprecated active option/);
 
-    writeFileSync(join(root, "packages", "example", "proto", "user.proto"), 'syntax = "proto3";\n');
+    writeFileSync(
+      join(root, "packages", "example", "proto", "user.proto"),
+      [
+        'syntax = "proto3";',
+        "message UserId { string value = 1 [(required) = true]; }",
+        "message User { UserId id = 1 [(required) = true, (validate) = true]; }",
+        "message GetUserRequest { UserId user_id = 1 [(required) = true, (validate) = true]; }",
+        "",
+      ].join("\n"),
+    );
     writeReadme(root, withPublicImport("[target heading](docs/target.md#target)"));
     writeFileSync(
       join(root, "packages", "validation", "README.md"),
@@ -297,6 +323,7 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
         "",
         "```protobuf",
         'import "google/protobuf/timestamp.proto";',
+        "// Describes an account user.",
         "message User {}",
         "```",
         "",
@@ -311,8 +338,11 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
         "",
         "```protobuf",
         'import "google/protobuf/timestamp.proto";',
+        "// Describes an account user.",
         "message User {",
+        "// Describes a duplicate account user.",
         "message User {",
+        "  // Stores the account expiration time.",
         "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
         "}",
         "```",
@@ -328,7 +358,65 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
         "",
         "```protobuf",
         'import "google/protobuf/timestamp.proto";',
+        "// Describes an account user.",
         "message User {",
+        "  // Stores the primitive account identifier.",
+        '  int32 id = 1 [(min).value = "1"];',
+        "",
+        "  // Stores the account expiration time.",
+        "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
+        "}",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    expectFailure(root, /must declare a documented required UserId value/);
+
+    writeFileSync(
+      join(root, "packages", "validation", "README.md"),
+      [
+        "## Complete Proto Example",
+        "",
+        "```protobuf",
+        'import "google/protobuf/timestamp.proto";',
+        '"// Identifies an account user.",',
+        '"message UserId {",',
+        '"  // Stores the required account user identifier text.",',
+        '"  string value = 1 [(required) = true];",',
+        '"}",',
+        "// Describes an account user.",
+        "message User {",
+        "  // Stores the required account user identifier.",
+        "  UserId id = 1 [(required) = true, (validate) = true];",
+        "",
+        "  // Stores the account expiration time.",
+        "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
+        "}",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    expectFailure(root, /must declare a documented required UserId value/);
+
+    writeFileSync(
+      join(root, "packages", "validation", "README.md"),
+      [
+        "## Complete Proto Example",
+        "",
+        "```protobuf",
+        'import "google/protobuf/timestamp.proto";',
+        "// Identifies an account user.",
+        "message UserId {",
+        "  // Stores the required account user identifier text.",
+        "  string value = 1 [(required) = true];",
+        "}",
+        "",
+        "// Describes an account user.",
+        "message User {",
+        "  // Stores the required account user identifier.",
+        "  UserId id = 1 [(required) = true, (validate) = true];",
+        "",
+        "  // Stores the account expiration time.",
         "  google.protobuf.Timestamp expires_at = 11 [(when).in = FUTURE];",
         "}",
         "```",
@@ -336,6 +424,61 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
       ].join("\n"),
     );
     assert.equal(checkDocumentation({ root }).length, 4);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = createFixture();
+  try {
+    const documentedFence = [
+      "```protobuf",
+      "// Describes an account user.",
+      "message User {",
+      "  // Stores the account identifier.",
+      "  string id = 1;",
+      "",
+      "  // Lists account roles.",
+      "  enum Role {",
+      "    // Marks a user without a selected role.",
+      "    ROLE_UNSPECIFIED = 0;",
+      "",
+      "    // Marks a regular account user.",
+      "    ROLE_MEMBER = 1;",
+      "  }",
+      "",
+      "  // Selects one contact method.",
+      "  oneof contact {",
+      "    // Stores an email address.",
+      "    string email = 2;",
+      "",
+      "    // Stores a phone number.",
+      "    string phone = 3;",
+      "  }",
+      "}",
+      "```",
+    ].join("\n");
+    writeReadme(root, withPublicImport(documentedFence));
+    assert.equal(checkDocumentation({ root }).length, 3);
+
+    writeReadme(
+      root,
+      withPublicImport(documentedFence.replace("  // Stores the account identifier.\n", "")),
+    );
+    expectFailure(root, /README\.md.*field id.*leading comment/);
+
+    writeReadme(
+      root,
+      withPublicImport(documentedFence.replace("  string id = 1;\n\n", "  string id = 1;\n")),
+    );
+    expectFailure(root, /README\.md.*field id.*exactly one empty line/);
+
+    writeReadme(
+      root,
+      withPublicImport(documentedFence.replace("  string id = 1;\n\n", "  string id = 1;\n\n\n")),
+    );
+    expectFailure(root, /README\.md.*field id.*exactly one empty line/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -416,6 +559,147 @@ function writeRepositoryGuides(root, { developmentSetup, exampleSetup, rootSetup
 }
 
 const workspaceRoot = join(import.meta.dirname, "..");
+{
+  const root = createFixture();
+  try {
+    writeReadme(root, withPublicImport("# Root"));
+    assert.equal(checkDocumentation({ root }).length, 3);
+
+    const userProto = join(root, "packages", "example", "proto", "user.proto");
+    const validUser = readFileSync(userProto, "utf8");
+    writeFileSync(
+      userProto,
+      readFileSync(userProto, "utf8").replace("[(required) = true]; }", "; }"),
+    );
+    expectFailure(root, /UserId\.value.*required/);
+
+    writeFileSync(userProto, validUser);
+
+    writeFileSync(
+      userProto,
+      `${validUser.replace(
+        "UserId id = 1 [(required) = true, (validate) = true]",
+        "string id = 1 [(required) = true, (validate) = true]",
+      )}message LaterUser { UserId id = 1 [(required) = true, (validate) = true]; }\n`,
+    );
+    expectFailure(root, /User\.id.*required and validate/);
+
+    writeFileSync(userProto, validUser);
+
+    writeFileSync(
+      userProto,
+      validUser.replace(
+        "UserId id = 1 [(required) = true, (validate) = true]; }",
+        "string id = 1 [(required) = true, (validate) = true]; message Counterfeit { UserId id = 1 [(required) = true, (validate) = true]; } }",
+      ),
+    );
+    expectFailure(root, /User\.id.*required and validate/);
+
+    writeFileSync(userProto, validUser);
+
+    writeFileSync(
+      userProto,
+      readFileSync(userProto, "utf8").replace(", (validate) = true]; }", "]; }"),
+    );
+    expectFailure(root, /User\.id.*required and validate/);
+
+    writeFileSync(userProto, validUser);
+    writeFileSync(
+      userProto,
+      readFileSync(userProto, "utf8").replace(
+        "UserId user_id = 1 [(required) = true, (validate) = true]",
+        "UserId user_id = 1 [(required) = true]",
+      ),
+    );
+    expectFailure(root, /GetUserRequest\.user_id.*required and validate/);
+
+    writeFileSync(userProto, validUser);
+
+    const productProto = join(root, "packages", "example", "proto", "product.proto");
+    const validProduct = readFileSync(productProto, "utf8");
+    writeFileSync(
+      productProto,
+      readFileSync(productProto, "utf8").replace(
+        /(message ProductId \{ string value = 1 \[)\(required\) = true, /,
+        "$1",
+      ),
+    );
+    expectFailure(root, /ProductId\.value.*required/);
+
+    writeFileSync(productProto, validProduct);
+    writeFileSync(
+      productProto,
+      readFileSync(productProto, "utf8").replace("^prod-[0-9]+$", "^product-[0-9]+$"),
+    );
+    expectFailure(root, /ProductId\.value must preserve the prod-\[0-9\]\+ pattern/);
+
+    writeFileSync(productProto, validProduct);
+    writeFileSync(
+      productProto,
+      readFileSync(productProto, "utf8").replace(
+        "ProductId id = 1 [(required) = true, (validate) = true]",
+        "ProductId id = 1 [(required) = true]",
+      ),
+    );
+    expectFailure(root, /Product\.id.*required and validate/);
+
+    writeFileSync(productProto, validProduct);
+    writeFileSync(
+      productProto,
+      readFileSync(productProto, "utf8").replace(
+        "message CategoryId { string value = 1 [(required) = true]; }",
+        "message CategoryId { string value = 1; }",
+      ),
+    );
+    expectFailure(root, /CategoryId\.value.*required/);
+
+    writeFileSync(productProto, validProduct);
+
+    writeFileSync(
+      productProto,
+      readFileSync(productProto, "utf8").replace(
+        "CategoryId id = 1 [(required) = true, (validate) = true]",
+        "CategoryId id = 1 [(required) = true]",
+      ),
+    );
+    expectFailure(root, /Category\.id.*required and validate/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = createFixture();
+  try {
+    const documentedFence = (secondComment) =>
+      [
+        "```protobuf",
+        "// Describes an account user.",
+        "message User {",
+        '  // Stores the account identifier as "{".',
+        '  string id = 1 [default = "{"];',
+        secondComment,
+        "  string name = 2;",
+        "}",
+        "```",
+      ].join("\n");
+    writeReadme(root, withPublicImport(documentedFence("  // Stores the account name.")));
+    expectFailure(root, /field id.*exactly one empty line/);
+
+    writeReadme(root, withPublicImport(documentedFence("  // Stores the { account name.")));
+    expectFailure(root, /field id.*exactly one empty line/);
+
+    const documentedSingleQuoteFence = documentedFence("  // Stores the account name.").replace(
+      'default = "{"',
+      "default = '{'",
+    );
+    writeReadme(root, withPublicImport(documentedSingleQuoteFence));
+    expectFailure(root, /field id.*exactly one empty line/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 const workspaceManifest = JSON.parse(readFileSync(join(workspaceRoot, "package.json"), "utf8"));
 
 assert.equal(

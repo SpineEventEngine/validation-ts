@@ -32,12 +32,19 @@ import "google/protobuf/timestamp.proto";
 import "spine/options.proto";
 import "user.proto";
 
+// Identifies one catalog product.
+message ProductId {
+    // Stores the required product code in the prod-number format.
+    string value = 1 [(required) = true,
+                      (pattern).regex = "^prod-[0-9]+$",
+                      (pattern).error_msg = "Product ID must follow format 'prod-XXX'."];
+}
+
 // Represents a catalog product returned by the example storefront.
 message Product {
-    // Identifies the product with the required prod-number format.
-    string id = 1 [(required) = true,
-                   (pattern).regex = "^prod-[0-9]+$",
-                   (pattern).error_msg = "Product ID must follow format 'prod-XXX'."];
+    // Stores the required catalog product identifier.
+    ProductId id = 1 [(required) = true,
+                    (validate) = true];
 
     // Supplies the required customer-facing product name.
     string name = 2 [(required) = true,
@@ -62,6 +69,7 @@ message Product {
 
     // Sets the text color only when a highlight color is also supplied.
     Color text_color = 8 [(goes).with = "highlight_color"];
+
     // Sets the highlight color only when a text color is also supplied.
     Color highlight_color = 9 [(goes).with = "text_color"];
 }
@@ -70,19 +78,29 @@ message Product {
 message Color {
     // Stores the red component on the inclusive 0–255 scale.
     int32 red = 1 [(range).value = "[0..255]"];
+
     // Stores the green component on the inclusive 0–255 scale.
     int32 green = 2 [(range).value = "[0..255]"];
+
     // Stores the blue component on the inclusive 0–255 scale.
     int32 blue = 3 [(range).value = "[0..255]"];
 }
 
+// Identifies one catalog category.
+message CategoryId {
+    // Stores the catalog category identifier text.
+    string value = 1 [(required) = true];
+}
+
 // Identifies the catalog category assigned to a product.
 message Category {
-    // Holds the positive category identifier.
-    int32 id = 1 [(min).value = "1"];
+    // Holds the required catalog category identifier.
+    CategoryId id = 1 [(required) = true,
+                     (validate) = true];
 
     // Holds the required category label.
     string name = 2 [(required) = true];
+
     // Holds optional category context for display or filtering.
     string context = 3;
 }
@@ -107,8 +125,10 @@ message PaymentCardNumber {
     string number = 1 [(required) = true,
                        (pattern).regex = "^[0-9]{13,19}$",
                        (pattern).error_msg = "Card number must be 13-19 digits."];
+
     // Stores the card expiration month.
     int32 expiry_month = 2 [(range).value = "[1..12]"];
+
     // Stores the card expiration year, beginning in 2024.
     int32 expiry_year = 3 [(min).value = "2024"];
 }
@@ -118,6 +138,7 @@ message BankAccount {
     // Stores the required 8-to-17 digit account number.
     string account_number = 1 [(required) = true,
                                (pattern).regex = "^[0-9]{8,17}$"];
+
     // Stores the required nine-digit routing number.
     string routing_number = 2 [(required) = true,
                                (pattern).regex = "^[0-9]{9}$"];
@@ -137,15 +158,15 @@ message ListProductsRequest {
 
 // Returns a page of catalog products and the total match count.
 message ListProductsResponse {
-    // Lists the returned products with nested validation enabled.
+    // Lists the returned catalog products with checks enabled.
     repeated Product products = 1 [(validate) = true];
 
     // Reports the non-negative number of matching products.
     int32 total_count = 2 [(min).value = "0"];
 }
 
-// Wraps a resolvable Any payload for nested-validation examples.
+// Wraps catalog account details for examples.
 message ProductEnvelope {
-    // Carries the Any value whose embedded message is validated.
+    // Carries the Any value whose account details are checked.
     google.protobuf.Any payload = 1 [(validate) = true];
 }
