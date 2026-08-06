@@ -588,6 +588,17 @@ const workspaceRoot = join(import.meta.dirname, "..");
 
     writeFileSync(
       userProto,
+      validUser.replace(
+        "UserId id = 1 [(required) = true, (validate) = true]; }",
+        "string id = 1 [(required) = true, (validate) = true]; message Counterfeit { UserId id = 1 [(required) = true, (validate) = true]; } }",
+      ),
+    );
+    expectFailure(root, /User\.id.*required and validate/);
+
+    writeFileSync(userProto, validUser);
+
+    writeFileSync(
+      userProto,
       readFileSync(userProto, "utf8").replace(", (validate) = true]; }", "]; }"),
     );
     expectFailure(root, /User\.id.*required and validate/);

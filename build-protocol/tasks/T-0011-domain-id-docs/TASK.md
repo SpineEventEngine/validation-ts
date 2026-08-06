@@ -74,6 +74,7 @@ and deterministic-check plan on 2026-08-01
 | Performance/reliability review | `/root/t0011_reliability_review` | `gpt-5.6-terra` | high               | Deterministic checker behavior, gate coverage, generation, and delivery                             | Complete |
 | Correction batch               | `/root/t0011_implementation`     | `gpt-5.6-terra` | medium             | Resolve the complete accepted P1/P2 review wave and re-run affected focused checks                  | Complete |
 | Final correction batch         | `/root/t0011_checker_correction` | `gpt-5.6-terra` | medium             | Resolve accepted F-005/F-006 checker false-negative findings with verified RED/GREEN regressions    | Complete |
+| Final direct-field correction  | `/root/t0011_checker_correction` | `gpt-5.6-terra` | medium             | Resolve accepted F-007 nested-field false-negative with verified RED/GREEN regression               | Complete |
 | Security review                | N/A                              | `gpt-5.6-terra` | high               | No dependency, credential, publishing, trust-boundary, or runtime-input security change             | N/A      |
 
 ## Scope And Ownership
@@ -140,6 +141,7 @@ Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
 | F-004 | P2       | Yes       | Restore optional `Product.category` behavior and its category-free scenario.                                                 |
 | F-005 | P2       | Yes       | Bound required-and-validated field checks to the brace-aware named message body; add a later-message counterfeit regression. |
 | F-006 | P2       | Yes       | Track both single- and double-quoted Proto strings while stripping brace structure; add a single-quoted brace regression.    |
+| F-007 | P2       | Yes       | Limit required-and-validated matching to immediate fields of the named message; add a nested-counterfeit regression.         |
 
 ## Integration
 

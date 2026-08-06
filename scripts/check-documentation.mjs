@@ -307,16 +307,30 @@ function requireProtoMatch(source, expression, description, file) {
 function protoMessageBody(source, message) {
   const lines = protoStructure(source.split(/\r?\n/));
   const declaration = new RegExp("^\\s*message\\s+" + message + "\\s*\\{");
-  let start;
-  let depth = 0;
   for (let index = 0; index < lines.length; index += 1) {
-    if (start === undefined) {
-      if (!declaration.test(lines[index])) continue;
-      start = index;
+    const match = declaration.exec(lines[index]);
+    if (!match) continue;
+    let depth = 1;
+    let body = "";
+    for (let lineIndex = index; lineIndex < lines.length; lineIndex += 1) {
+      const line = lines[lineIndex];
+      const start = lineIndex === index ? match[0].length : 0;
+      for (let characterIndex = start; characterIndex < line.length; characterIndex += 1) {
+        const character = line[characterIndex];
+        if (character === "{") {
+          depth += 1;
+          continue;
+        }
+        if (character === "}") {
+          depth -= 1;
+          if (depth === 0) return body;
+          continue;
+        }
+        if (depth === 1) body += character;
+      }
+      if (depth === 1) body += "\n";
     }
-    depth += (lines[index].match(/\{/g) ?? []).length;
-    depth -= (lines[index].match(/\}/g) ?? []).length;
-    if (depth === 0) return lines.slice(start, index + 1).join("\n");
+    return undefined;
   }
   return undefined;
 }
