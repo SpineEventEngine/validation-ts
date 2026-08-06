@@ -1,6 +1,6 @@
 # T-0011: Teach Domain ID Messages In Beginner Examples
 
-Status: Verified
+Status: Complete
 Classification: High-risk
 Baseline: `a34056e7e7f6141116b20c9457863375786aed83`
 Branch: `task/T-0011-domain-id-docs`
@@ -149,12 +149,21 @@ lines across 18 files and 322 tests.
 
 ## Integration
 
-- Task commit: `79e7229ca5f3795fbc606b3a212837f50dec4175`
-- Task push:
-- `dev` merge:
-- Post-merge verification:
-- Remote refs:
-- Worktree cleanup:
+- Task head: `18d747944e880c5f0a62e5449b2e6f684e63bd9a`; pushed before
+  integration.
+- `dev` merge: `d3deaf1b8fc04d30cb5852c875e32fee11a20453`; pushed and confirmed
+  at `origin/dev`.
+- Post-merge verification: All canonical sub-gates passed, including 322 tests,
+  coverage, documentation, Proto/generation, build/example execution, the
+  network-enabled package consumer, and Git checks.
+- Remote refs before the closure record: `origin/dev` matched `d3deaf1` and
+  `origin/master` remained `24b6ffb8de85fcc8958d1652dd928a0142c3cdd2`.
+- CI observation: The local `gh` credential returned HTTP 401, so the remote
+  workflow result could not be queried from this environment. This does not
+  affect the completed canonical gates or SSH synchronization.
+- Worktree cleanup: Removed the clean T-0011 worktree and deleted the merged
+  task branch locally and remotely. Preserved `.pnpm-store/` and
+  `validation-ts.code-workspace` in the main checkout.
 
 ## Open Risks And Follow-Up
 
