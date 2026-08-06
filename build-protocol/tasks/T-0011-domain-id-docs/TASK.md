@@ -1,6 +1,6 @@
 # T-0011: Teach Domain ID Messages In Beginner Examples
 
-Status: Verification
+Status: Verified
 Classification: High-risk
 Baseline: `a34056e7e7f6141116b20c9457863375786aed83`
 Branch: `task/T-0011-domain-id-docs`
@@ -120,9 +120,10 @@ and deterministic-check plan on 2026-08-01
 | T-0011 correction checks                                  | Passed checker tests/checker, generation, example tests (10), generated typecheck, immutable Proto verification (12 files), Proto lint, source check, formatting, and `git diff --check`.        |
 | Final checker correction checks                           | Passed checker tests/checker, source check, formatting, and `git diff --check`; RED evidence for F-005 and F-006 is recorded in the work log.                                                    |
 | Final direct-field correction checks                      | Passed checker tests/checker, source check, formatting, and `git diff --check`; RED evidence for F-007 is recorded in the work log.                                                              |
+| Canonical task verification                               | Passed all canonical gates across `corepack pnpm verify`, the network-enabled package smoke, and the final Git check; 18 files and 322 tests passed.                                             |
 
-Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
-96.12% lines.
+Coverage: 94.86% statements, 91.68% branches, 99.19% functions, and 96.12%
+lines across 18 files and 322 tests.
 
 ## Review Dispositions
 
