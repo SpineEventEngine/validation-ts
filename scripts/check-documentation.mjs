@@ -250,7 +250,7 @@ function protoStructure(lines) {
   let inBlockComment = false;
   return lines.map((line) => {
     let result = "";
-    let quoted = false;
+    let quote;
     let escaped = false;
     for (let index = 0; index < line.length; index += 1) {
       const character = line[index];
@@ -262,10 +262,10 @@ function protoStructure(lines) {
         }
         continue;
       }
-      if (quoted) {
+      if (quote) {
         if (escaped) escaped = false;
         else if (character === "\\") escaped = true;
-        else if (character === '"') quoted = false;
+        else if (character === quote) quote = undefined;
         continue;
       }
       if (character === "/" && next === "/") break;
@@ -274,8 +274,8 @@ function protoStructure(lines) {
         index += 1;
         continue;
       }
-      if (character === '"') {
-        quoted = true;
+      if (character === '"' || character === "'") {
+        quote = character;
         continue;
       }
       result += character;
@@ -304,6 +304,23 @@ function requireProtoMatch(source, expression, description, file) {
   if (!expression.test(source)) throw new Error(file + ": " + description);
 }
 
+function protoMessageBody(source, message) {
+  const lines = protoStructure(source.split(/\r?\n/));
+  const declaration = new RegExp("^\\s*message\\s+" + message + "\\s*\\{");
+  let start;
+  let depth = 0;
+  for (let index = 0; index < lines.length; index += 1) {
+    if (start === undefined) {
+      if (!declaration.test(lines[index])) continue;
+      start = index;
+    }
+    depth += (lines[index].match(/\{/g) ?? []).length;
+    depth -= (lines[index].match(/\}/g) ?? []).length;
+    if (depth === 0) return lines.slice(start, index + 1).join("\n");
+  }
+  return undefined;
+}
+
 function checkExampleDomainIds(root) {
   const userProto = resolve(root, "packages/example/proto/user.proto");
   const productProto = resolve(root, "packages/example/proto/product.proto");
@@ -320,14 +337,12 @@ function checkExampleDomainIds(root) {
       id + ".value must be required",
       file,
     );
-  const requiredValidatedField = (source, message, type, field, file) =>
+  const requiredValidatedField = (source, message, type, field, file) => {
+    const body = protoMessageBody(source, message);
     requireProtoMatch(
-      source,
+      body ?? "",
       new RegExp(
-        "message\\s+" +
-          message +
-          "\\s*\\{[\\s\\S]*?" +
-          type +
+        type +
           "\\s+" +
           field +
           "\\s*=\\s*1\\s*\\[(?=[^\\]]*\\(required\\)\\s*=\\s*true)(?=[^\\]]*\\(validate\\)\\s*=\\s*true)[^\\]]*\\]",
@@ -335,6 +350,7 @@ function checkExampleDomainIds(root) {
       message + "." + field + " must be required and validate",
       file,
     );
+  };
 
   requiredValue(user, "UserId", userProto);
   requiredValue(product, "ProductId", productProto);

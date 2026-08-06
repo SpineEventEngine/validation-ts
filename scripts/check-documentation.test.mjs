@@ -577,6 +577,17 @@ const workspaceRoot = join(import.meta.dirname, "..");
 
     writeFileSync(
       userProto,
+      `${validUser.replace(
+        "UserId id = 1 [(required) = true, (validate) = true]",
+        "string id = 1 [(required) = true, (validate) = true]",
+      )}message LaterUser { UserId id = 1 [(required) = true, (validate) = true]; }\n`,
+    );
+    expectFailure(root, /User\.id.*required and validate/);
+
+    writeFileSync(userProto, validUser);
+
+    writeFileSync(
+      userProto,
       readFileSync(userProto, "utf8").replace(", (validate) = true]; }", "]; }"),
     );
     expectFailure(root, /User\.id.*required and validate/);
@@ -665,6 +676,13 @@ const workspaceRoot = join(import.meta.dirname, "..");
     expectFailure(root, /field id.*exactly one empty line/);
 
     writeReadme(root, withPublicImport(documentedFence("  // Stores the { account name.")));
+    expectFailure(root, /field id.*exactly one empty line/);
+
+    const documentedSingleQuoteFence = documentedFence("  // Stores the account name.").replace(
+      'default = "{"',
+      "default = '{'",
+    );
+    writeReadme(root, withPublicImport(documentedSingleQuoteFence));
     expectFailure(root, /field id.*exactly one empty line/);
   } finally {
     rmSync(root, { recursive: true, force: true });

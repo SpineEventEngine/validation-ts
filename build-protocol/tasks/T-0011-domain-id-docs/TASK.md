@@ -73,6 +73,7 @@ and deterministic-check plan on 2026-08-01
 | TypeScript/API review          | `/root/t0011_api_review`         | `gpt-5.6-terra` | high               | Generated message shapes, serialized example compatibility, and unchanged package API               | Complete |
 | Performance/reliability review | `/root/t0011_reliability_review` | `gpt-5.6-terra` | high               | Deterministic checker behavior, gate coverage, generation, and delivery                             | Complete |
 | Correction batch               | `/root/t0011_implementation`     | `gpt-5.6-terra` | medium             | Resolve the complete accepted P1/P2 review wave and re-run affected focused checks                  | Complete |
+| Final correction batch         | `/root/t0011_checker_correction` | `gpt-5.6-terra` | medium             | Resolve accepted F-005/F-006 checker false-negative findings with verified RED/GREEN regressions    | Complete |
 | Security review                | N/A                              | `gpt-5.6-terra` | high               | No dependency, credential, publishing, trust-boundary, or runtime-input security change             | N/A      |
 
 ## Scope And Ownership
@@ -112,8 +113,9 @@ and deterministic-check plan on 2026-08-01
 | Baseline network-enabled `corepack pnpm package:check`    | Passed; packed 112 files and loaded the installed ESM consumer.                                                                                                                                  |
 | Baseline `corepack pnpm git:check`                        | Passed.                                                                                                                                                                                          |
 | T-0011 focused implementation checks                      | Passed `generate`, checker tests/checker, example tests (10), immutable Proto verification (12 files), Proto lint, generated typecheck, build, source check, formatting, and `git diff --check`. |
-| Orchestrator correction verification                      | Passed checker tests/checker, source check, immutable Proto verification, Proto lint, formatting, build/generation, example tests (10), and `git diff --check`. |
+| Orchestrator correction verification                      | Passed checker tests/checker, source check, immutable Proto verification, Proto lint, formatting, build/generation, example tests (10), and `git diff --check`.                                  |
 | T-0011 correction checks                                  | Passed checker tests/checker, generation, example tests (10), generated typecheck, immutable Proto verification (12 files), Proto lint, source check, formatting, and `git diff --check`.        |
+| Final checker correction checks                           | Passed checker tests/checker, source check, formatting, and `git diff --check`; RED evidence for F-005 and F-006 is recorded in the work log.                                                    |
 
 Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
 96.12% lines.
@@ -130,12 +132,14 @@ Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
 
 ## Findings
 
-| ID    | Severity | Accepted? | Resolution                                                                                            |
-| ----- | -------- | --------- | ----------------------------------------------------------------------------------------------------- |
-| F-001 | P1       | Yes       | Teach message IDs in the package and example READMEs; remove the remaining primitive README ID.       |
-| F-002 | P1       | Yes       | Add deterministic enforcement and negative tests for all three ID messages and four accepting fields. |
-| F-003 | P2       | Yes       | Ignore comments and quoted strings while tracking Proto-fence braces; add regressions.                |
-| F-004 | P2       | Yes       | Restore optional `Product.category` behavior and its category-free scenario.                          |
+| ID    | Severity | Accepted? | Resolution                                                                                                                   |
+| ----- | -------- | --------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| F-001 | P1       | Yes       | Teach message IDs in the package and example READMEs; remove the remaining primitive README ID.                              |
+| F-002 | P1       | Yes       | Add deterministic enforcement and negative tests for all three ID messages and four accepting fields.                        |
+| F-003 | P2       | Yes       | Ignore comments and quoted strings while tracking Proto-fence braces; add regressions.                                       |
+| F-004 | P2       | Yes       | Restore optional `Product.category` behavior and its category-free scenario.                                                 |
+| F-005 | P2       | Yes       | Bound required-and-validated field checks to the brace-aware named message body; add a later-message counterfeit regression. |
+| F-006 | P2       | Yes       | Track both single- and double-quoted Proto strings while stripping brace structure; add a single-quoted brace regression.    |
 
 ## Integration
 
