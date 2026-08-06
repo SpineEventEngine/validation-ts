@@ -1,6 +1,6 @@
 # T-0011: Teach Domain ID Messages In Beginner Examples
 
-Status: Approved
+Status: Verification
 Classification: High-risk
 Baseline: `a34056e7e7f6141116b20c9457863375786aed83`
 Branch: `task/T-0011-domain-id-docs`
@@ -64,18 +64,20 @@ and deterministic-check plan on 2026-08-01
 
 ## Agent Dispatch
 
-| Role/function                  | Agent ID                         | Expected model  | Expected reasoning | Scope                                                                                               | Status   |
-| ------------------------------ | -------------------------------- | --------------- | ------------------ | --------------------------------------------------------------------------------------------------- | -------- |
-| Requirements split             | `/root/t0011_requirements`       | `gpt-5.6-sol`   | high               | Confirm ordered slices and high-risk acceptance coverage                                            | Complete |
-| Implementation                 | `/root/t0011_implementation`     | `gpt-5.6-terra` | medium             | Own checker tests/tooling, maintained READMEs, example Protos, scenarios, tests, and active records | Complete |
-| Style/maintainability review   | `/root/t0011_style_review`       | `gpt-5.6-terra` | high               | Naming, schema organization, checker maintainability, and diff scope                                | Complete |
-| Documentation review           | `/root/t0011_docs_review`        | `gpt-5.6-terra` | medium             | Beginner reader test, simple domain wording, completeness, spacing, and presentation                | Complete |
-| TypeScript/API review          | `/root/t0011_api_review`         | `gpt-5.6-terra` | high               | Generated message shapes, serialized example compatibility, and unchanged package API               | Complete |
-| Performance/reliability review | `/root/t0011_reliability_review` | `gpt-5.6-terra` | high               | Deterministic checker behavior, gate coverage, generation, and delivery                             | Complete |
-| Correction batch               | `/root/t0011_implementation`     | `gpt-5.6-terra` | medium             | Resolve the complete accepted P1/P2 review wave and re-run affected focused checks                  | Complete |
-| Final correction batch         | `/root/t0011_checker_correction` | `gpt-5.6-terra` | medium             | Resolve accepted F-005/F-006 checker false-negative findings with verified RED/GREEN regressions    | Complete |
-| Final direct-field correction  | `/root/t0011_checker_correction` | `gpt-5.6-terra` | medium             | Resolve accepted F-007 nested-field false-negative with verified RED/GREEN regression               | Complete |
-| Security review                | N/A                              | `gpt-5.6-terra` | high               | No dependency, credential, publishing, trust-boundary, or runtime-input security change             | N/A      |
+| Role/function                  | Agent ID                           | Expected model  | Expected reasoning | Scope                                                                                               | Status   |
+| ------------------------------ | ---------------------------------- | --------------- | ------------------ | --------------------------------------------------------------------------------------------------- | -------- |
+| Requirements split             | `/root/t0011_requirements`         | `gpt-5.6-sol`   | high               | Confirm ordered slices and high-risk acceptance coverage                                            | Complete |
+| Implementation                 | `/root/t0011_implementation`       | `gpt-5.6-terra` | medium             | Own checker tests/tooling, maintained READMEs, example Protos, scenarios, tests, and active records | Complete |
+| Style/maintainability review   | `/root/t0011_style_review`         | `gpt-5.6-terra` | high               | Naming, schema organization, checker maintainability, and diff scope                                | Complete |
+| Documentation review           | `/root/t0011_docs_review`          | `gpt-5.6-terra` | medium             | Beginner reader test, simple domain wording, completeness, spacing, and presentation                | Complete |
+| TypeScript/API review          | `/root/t0011_api_review`           | `gpt-5.6-terra` | high               | Generated message shapes, serialized example compatibility, and unchanged package API               | Complete |
+| Performance/reliability review | `/root/t0011_reliability_review`   | `gpt-5.6-terra` | high               | Deterministic checker behavior, gate coverage, generation, and delivery                             | Complete |
+| Correction batch               | `/root/t0011_implementation`       | `gpt-5.6-terra` | medium             | Resolve the complete accepted P1/P2 review wave and re-run affected focused checks                  | Complete |
+| Final correction batch         | `/root/t0011_checker_correction`   | `gpt-5.6-terra` | medium             | Resolve accepted F-005/F-006 checker false-negative findings with verified RED/GREEN regressions    | Complete |
+| Final direct-field correction  | `/root/t0011_checker_correction`   | `gpt-5.6-terra` | medium             | Resolve accepted F-007 nested-field false-negative with verified RED/GREEN regression               | Complete |
+| Final style re-review          | `/root/t0011_style_rereview`       | `gpt-5.6-terra` | high               | Confirm F-001 through F-007 resolution, immediate-depth matching, and scope discipline              | Complete |
+| Final reliability re-review    | `/root/t0011_reliability_rereview` | `gpt-5.6-terra` | high               | Confirm deterministic regressions, structural parsing, and completion-gate readiness                | Complete |
+| Security review                | N/A                                | `gpt-5.6-terra` | high               | No dependency, credential, publishing, trust-boundary, or runtime-input security change             | N/A      |
 
 ## Scope And Ownership
 
@@ -117,19 +119,20 @@ and deterministic-check plan on 2026-08-01
 | Orchestrator correction verification                      | Passed checker tests/checker, source check, immutable Proto verification, Proto lint, formatting, build/generation, example tests (10), and `git diff --check`.                                  |
 | T-0011 correction checks                                  | Passed checker tests/checker, generation, example tests (10), generated typecheck, immutable Proto verification (12 files), Proto lint, source check, formatting, and `git diff --check`.        |
 | Final checker correction checks                           | Passed checker tests/checker, source check, formatting, and `git diff --check`; RED evidence for F-005 and F-006 is recorded in the work log.                                                    |
+| Final direct-field correction checks                      | Passed checker tests/checker, source check, formatting, and `git diff --check`; RED evidence for F-007 is recorded in the work log.                                                              |
 
 Coverage: baseline 94.86% statements, 91.68% branches, 99.19% functions, and
 96.12% lines.
 
 ## Review Dispositions
 
-| Concern                 | Reviewer | Disposition | Evidence                      |
-| ----------------------- | -------- | ----------- | ----------------------------- |
-| Style/maintainability   | Pending  | Pending     |                               |
-| Documentation           | Pending  | Pending     |                               |
-| TypeScript/API          | Pending  | Pending     |                               |
-| Performance/reliability | Pending  | Pending     |                               |
-| Security                | N/A      | N/A         | No security boundary changes. |
+| Concern                 | Reviewer                           | Disposition | Evidence                                                                        |
+| ----------------------- | ---------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| Style/maintainability   | `/root/t0011_style_rereview`       | Clean       | F-001 through F-007 resolved at `8e1bad2`; no new P0/P1/P2.                     |
+| Documentation           | `/root/t0011_docs_review`          | Clean       | Beginner wording, complete comments, spacing, and README presentation verified. |
+| TypeScript/API          | `/root/t0011_api_review`           | Clean       | Generated message shapes and consumers match; package API unchanged.            |
+| Performance/reliability | `/root/t0011_reliability_rereview` | Clean       | Direct-field and quote regressions pass; no new P0/P1/P2.                       |
+| Security                | N/A                                | N/A         | No security boundary changes.                                                   |
 
 ## Findings
 
