@@ -1,0 +1,96 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.required_suite;
+
+import "spine/options.proto";
+// Fixture `RequiredFields` exercises `(required)`.
+message RequiredFields {
+    // Validates `name` with `(required) = true`.
+    string name = 1 [(required) = true];
+    // Provides an optional scalar control beside required fields.
+    int32 age = 2;
+    // Validates `address` with `(required) = true`.
+    Address address = 3 [(required) = true];
+    // Validates `status` with `(required) = true`.
+    Status status = 4 [(required) = true];
+    // Validates `tags` with `(required) = true`.
+    repeated string tags = 5 [(required) = true];
+    // Validates `payload` with `(required) = true`.
+    bytes payload = 6 [(required) = true];
+    // Validates `scores` with `(required) = true`.
+    map<string, int32> scores = 7 [(required) = true];
+}
+
+// Deliberately applies `(required)` to an unsupported int32 target.
+message InvalidRequiredNumeric {
+    // Is the unsupported int32 target for `(required)`.
+    int32 age = 1 [(required) = true];
+}
+
+// Deliberately applies `(required)` to an unsupported bool target.
+message InvalidRequiredBoolean {
+    // Is the unsupported bool target for `(required)`.
+    bool enabled = 1 [(required) = true];
+}
+// Provides nested address input for the required-message case.
+message Address {
+    // Supplies the unconstrained street component of the address.
+    string street = 1;
+    // Supplies the unconstrained city component of the address.
+    string city = 2;
+}
+// Identifies the required account status in `RequiredFields`.
+enum Status {
+    // Is the default unset status rejected by `(required)`.
+    STATUS_UNSPECIFIED = 0;
+    // Represents an active status that satisfies `(required)`.
+    STATUS_ACTIVE = 1;
+    // Represents an inactive status that still satisfies `(required)`.
+    STATUS_INACTIVE = 2;
+}
+// Fixture `CustomErrorMessages` exercises `(required)`.
+message CustomErrorMessages {
+    // Validates `username` with `(required) = true`.
+    string username = 1 [
+        (required) = true,
+        (if_missing).error_msg = "Username is mandatory for account creation."
+    ];
+
+    // Validates `email` with `(required) = true`.
+    string email = 2 [
+        (required) = true,
+        (if_missing).error_msg = "Email address must be provided."
+    ];
+}
+// Provides fields that remain optional without `(required)`.
+message OptionalFields {
+    // Supplies an optional text control.
+    string nickname = 1;
+    // Supplies an optional numeric control.
+    int32 score = 2;
+}

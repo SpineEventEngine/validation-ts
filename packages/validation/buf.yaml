@@ -1,0 +1,35 @@
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+  ignore_only:
+    PACKAGE_DEFINED:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    PACKAGE_SAME_JAVA_PACKAGE:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    PACKAGE_VERSION_SUFFIX:
+      - proto/spine/base/field_path.proto
+      - proto/spine/validate/error_message.proto
+      - proto/spine/validate/validation_error.proto
+      - proto/spine/time/time.proto
+    FIELD_LOWER_SNAKE_CASE:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    ENUM_NO_ALLOW_ALIAS:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    ENUM_VALUE_PREFIX:
+      - proto/spine/options.proto
+      - proto/spine/time/time.proto
+      - proto/spine/time_options.proto
+    ENUM_ZERO_VALUE_SUFFIX:
+      - proto/spine/options.proto
+      - proto/spine/time/time.proto
+      - proto/spine/time_options.proto
+breaking:
+  use:
+    - FILE

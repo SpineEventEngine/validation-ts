@@ -1,0 +1,271 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.minmax_suite;
+
+import "spine/options.proto";
+// Fixture `MinValue` exercises `(min)`.
+message MinValue {
+    // Validates `positive_id` with `(min).value = "1"`.
+    int32 positive_id = 1 [(min).value = "1"];
+    // Validates `non_negative` with `(min).value = "0"`.
+    int32 non_negative = 2 [(min).value = "0"];
+    // Validates `price` with `(min).value = "0.01"`.
+    double price = 3 [(min).value = "0.01"];
+}
+// Fixture `MaxValue` exercises `(max)`.
+message MaxValue {
+    // Validates `percentage` with `(max).value = "100"`.
+    int32 percentage = 1 [(max).value = "100"];
+    // Validates `altitude` with `(max).value = "8848.86"`.
+    double altitude = 2 [(max).value = "8848.86"];
+    // Validates `year` with `(max).value = "2100"`.
+    int64 year = 3 [(max).value = "2100"];
+}
+// Fixture `MinMaxRange` exercises `(min)`, `(max)`.
+message MinMaxRange {
+    // Validates `age` with `(min).value = "0"`, `(max).value = "150"`.
+    int32 age = 1 [(min).value = "0", (max).value = "150"];
+    // Validates `temperature` with `(min).value = "-273.15"`, `(max).value = "1000.0"`.
+    double temperature = 2 [(min).value = "-273.15", (max).value = "1000.0"];
+    // Validates `percentage` with `(min).value = "0"`, `(max).value = "100"`.
+    int32 percentage = 3 [(min).value = "0", (max).value = "100"];
+}
+// Tests strictly exclusive numeric lower and upper bounds.
+message ExclusiveBounds {
+    // Requires a value strictly greater than zero.
+    double positive_value = 1 [(min) = {
+        value: "0.0",
+        exclusive: true
+    }];
+    // Requires a positive Kelvin temperature with a custom failure message.
+    double temperature_kelvin = 2 [(min) = {
+        value: "0.0",
+        exclusive: true,
+        error_msg: "Temperature cannot reach {other}K, but provided {value}."
+    }];
+    // Requires a value strictly below 100.
+    int32 below_limit = 3 [(max) = {
+        value: "100",
+        exclusive: true
+    }];
+}
+// Tests custom error messages for minimum and maximum bounds.
+message CustomErrorMessages {
+    // Enforces an adult-age lower bound with a custom message.
+    int32 age = 1 [(min) = {
+        value: "18",
+        error_msg: "Must be at least {other} years old. Provided: {value}."
+    }];
+    // Enforces custom lower and upper balance messages.
+    double balance = 2 [(min) = {
+        value: "0.01",
+        error_msg: "Balance must be at least ${other}. Current: ${value}."
+    }, (max) = {
+        value: "1000000.0",
+        error_msg: "Balance cannot exceed ${other}. Current: ${value}."
+    }];
+}
+// Fixture `NumericTypes` exercises `(min)`, `(max)`.
+message NumericTypes {
+    // Validates `int32_field` with `(min).value = "0"`, `(max).value = "2147483647"`.
+    int32 int32_field = 1 [(min).value = "0", (max).value = "2147483647"];
+    // Validates `int64_field` with `(min).value = "0"`.
+    int64 int64_field = 2 [(min).value = "0"];
+    // Validates `uint32_field` with `(max).value = "4294967295"`.
+    uint32 uint32_field = 3 [(max).value = "4294967295"];
+    // Validates `uint64_field` with `(min).value = "1"`.
+    uint64 uint64_field = 4 [(min).value = "1"];
+    // Validates `float_field` with `(min).value = "0.0"`, `(max).value = "100.0"`.
+    float float_field = 5 [(min).value = "0.0", (max).value = "100.0"];
+    // Validates `double_field` with `(min).value = "-1000.0"`, `(max).value = "1000.0"`.
+    double double_field = 6 [(min).value = "-1000.0", (max).value = "1000.0"];
+}
+// Fixture `RepeatedMinMax` exercises `(min)`, `(max)`.
+message RepeatedMinMax {
+    // Validates `scores` with `(min).value = "0"`, `(max).value = "100"`.
+    repeated int32 scores = 1 [(min).value = "0", (max).value = "100"];
+    // Validates `prices` with `(min).value = "0.01"`.
+    repeated double prices = 2 [(min).value = "0.01"];
+    // Validates `measurements` with `(min).value = "0.0"`, `(max).value = "100.0"`.
+    repeated float measurements = 3 [(min).value = "0.0", (max).value = "100.0"];
+}
+// Fixture `CombinedConstraints` exercises `(min)`.
+message CombinedConstraints {
+    // Validates `product_id` with `(min).value = "1"`.
+    int32 product_id = 1 [(min).value = "1"];
+    // Enforces the custom minimum price of 0.01.
+    double price = 2 [
+        (min) = {
+            value: "0.01",
+            error_msg: "Price must be at least {other}."
+        }
+    ];
+    // Validates `stock` with `(min).value = "0"`.
+    int32 stock = 3 [(min).value = "0"];
+}
+// Fixture `OptionalMinMax` exercises `(min)`, `(max)`.
+message OptionalMinMax {
+    // Validates `optional_count` with `(min).value = "1"`.
+    int32 optional_count = 1 [(min).value = "1"];
+    // Validates `optional_rating` with `(max).value = "5.0"`.
+    double optional_rating = 2 [(max).value = "5.0"];
+}
+// Fixture `NumericBoundsContract` exercises `(min)`, `(max)`.
+message NumericBoundsContract {
+    // Validates `precise_min` with `(min).value = "9007199254740993"`.
+    int64 precise_min = 1 [(min).value = "9007199254740993"];
+    // Validates `precise_max` with `(max).value = "9007199254740993"`.
+    uint64 precise_max = 2 [(max).value = "9007199254740993"];
+    // Validates `repeated_precise` with `(min).value = "9007199254740993"`.
+    repeated int64 repeated_precise = 3 [(min).value = "9007199254740993"];
+}
+
+// Deliberately tests invalid configuration `(min).value = "1x"`.
+message InvalidMinSuffix {
+    // Validates `value` with `(min).value = "1x"`.
+    int32 value = 1 [(min).value = "1x"];
+}
+// Deliberately tests invalid configuration `(min).value = "1"`.
+message InvalidMinFloat {
+    // Validates `value` with `(min).value = "1"`.
+    double value = 1 [(min).value = "1"];
+}
+// Deliberately tests invalid configuration `(min).value = "-1"`.
+message InvalidMinUnsigned {
+    // Validates `value` with `(min).value = "-1"`.
+    uint32 value = 1 [(min).value = "-1"];
+}
+// Deliberately tests invalid configuration `(min).value = "1"`.
+message InvalidMinTarget {
+    // Validates `value` with `(min).value = "1"`.
+    string value = 1 [(min).value = "1"];
+}
+
+// Supplies numeric bounds used by reference-based minimum and maximum checks.
+message NumericLimits {
+    // Supplies the referenced signed lower bound.
+    int64 lower = 1;
+    // Supplies the referenced floating-point upper bound.
+    double upper = 2;
+}
+
+// Fixture `NumericReferences` exercises `(min)`, `(max)`.
+message NumericReferences {
+    // Supplies the object containing named numeric bounds.
+    NumericLimits limits = 1;
+    // Validates `actual` with `(min).value = "limits.lower"`.
+    int64 actual = 2 [(min).value = "limits.lower"];
+    // Validates `measured` with `(max).value = "limits.upper"`.
+    double measured = 3 [(max).value = "limits.upper"];
+}
+// Deliberately tests invalid configuration `(min).value = "does_not_exist"`.
+message MissingNumericReference {
+    // Validates `value` with `(min).value = "does_not_exist"`.
+    int32 value = 1 [(min).value = "does_not_exist"];
+}
+// Deliberately tests invalid configuration `(min).value = "limits"`.
+message IncompatibleNumericReference {
+    // Stores the referenced numeric bounds.
+    NumericLimits limits = 1;
+    // Deliberately references the message-valued `limits` target as a minimum.
+    int32 value = 2 [(min).value = "limits"];
+}
+
+// Fixture `NumericScalarMatrix` exercises `(min)`, `(max)`.
+message NumericScalarMatrix {
+    // Validates `sint32_value` with `(min).value = "-1"`.
+    sint32 sint32_value = 1 [(min).value = "-1"];
+    // Validates `sint64_value` with `(max).value = "9007199254740993"`.
+    sint64 sint64_value = 2 [(max).value = "9007199254740993"];
+    // Validates `fixed32_value` with `(min).value = "1"`.
+    fixed32 fixed32_value = 3 [(min).value = "1"];
+    // Validates `fixed64_value` with `(max).value = "9007199254740993"`.
+    fixed64 fixed64_value = 4 [(max).value = "9007199254740993"];
+    // Validates `sfixed32_value` with `(min).value = "-1"`.
+    sfixed32 sfixed32_value = 5 [(min).value = "-1"];
+    // Validates `sfixed64_value` with `(max).value = "9007199254740993"`.
+    sfixed64 sfixed64_value = 6 [(max).value = "9007199254740993"];
+}
+
+// Fixture `CrossTypeReferences` exercises `(min)`, `(max)`.
+message CrossTypeReferences {
+    // Supplies the double-valued lower-bound reference.
+    double double_bound = 1;
+    // Supplies the 64-bit upper-bound reference.
+    int64 int64_bound = 2;
+    // Validates `integer_value` with `(min).value = "double_bound"`.
+    int64 integer_value = 3 [(min).value = "double_bound"];
+    // Validates `floating_value` with `(max).value = "int64_bound"`.
+    double floating_value = 4 [(max).value = "int64_bound"];
+}
+
+// Deliberately tests invalid configuration `(min).value = "2147483648"`.
+message InvalidInt32Overflow {
+    // Validates `value` with `(min).value = "2147483648"`.
+    int32 value = 1 [(min).value = "2147483648"];
+}
+// Deliberately tests invalid configuration `(max).value = "4294967296"`.
+message InvalidUint32Overflow {
+    // Validates `value` with `(max).value = "4294967296"`.
+    uint32 value = 1 [(max).value = "4294967296"];
+}
+// Deliberately tests invalid configuration `(min).value = "9223372036854775808"`.
+message InvalidInt64Overflow {
+    // Validates `value` with `(min).value = "9223372036854775808"`.
+    int64 value = 1 [(min).value = "9223372036854775808"];
+}
+// Deliberately tests invalid configuration `(max).value = "18446744073709551616"`.
+message InvalidUint64Overflow {
+    // Validates `value` with `(max).value = "18446744073709551616"`.
+    uint64 value = 1 [(max).value = "18446744073709551616"];
+}
+// Deliberately tests invalid configuration `(min).value = "-1"`.
+message InvalidUint64Negative {
+    // Validates `value` with `(min).value = "-1"`.
+    uint64 value = 1 [(min).value = "-1"];
+}
+// Deliberately tests invalid configuration `(min).value = "1.0"`.
+message InvalidIntegerDecimal {
+    // Validates `value` with `(min).value = "1.0"`.
+    sint32 value = 1 [(min).value = "1.0"];
+}
+// Deliberately tests invalid configuration `(min).value = "1.0e"`.
+message InvalidFloatExponent {
+    // Validates `value` with `(min).value = "1.0e"`.
+    double value = 1 [(min).value = "1.0e"];
+}
+// Deliberately tests invalid configuration `(min).value = "3.5e38"`.
+message InvalidFloatOverflow {
+    // Validates `value` with `(min).value = "3.5e38"`.
+    float value = 1 [(min).value = "3.5e38"];
+}
+// Deliberately tests invalid configuration `(min).value = "1.8e308"`.
+message InvalidDoubleOverflow {
+    // Validates `value` with `(min).value = "1.8e308"`.
+    double value = 1 [(min).value = "1.8e308"];
+}

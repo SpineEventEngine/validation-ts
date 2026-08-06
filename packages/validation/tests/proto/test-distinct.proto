@@ -1,0 +1,189 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.distinct_suite;
+
+// Fixtures covering `(distinct)` uniqueness on supported collection shapes.
+
+import "spine/options.proto";
+
+// Exercises uniqueness checks for repeated primitive values.
+message DistinctPrimitives {
+    // Requires each repeated integer to occur once.
+    repeated int32 numbers = 1 [(distinct) = true];
+    // Requires each repeated tag to occur once.
+    repeated string tags = 2 [(distinct) = true];
+    // Requires each repeated score to occur once.
+    repeated double scores = 3 [(distinct) = true];
+    // Requires each repeated boolean flag to occur once.
+    repeated bool flags = 4 [(distinct) = true];
+}
+
+// Exercises uniqueness checks for repeated enum values.
+message DistinctEnums {
+    // Requires each repeated status to occur once.
+    repeated Status statuses = 1 [(distinct) = true];
+}
+
+// Defines statuses used by the distinct-enum fixture.
+enum Status {
+    // Represents an unset status.
+    STATUS_UNSPECIFIED = 0;
+    // Represents an active status.
+    STATUS_ACTIVE = 1;
+    // Represents an inactive status.
+    STATUS_INACTIVE = 2;
+    // Represents a pending status.
+    STATUS_PENDING = 3;
+}
+
+// Verifies that repeated fields without `(distinct)` allow duplicates.
+message NonDistinctFields {
+    // Holds numbers that intentionally have no uniqueness constraint.
+    repeated int32 numbers = 1;
+    // Holds tags that intentionally have no uniqueness constraint.
+    repeated string tags = 2;
+}
+
+// Combines `(distinct)` with range, pattern, and boundary rules.
+message CombinedConstraints {
+    // Requires unique product identifiers in the allowed range.
+    repeated int32 product_ids = 1 [
+        (distinct) = true,
+        (range).value = "[1..999999]"
+    ];
+    // Requires unique email addresses matching the fixture pattern.
+    repeated string emails = 2 [
+        (distinct) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+    // Requires unique scores from zero through 100.
+    repeated int32 scores = 3 [
+        (distinct) = true,
+        (min).value = "0",
+        (max).value = "100"
+    ];
+}
+
+// Exercises uniqueness on repeated fields that may be absent.
+message OptionalDistinct {
+    // Holds optional numbers that must be unique when supplied.
+    repeated int32 optional_numbers = 1 [(distinct) = true];
+    // Holds optional tags that must be unique when supplied.
+    repeated string optional_tags = 2 [(distinct) = true];
+}
+
+// Represents a profile with a required name and unique label sets.
+message UserProfile {
+    // Requires the profile's username.
+    string username = 1 [(required) = true];
+    // Requires the profile's tags to be unique.
+    repeated string tags = 2 [(distinct) = true];
+    // Requires the profile's skills to be unique.
+    repeated string skills = 3 [(distinct) = true];
+}
+
+// Represents a cart whose products and coupons cannot repeat.
+message ShoppingCart {
+    // Requires each product identifier to occur once.
+    repeated int32 product_ids = 1 [(distinct) = true];
+    // Requires each coupon code to occur once.
+    repeated string coupon_codes = 2 [(distinct) = true];
+}
+
+// Exercises uniqueness across all supported repeated numeric types.
+message DistinctNumericTypes {
+    // Requires each 32-bit signed integer to occur once.
+    repeated int32 int32_values = 1 [(distinct) = true];
+    // Requires each 64-bit signed integer to occur once.
+    repeated int64 int64_values = 2 [(distinct) = true];
+    // Requires each 32-bit unsigned integer to occur once.
+    repeated uint32 uint32_values = 3 [(distinct) = true];
+    // Requires each 64-bit unsigned integer to occur once.
+    repeated uint64 uint64_values = 4 [(distinct) = true];
+    // Requires each floating-point value to occur once.
+    repeated float float_values = 5 [(distinct) = true];
+    // Requires each double-precision value to occur once.
+    repeated double double_values = 6 [(distinct) = true];
+}
+
+// Exercises uniqueness for empty, zero, and case-sensitive values.
+message DistinctEdgeCases {
+    // Requires each empty-or-populated string to occur once.
+    repeated string empty_strings = 1 [(distinct) = true];
+    // Requires each zero-or-nonzero integer to occur once.
+    repeated int32 zeros = 2 [(distinct) = true];
+    // Treats differently cased strings as distinct values.
+    repeated string case_sensitive = 3 [(distinct) = true];
+}
+
+// Exercises the descriptor-aware equality paths used by `(distinct)`.
+message DistinctAdvanced {
+    // Requires byte sequences to be unique by content.
+    repeated bytes byte_values = 1 [(distinct) = true];
+    // Requires 64-bit integers to be unique.
+    repeated int64 int64_values = 2 [(distinct) = true];
+    // Requires enum statuses to be unique.
+    repeated Status statuses = 3 [(distinct) = true];
+    // Requires nested messages to be unique by descriptor-aware equality.
+    repeated DistinctValue messages = 4 [(distinct) = true];
+    // Exercises `(distinct)` on a string-valued map.
+    map<string, string> names = 5 [(distinct) = true];
+    // Exercises `(distinct)` on an enum-valued map.
+    map<string, Status> state_by_name = 6 [(distinct) = true];
+    // Exercises `(distinct)` on a message-valued map.
+    map<string, DistinctValue> value_by_name = 7 [(distinct) = true];
+}
+
+// Provides nested values for descriptor-aware equality checks.
+message DistinctValue {
+    // Names the nested value.
+    string name = 1;
+    // Orders otherwise similar nested values.
+    int64 sequence = 2;
+}
+
+// Deliberately applies `(distinct)` to a scalar field, which is invalid.
+message DistinctUnsupportedTarget {
+    // Is the unsupported scalar target for the `(distinct)` option.
+    string name = 1 [(distinct) = true];
+}
+
+// Verifies that an explicit false `(distinct)` option is a no-op.
+message DistinctDisabled {
+    // Holds values for the disabled uniqueness option.
+    repeated string values = 1 [(distinct) = false];
+}
+
+// Verifies the custom duplicate-message override.
+message DistinctCustomMessage {
+    // Holds values whose duplicates use the configured error message.
+    repeated string values = 1 [
+        (distinct) = true,
+        (if_has_duplicates).error_msg = "Duplicate class: `${field.duplicates}`."
+    ];
+}

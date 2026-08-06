@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-07-28",
+  "frozenFiles": [
+    {
+      "localPath": "packages/validation/proto/spine/options.proto",
+      "classification": "legacy-baseline",
+      "sourceRepository": "SpineEventEngine/base-libraries",
+      "sourceCommit": null,
+      "sha256": "c0046a723f88be7f30cf20fb76375244c8230c40b3cafff03daaca6e8594f981"
+    },
+    {
+      "localPath": "packages/validation/tests/proto/spine/options.proto",
+      "classification": "legacy-baseline-copy",
+      "sourceRepository": "SpineEventEngine/base-libraries",
+      "sourceCommit": null,
+      "sha256": "c0046a723f88be7f30cf20fb76375244c8230c40b3cafff03daaca6e8594f981"
+    },
+    {
+      "localPath": "packages/example/proto/spine/options.proto",
+      "classification": "legacy-baseline-copy",
+      "sourceRepository": "SpineEventEngine/base-libraries",
+      "sourceCommit": null,
+      "sha256": "c0046a723f88be7f30cf20fb76375244c8230c40b3cafff03daaca6e8594f981"
+    },
+    {
+      "localPath": "packages/validation/proto/spine/base/field_path.proto",
+      "classification": "legacy-baseline",
+      "sourceRepository": "SpineEventEngine/base-libraries",
+      "sourceCommit": null,
+      "sha256": "c4483fcf828a6aa9b0b4a73f290df0e8be669ed681316b4f4040a9c4fbbe8407"
+    },
+    {
+      "localPath": "packages/validation/proto/spine/validate/error_message.proto",
+      "classification": "legacy-baseline",
+      "sourceRepository": "SpineEventEngine/base-libraries",
+      "sourceCommit": null,
+      "sha256": "be2e36e3a4a16886c97f31650732ca645155843c5706fbd92d161639c340090b"
+    },
+    {
+      "localPath": "packages/validation/proto/spine/validate/validation_error.proto",
+      "classification": "legacy-baseline",
+      "sourceRepository": "SpineEventEngine/base-libraries",
+      "sourceCommit": null,
+      "sha256": "ad9548e441ba7afc8ea9377ffcc7684fb9fd623ff383050464342283078df1ca"
+    },
+    {
+      "localPath": "packages/validation/proto/spine/time_options.proto",
+      "classification": "immutable-upstream-copy",
+      "sourceRepository": "SpineEventEngine/time",
+      "sourceCommit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time_options.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time_options.proto",
+      "retrievedAt": "2026-07-28",
+      "sha256": "933858bdbb118930a171d9a2383d884b498d7ed465a35664f2f411a72785f5be"
+    },
+    {
+      "localPath": "packages/validation/proto/spine/time/time.proto",
+      "classification": "immutable-upstream-copy",
+      "sourceRepository": "SpineEventEngine/time",
+      "sourceCommit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time/time.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time/time.proto",
+      "retrievedAt": "2026-07-28",
+      "sha256": "da0e7482c69fb6e735441a4934222c054ec9795d7d4b46347751fccb5f692062"
+    },
+    {
+      "localPath": "packages/validation/tests/proto/spine/time_options.proto",
+      "classification": "immutable-upstream-copy",
+      "sourceRepository": "SpineEventEngine/time",
+      "sourceCommit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time_options.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time_options.proto",
+      "retrievedAt": "2026-07-28",
+      "sha256": "933858bdbb118930a171d9a2383d884b498d7ed465a35664f2f411a72785f5be"
+    },
+    {
+      "localPath": "packages/validation/tests/proto/spine/time/time.proto",
+      "classification": "immutable-upstream-copy",
+      "sourceRepository": "SpineEventEngine/time",
+      "sourceCommit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time/time.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time/time.proto",
+      "retrievedAt": "2026-07-28",
+      "sha256": "da0e7482c69fb6e735441a4934222c054ec9795d7d4b46347751fccb5f692062"
+    },
+    {
+      "localPath": "packages/example/proto/spine/time_options.proto",
+      "classification": "immutable-upstream-copy",
+      "sourceRepository": "SpineEventEngine/time",
+      "sourceCommit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time_options.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time_options.proto",
+      "retrievedAt": "2026-07-28",
+      "sha256": "933858bdbb118930a171d9a2383d884b498d7ed465a35664f2f411a72785f5be"
+    },
+    {
+      "localPath": "packages/example/proto/spine/time/time.proto",
+      "classification": "immutable-upstream-copy",
+      "sourceRepository": "SpineEventEngine/time",
+      "sourceCommit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time/time.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time/time.proto",
+      "retrievedAt": "2026-07-28",
+      "sha256": "da0e7482c69fb6e735441a4934222c054ec9795d7d4b46347751fccb5f692062"
+    }
+  ],
+  "currentUpstreamReferences": [
+    {
+      "repository": "SpineEventEngine/base-libraries",
+      "commit": "7a05857b2adc68dc2f9b28a03ae3073e7c3e9df3",
+      "sourcePath": "base/src/main/proto/spine/options.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/base-libraries/7a05857b2adc68dc2f9b28a03ae3073e7c3e9df3/base/src/main/proto/spine/options.proto",
+      "sha256": "0890847e70ae80b9ecff9197de3721a31cc3862b29ad8ba726cab7d7760ffe29",
+      "vendored": false
+    },
+    {
+      "repository": "SpineEventEngine/time",
+      "commit": "57d3dd98fea8efcdc4a3843f91143acc2dce87dc",
+      "sourcePath": "time/src/main/proto/spine/time_options.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/57d3dd98fea8efcdc4a3843f91143acc2dce87dc/time/src/main/proto/spine/time_options.proto",
+      "sha256": "70acff3da4ec7e3b0bba4f201948cd5ec2007e29b71c08a266b670be4271adfb",
+      "vendored": false
+    },
+    {
+      "repository": "SpineEventEngine/time",
+      "commit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time_options.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time_options.proto",
+      "sha256": "933858bdbb118930a171d9a2383d884b498d7ed465a35664f2f411a72785f5be",
+      "vendored": true
+    },
+    {
+      "repository": "SpineEventEngine/time",
+      "commit": "4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc",
+      "sourcePath": "time/src/main/proto/spine/time/time.proto",
+      "rawUrl": "https://raw.githubusercontent.com/SpineEventEngine/time/4daeedfb6a1f961c0fa8dc3692b330d370dbfbbc/time/src/main/proto/spine/time/time.proto",
+      "sha256": "da0e7482c69fb6e735441a4934222c054ec9795d7d4b46347751fccb5f692062",
+      "vendored": true
+    }
+  ]
+}

@@ -1,17 +1,58 @@
 {
-  "name": "@spine-event-engine/validation-ts-workspace",
-  "version": "2.0.0-snapshot.4",
+  "name": "@spine-event-engine/validation-workspace",
+  "version": "2.0.0-snapshot.7",
   "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@spine-event-engine/validation-ts",
-    "test": "npm test --workspace=@spine-event-engine/validation-ts",
-    "example": "npm start --workspace=@spine-event-engine/example-smoke"
+    "check:node": "node scripts/check-node-version.mjs",
+    "source:check": "node scripts/check-source-conventions.mjs",
+    "generate": "pnpm --filter @spine-event-engine/validation generate && pnpm --filter @spine-event-engine/validation generate:tests && pnpm --filter @spine-event-engine/example-smoke generate",
+    "build": "pnpm generate && tsc -b",
+    "typecheck": "pnpm generate && pnpm typecheck:generated",
+    "typecheck:generated": "tsc -b && tsc --noEmit -p packages/validation/tsconfig.tests.json && tsc --noEmit -p packages/example/tsconfig.tests.json",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:validation": "pnpm generate && vitest run packages/validation/tests",
+    "test:example": "pnpm generate && vitest run packages/example/tests",
+    "test": "pnpm test:validation && pnpm test:example",
+    "test:coverage": "pnpm generate && vitest run --coverage",
+    "test:generated-guard": "node --test scripts/check-generated-determinism.test.mjs",
+    "test:workflow-pnpm-action-setup": "node --test scripts/check-pnpm-action-setup.test.mjs",
+    "docs:api": "typedoc --options typedoc.json",
+    "docs:check": "node scripts/check-documentation.test.mjs && typedoc --options typedoc.json && node scripts/check-documentation.mjs",
+    "proto:lint": "pnpm --filter @spine-event-engine/validation proto:lint && pnpm --filter @spine-event-engine/example-smoke proto:lint",
+    "proto:verify": "node scripts/verify-proto-sources.mjs",
+    "proto:check-generated": "node scripts/check-generated-determinism.mjs",
+    "package:check": "node scripts/check-package.mjs",
+    "git:check": "node scripts/check-git-diff.mjs",
+    "example": "pnpm --filter @spine-event-engine/example-smoke start",
+    "example:run": "pnpm --filter @spine-event-engine/example-smoke start:built",
+    "verify": "pnpm check:node && pnpm proto:verify && pnpm generate && pnpm typecheck:generated && pnpm source:check && pnpm lint && pnpm format:check && pnpm test:generated-guard && pnpm test:workflow-pnpm-action-setup && pnpm test:coverage && pnpm docs:check && pnpm proto:lint && pnpm proto:check-generated && pnpm build && pnpm example:run && pnpm package:check && pnpm git:check"
   },
   "keywords": [],
   "author": "",
   "license": "Apache-2.0",
-  "description": "TypeScript validation library for Protobuf messages with Spine validation options"
+  "description": "TypeScript validation library for Protobuf messages with Spine validation options",
+  "devDependencies": {
+    "@bufbuild/protobuf": "2.13.0",
+    "@eslint/js": "9.39.1",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.0",
+    "typedoc": "0.28.19",
+    "@types/node": "24.13.2",
+    "@vitest/coverage-v8": "4.1.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.62.0",
+    "vitest": "4.1.9",
+    "yaml": "2.9.0"
+  }
 }

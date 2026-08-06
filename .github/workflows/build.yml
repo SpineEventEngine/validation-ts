@@ -1,33 +1,71 @@
-name: Build and Test
+name: Verify
 
-on: push
+on:
+  push:
+    branches:
+      - dev
+      - master
+  pull_request:
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  verify:
+    name: Full verification
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 24.x]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Activate pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.9.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify validation package and example
+        run: pnpm verify
+
+  compatibility:
+    name: Node.js ${{ matrix.node-version }} compatibility
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Activate pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.9.0
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Build validation package
-        run: npm run build
+      - name: Build packages
+        run: pnpm build
 
-      - name: Run tests
-        run: npm test
+      - name: Run validation tests
+        run: pnpm test:validation
 
-      - name: Build example
-        run: npm run example
+      - name: Run example tests
+        run: pnpm test:example
+
+      - name: Run compiled example console adapter
+        run: pnpm example:run

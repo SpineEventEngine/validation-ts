@@ -1,0 +1,87 @@
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+  ignore_only:
+    PACKAGE_DEFINED:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    PACKAGE_SAME_JAVA_PACKAGE:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    PACKAGE_VERSION_SUFFIX:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+      - proto/spine/time/time.proto
+      - proto/test-when.proto
+    FILE_LOWER_SNAKE_CASE:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+      - proto/test-when.proto
+    FIELD_LOWER_SNAKE_CASE:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    ENUM_NO_ALLOW_ALIAS:
+      - proto/spine/options.proto
+      - proto/spine/time_options.proto
+    ENUM_VALUE_PREFIX:
+      - proto/spine/options.proto
+      - proto/spine/time/time.proto
+      - proto/spine/time_options.proto
+    ENUM_ZERO_VALUE_SUFFIX:
+      - proto/spine/options.proto
+      - proto/spine/time/time.proto
+      - proto/spine/time_options.proto
+    DIRECTORY_SAME_PACKAGE:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+      - proto/test-when.proto
+    PACKAGE_DIRECTORY_MATCH:
+      - proto/integration-account.proto
+      - proto/integration-product.proto
+      - proto/integration-user.proto
+      - proto/test-choice.proto
+      - proto/test-distinct.proto
+      - proto/test-goes.proto
+      - proto/test-min-max.proto
+      - proto/test-pattern.proto
+      - proto/test-range.proto
+      - proto/test-required-field.proto
+      - proto/test-required.proto
+      - proto/test-validate.proto
+      - proto/test-when.proto
+breaking:
+  use:
+    - FILE

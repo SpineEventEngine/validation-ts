@@ -1,0 +1,28 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["packages/validation/src/index.ts"],
+  "tsconfig": "packages/validation/tsconfig.json",
+  "out": "packages/validation/docs/api/reference",
+  "exclude": ["**/dist/**", "**/coverage/**", "**/*.test.ts"],
+  "cleanOutputDir": true,
+  "highlightLanguages": ["bash", "js", "json", "protobuf", "typescript", "yaml"],
+  "includeVersion": true,
+  "treatWarningsAsErrors": true,
+  "validation": {
+    "notDocumented": true
+  },
+  "requiredToBeDocumented": [
+    "Class",
+    "Constructor",
+    "Enum",
+    "EnumMember",
+    "Function",
+    "Interface",
+    "Method",
+    "Property",
+    "TypeAlias",
+    "Variable"
+  ],
+  "blockTags": ["@deprecated", "@example", "@generated", "@param", "@returns"],
+  "excludeTags": ["@generated"]
+}

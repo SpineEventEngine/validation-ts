@@ -1,0 +1,613 @@
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import ts from "typescript";
+
+const stalePlaceholder =
+  /(?:\$\{(?:value|other|field|regex)\}|(?<!\$)\{(?:value|other|field|regex)\})/;
+const markdownLink = /\[[^\]]*\]\(([^)\s]+)\)/g;
+const typeScriptFence = /```(?:ts|typescript)\s*\r?\n([\s\S]*?)```/gi;
+const shellFence = /```(?:bash|sh|shell)\s*\r?\n([\s\S]*?)```/gi;
+const protobufFence = /```protobuf\s*\r?\n([\s\S]*?)```/gi;
+const publicPackage = "@spine-event-engine/validation";
+const previewInstall = /(?:pnpm|npm)\s+(?:add|install)\s+[^\n]*@spine-event-engine\/validation@/;
+const exactPreview = /@spine-event-engine\/validation@\d+\.\d+\.\d+-snapshot\.\d+/;
+const historicalWorkflowLanguage =
+  /(?:\bimplementation[- ]history\b|\bchat(?:\s+transcript)?\b|\btask(?:\s+(?:record|log|branch|history))?\b|(?<!-)\bfrozen\b|\bprovenance\b|\bintake record\b|\bshared-envelope\b|\blegacy (?:adapter|behavior)\b|\bimplementation seams\b|\bapproved (?:direction|comparison)\b)/i;
+const repositorySetupGuides = [
+  "README.md",
+  "packages/example/README.md",
+  "packages/validation/docs/development.md",
+  "packages/validation/docs/contributing.md",
+];
+
+/** Returns maintained Markdown files, excluding generated TypeDoc and protocol records. */
+export function findMaintainedMarkdown(root) {
+  const markdown = [resolve(root, "README.md")];
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )) {
+      if (["node_modules", ".worktrees", "api", "build-protocol"].includes(entry.name)) continue;
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (extname(entry.name) === ".md") markdown.push(path);
+    }
+  };
+  for (const directory of [resolve(root, "docs"), resolve(root, "packages")]) {
+    if (existsSync(directory)) visit(directory);
+  }
+  return markdown.sort((left, right) => left.localeCompare(right));
+}
+
+function executableLines(fence) {
+  return fence.split(/\r?\n/).filter((line) => line.trim() && !line.trim().startsWith("#"));
+}
+
+function checkPreviewInstallSequences(content, file) {
+  for (const match of content.matchAll(shellFence)) {
+    const fence = match[1];
+    if (!previewInstall.test(fence)) continue;
+    if (hasShellOperator(fence))
+      throw new Error(`Quick-install sequence in ${file} must not use shell chaining or operators`);
+    const commands = executableLines(fence);
+    if (commands.length !== 1)
+      throw new Error(
+        `Quick-install sequence in ${file} must contain exactly one executable command`,
+      );
+    if (exactPreview.test(fence)) {
+      const beforeFence = content.slice(0, match.index);
+      const headings = [...beforeFence.matchAll(/^#{1,6}\s+(.+)$/gm)];
+      const precedingHeading = headings.at(-1)?.[1] ?? "";
+      if (!/alternative/i.test(precedingHeading))
+        throw new Error(
+          `Exact preview install in ${file} must be in a separately labelled alternative section`,
+        );
+    }
+  }
+}
+
+/** Checks direct-Corepack setup and clean example-test ordering in repository guides. */
+function checkRepositorySetup(root, file, content) {
+  const relativePath = relative(root, file);
+  if (!repositorySetupGuides.includes(relativePath)) return;
+  if (!repositorySetupGuides.every((guide) => existsSync(resolve(root, guide)))) return;
+  if (/\bcorepack enable pnpm\b/.test(content))
+    throw new Error(`Repository guide ${file} must not use corepack enable pnpm`);
+  if (!/corepack pnpm install --frozen-lockfile/.test(content))
+    throw new Error(`Repository guide ${file} must include direct corepack pnpm setup`);
+
+  for (const match of content.matchAll(shellFence)) {
+    const commands = executableLines(match[1]);
+    for (const command of commands) {
+      if (/^pnpm\s/.test(command))
+        throw new Error(`Repository command in ${file} must begin with corepack pnpm`);
+    }
+    const exampleTest = commands.indexOf("corepack pnpm test:example");
+    if (exampleTest !== -1 && !commands.slice(0, exampleTest).includes("corepack pnpm build"))
+      throw new Error(
+        `Repository guide ${file} must run corepack pnpm build before corepack pnpm test:example`,
+      );
+  }
+}
+
+/** Detects shell control operators outside quoted package arguments. */
+function hasShellOperator(command) {
+  let quote;
+  for (let index = 0; index < command.length; index += 1) {
+    const character = command[index];
+    if (character === "\\") {
+      if (!quote && (command[index + 1] === "\n" || command.slice(index + 1, index + 3) === "\r\n"))
+        return true;
+      index += 1;
+      continue;
+    }
+    if (quote) {
+      if (character === quote) quote = undefined;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      continue;
+    }
+    if (character === ";" || character === "|") return true;
+    if (character === "&") return true;
+  }
+  return false;
+}
+
+function checkPackageDocumentationLinks(root) {
+  const docs = resolve(root, "packages/validation/docs");
+  if (!existsSync(docs)) return;
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )) {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (extname(entry.name) === ".md") {
+        const content = readFileSync(path, "utf8");
+        if (!/\]\(\.\.\/README\.md(?:#[^)]+)?\)/.test(content))
+          throw new Error(`Package documentation ${path} must link back to the package README`);
+      }
+    }
+  };
+  visit(docs);
+}
+
+function headingAnchors(content) {
+  const counts = new Map();
+  const anchors = new Set();
+  for (const match of content.matchAll(/^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm)) {
+    const slug = match[1]
+      .trim()
+      .toLowerCase()
+      .replace(/[\]`*_~()]/g, "")
+      .replace(/[^\p{L}\p{N}\s-]/gu, "")
+      .replace(/\s+/g, "-");
+    if (!slug) continue;
+    const duplicate = counts.get(slug) ?? 0;
+    counts.set(slug, duplicate + 1);
+    anchors.add(duplicate === 0 ? slug : `${slug}-${duplicate}`);
+  }
+  return anchors;
+}
+
+/** Throws when a resolved local path leaves the real repository root. */
+function assertWithinRepository(repositoryRoot, targetPath, destination, file) {
+  const resolvedRoot = resolve(repositoryRoot);
+  const realRepositoryRoot = realpathSync(repositoryRoot);
+  const resolvedTarget = resolve(targetPath);
+  const contained = (root, path) => {
+    const pathRelative = relative(root, path);
+    return pathRelative === "" || (!pathRelative.startsWith("..") && !isAbsolute(pathRelative));
+  };
+  if (!contained(resolvedRoot, resolvedTarget))
+    throw new Error(`Local link ${destination} in ${file} escapes the repository root`);
+  if (existsSync(resolvedTarget) && !contained(realRepositoryRoot, realpathSync(resolvedTarget)))
+    throw new Error(`Local link ${destination} in ${file} escapes the repository root`);
+}
+
+function checkLocalMarkdownLinks(content, file, root) {
+  for (const match of content.matchAll(markdownLink)) {
+    const destination = match[1];
+    if (/^[a-z]+:/i.test(destination) || destination.startsWith("api/reference/")) continue;
+    const hashIndex = destination.indexOf("#");
+    const target = hashIndex === -1 ? destination : destination.slice(0, hashIndex);
+    const anchor =
+      hashIndex === -1 ? undefined : decodeURIComponent(destination.slice(hashIndex + 1));
+    if (target && isAbsolute(target))
+      throw new Error(`Local link ${destination} in ${file} escapes the repository root`);
+    const targetPath = target ? resolve(dirname(file), target) : file;
+    assertWithinRepository(root, targetPath, destination, file);
+    if (!existsSync(targetPath)) throw new Error(`Broken local link ${target} in ${file}`);
+    if (
+      anchor &&
+      extname(targetPath) === ".md" &&
+      !headingAnchors(readFileSync(targetPath, "utf8")).has(anchor)
+    )
+      throw new Error(`Broken local anchor ${anchor} in ${file}`);
+  }
+}
+
+function checkCompleteProtoExample(root) {
+  const packageReadme = resolve(root, "packages/validation/README.md");
+  const content = readFileSync(packageReadme, "utf8");
+  const example = content.match(
+    /^## Complete Proto Example\s*\n\n```protobuf\s*\n([\s\S]*?)```/m,
+  )?.[1];
+  if (!example) return;
+  if (!/import "google\/protobuf\/timestamp\.proto";/.test(example))
+    throw new Error("Complete Proto Example must import google/protobuf/timestamp.proto");
+  if (
+    !/google\.protobuf\.Timestamp\s+expires_at\s*=\s*11\s+\[\(when\)\.in\s*=\s*FUTURE\];/.test(
+      example,
+    )
+  )
+    throw new Error("Complete Proto Example must demonstrate (when) with expires_at");
+  if (/^\s*message\s+(\w+)\s*\{\s*\n(?:\s*\/\/[^\n]*\n)*\s*message\s+\1\s*\{/m.test(example))
+    throw new Error("Complete Proto Example must not immediately duplicate a message declaration");
+  if (
+    !/^\/\/[^\n]+\nmessage\s+UserId\s*\{\s*\n\s*\/\/[^\n]+\n\s*string\s+value\s*=\s*1\s*\[\(required\)\s*=\s*true\];\s*\n\}/m.test(
+      example,
+    )
+  )
+    throw new Error("Complete Proto Example must declare a documented required UserId value");
+  if (
+    !/UserId\s+id\s*=\s*1\s*\[(?=[^\]]*\(required\)\s*=\s*true)(?=[^\]]*\(validate\)\s*=\s*true)[^\]]*\]/.test(
+      example,
+    )
+  )
+    throw new Error("Complete Proto Example must use a required validated UserId id");
+}
+
+function protoDeclaration(line) {
+  const message = /^\s*message\s+(\w+)\s*\{/.exec(line);
+  if (message) return { kind: "message", name: message[1], block: true };
+  const enumeration = /^\s*enum\s+(\w+)\s*\{/.exec(line);
+  if (enumeration) return { kind: "enum", name: enumeration[1], block: true };
+  const oneof = /^\s*oneof\s+(\w+)\s*\{/.exec(line);
+  if (oneof) return { kind: "oneof", name: oneof[1], block: true };
+  const enumValue = /^\s*([A-Z][A-Z0-9_]*)\s*=\s*\d+/.exec(line);
+  if (enumValue) return { kind: "enum value", name: enumValue[1], block: false };
+  const field = /^\s*(?:(?:repeated|optional)\s+)?(?:map<[^>]+>|[.\w]+)\s+(\w+)\s*=\s*\d+/.exec(
+    line,
+  );
+  if (field) return { kind: "field", name: field[1], block: false };
+  return undefined;
+}
+
+function protoStructure(lines) {
+  let inBlockComment = false;
+  return lines.map((line) => {
+    let result = "";
+    let quote;
+    let escaped = false;
+    for (let index = 0; index < line.length; index += 1) {
+      const character = line[index];
+      const next = line[index + 1];
+      if (inBlockComment) {
+        if (character === "*" && next === "/") {
+          inBlockComment = false;
+          index += 1;
+        }
+        continue;
+      }
+      if (quote) {
+        if (escaped) escaped = false;
+        else if (character === "\\") escaped = true;
+        else if (character === quote) quote = undefined;
+        continue;
+      }
+      if (character === "/" && next === "/") break;
+      if (character === "/" && next === "*") {
+        inBlockComment = true;
+        index += 1;
+        continue;
+      }
+      if (character === '"' || character === "'") {
+        quote = character;
+        continue;
+      }
+      result += character;
+    }
+    return result;
+  });
+}
+
+function findProtoDeclarationEnd(lines, start, block) {
+  if (!block) {
+    for (let index = start; index < lines.length; index += 1)
+      if (lines[index].includes(";")) return index;
+    return start;
+  }
+  let depth = 0;
+  for (let index = start; index < lines.length; index += 1) {
+    depth += (lines[index].match(/\{/g) ?? []).length;
+    depth -= (lines[index].match(/\}/g) ?? []).length;
+    if (depth === 0) return index;
+  }
+  return start;
+}
+
+/** Checks that maintained README Proto fences have comments and readable declaration spacing. */
+function requireProtoMatch(source, expression, description, file) {
+  if (!expression.test(source)) throw new Error(file + ": " + description);
+}
+
+function protoMessageBody(source, message) {
+  const lines = protoStructure(source.split(/\r?\n/));
+  const declaration = new RegExp("^\\s*message\\s+" + message + "\\s*\\{");
+  for (let index = 0; index < lines.length; index += 1) {
+    const match = declaration.exec(lines[index]);
+    if (!match) continue;
+    let depth = 1;
+    let body = "";
+    for (let lineIndex = index; lineIndex < lines.length; lineIndex += 1) {
+      const line = lines[lineIndex];
+      const start = lineIndex === index ? match[0].length : 0;
+      for (let characterIndex = start; characterIndex < line.length; characterIndex += 1) {
+        const character = line[characterIndex];
+        if (character === "{") {
+          depth += 1;
+          continue;
+        }
+        if (character === "}") {
+          depth -= 1;
+          if (depth === 0) return body;
+          continue;
+        }
+        if (depth === 1) body += character;
+      }
+      if (depth === 1) body += "\n";
+    }
+    return undefined;
+  }
+  return undefined;
+}
+
+function checkExampleDomainIds(root) {
+  const userProto = resolve(root, "packages/example/proto/user.proto");
+  const productProto = resolve(root, "packages/example/proto/product.proto");
+  const user = readFileSync(userProto, "utf8");
+  const product = readFileSync(productProto, "utf8");
+  const requiredValue = (source, id, file) =>
+    requireProtoMatch(
+      source,
+      new RegExp(
+        "message\\s+" +
+          id +
+          "\\s*\\{[^}]*?string\\s+value\\s*=\\s*1\\s*\\[[^\\]]*\\(required\\)\\s*=\\s*true[^\\]]*\\]",
+      ),
+      id + ".value must be required",
+      file,
+    );
+  const requiredValidatedField = (source, message, type, field, file) => {
+    const body = protoMessageBody(source, message);
+    requireProtoMatch(
+      body ?? "",
+      new RegExp(
+        type +
+          "\\s+" +
+          field +
+          "\\s*=\\s*1\\s*\\[(?=[^\\]]*\\(required\\)\\s*=\\s*true)(?=[^\\]]*\\(validate\\)\\s*=\\s*true)[^\\]]*\\]",
+      ),
+      message + "." + field + " must be required and validate",
+      file,
+    );
+  };
+
+  requiredValue(user, "UserId", userProto);
+  requiredValue(product, "ProductId", productProto);
+  requireProtoMatch(
+    product,
+    /message\s+ProductId\s*\{[^}]*?\(pattern\)\.regex\s*=\s*"\^prod-\[0-9\]\+\$"/,
+    "ProductId.value must preserve the prod-[0-9]+ pattern",
+    productProto,
+  );
+  requiredValue(product, "CategoryId", productProto);
+  requiredValidatedField(user, "User", "UserId", "id", userProto);
+  requiredValidatedField(user, "GetUserRequest", "UserId", "user_id", userProto);
+  requiredValidatedField(product, "Product", "ProductId", "id", productProto);
+  requiredValidatedField(product, "Category", "CategoryId", "id", productProto);
+}
+
+function checkProtoFenceDocumentation(content, file) {
+  if (basename(file) !== "README.md") return;
+  for (const fence of content.matchAll(protobufFence)) {
+    const lines = fence[1].split(/\r?\n/);
+    const structure = protoStructure(lines);
+    const declarations = [];
+    let depth = 0;
+    for (let index = 0; index < lines.length; index += 1) {
+      const declaration = protoDeclaration(lines[index]);
+      if (declaration) {
+        const comment = lines[index - 1]?.trim();
+        if (!comment?.startsWith("//") || comment.slice(2).trim() === "")
+          throw new Error(
+            `${file}: ${declaration.kind} ${declaration.name} requires a non-empty leading comment`,
+          );
+        declarations.push({
+          ...declaration,
+          depth,
+          commentStart: index - 1,
+          end: findProtoDeclarationEnd(structure, index, declaration.block),
+        });
+      }
+      depth += (structure[index].match(/\{/g) ?? []).length;
+      depth -= (structure[index].match(/\}/g) ?? []).length;
+    }
+    for (let index = 1; index < declarations.length; index += 1) {
+      const previous = declarations[index - 1];
+      const current = declarations[index];
+      if (previous.depth !== current.depth) continue;
+      const emptyLines = lines
+        .slice(previous.end + 1, current.commentStart)
+        .filter((line) => line.trim() === "").length;
+      if (emptyLines !== 1)
+        throw new Error(
+          `${file}: ${previous.kind} ${previous.name} must have exactly one empty line before ${current.kind} ${current.name}`,
+        );
+    }
+  }
+}
+
+function checkSourceTsDoc(root, index, publicExports) {
+  const sourceRoots = [
+    resolve(root, "packages/validation/src"),
+    resolve(root, "packages/example/src"),
+  ];
+  let publicImportCount = 0;
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )) {
+      if (entry.name === "generated") continue;
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (extname(entry.name) === ".ts") {
+        const source = readFileSync(path, "utf8");
+        for (const comment of source.matchAll(/\/\*\*([\s\S]*?)\*\//g)) {
+          if (historicalWorkflowLanguage.test(comment[1]))
+            throw new Error(`Prohibited historical workflow language in ${path}`);
+        }
+        publicImportCount += checkTypeScriptFences(
+          tsDocTypeScriptFences(source),
+          path,
+          root,
+          index,
+          publicExports,
+        );
+      }
+    }
+  };
+  for (const sourceRoot of sourceRoots) {
+    if (existsSync(sourceRoot)) visit(sourceRoot);
+  }
+  return publicImportCount;
+}
+
+/** Discovers public value and type names from the package entry point via the TypeScript AST. */
+export function discoverPublicExports(indexSource) {
+  const source = ts.createSourceFile("index.ts", indexSource, ts.ScriptTarget.Latest, true);
+  const names = new Set();
+  for (const statement of source.statements) {
+    if (!ts.isExportDeclaration(statement) || !statement.exportClause) continue;
+    if (ts.isNamedExports(statement.exportClause)) {
+      for (const element of statement.exportClause.elements) names.add(element.name.text);
+      continue;
+    }
+    if (ts.isNamespaceExport(statement.exportClause)) names.add(statement.exportClause.name.text);
+  }
+  return names;
+}
+
+function namedPublicImports(markdown) {
+  const source = ts.createSourceFile("snippet.ts", markdown, ts.ScriptTarget.Latest, true);
+  const names = [];
+  const visit = (node) => {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      node.moduleSpecifier.text === publicPackage &&
+      node.importClause?.namedBindings &&
+      ts.isNamedImports(node.importClause.namedBindings)
+    ) {
+      for (const element of node.importClause.namedBindings.elements)
+        names.push(element.propertyName?.text ?? element.name.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return names;
+}
+
+function typecheckSnippet(snippet, file, root, index) {
+  const temporaryRoot = mkdtempSync(join(root, ".documentation-snippets-"));
+  try {
+    const snippetPath = join(temporaryRoot, "snippet.ts");
+    writeFileSync(snippetPath, snippet);
+
+    // Maintained examples may import this documented generated module. It is the
+    // sole virtual relative module; all other relative imports must resolve.
+    mkdirSync(join(temporaryRoot, "generated"));
+    writeFileSync(
+      join(temporaryRoot, "generated", "user_pb.ts"),
+      "export declare const UserSchema: any;\n",
+    );
+
+    const program = ts.createProgram([snippetPath], {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      target: ts.ScriptTarget.ES2024,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      ignoreDeprecations: "6.0",
+      baseUrl: root,
+      paths: { [publicPackage]: [index] },
+    });
+    const diagnostic = ts
+      .getPreEmitDiagnostics(program)
+      .find((entry) => entry.category === ts.DiagnosticCategory.Error);
+    if (diagnostic) {
+      throw new Error(
+        `Non-compilable TypeScript snippet in ${file}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, " ")}`,
+      );
+    }
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
+function tsDocTypeScriptFences(source) {
+  const fences = [];
+  for (const comment of source.matchAll(/\/\*\*([\s\S]*?)\*\//g)) {
+    const text = comment[1].replace(/^\s*\*\s?/gm, "");
+    for (const fence of text.matchAll(typeScriptFence)) fences.push(fence[1]);
+  }
+  return fences;
+}
+
+function checkTypeScriptFences(content, file, root, index, publicExports) {
+  let publicImportCount = 0;
+  for (const fence of content) {
+    for (const imported of namedPublicImports(fence)) {
+      publicImportCount++;
+      if (!publicExports.has(imported)) throw new Error(`Non-public import ${imported} in ${file}`);
+    }
+    typecheckSnippet(fence, file, root, index);
+  }
+  return publicImportCount;
+}
+
+/** Runs all project-owned documentation checks and returns checked Markdown paths. */
+export function checkDocumentation({ root }) {
+  const markdown = findMaintainedMarkdown(root);
+  const index = resolve(root, "packages/validation/src/index.ts");
+  const publicExports = discoverPublicExports(readFileSync(index, "utf8"));
+  let publicImportCount = 0;
+
+  for (const file of markdown) {
+    const content = readFileSync(file, "utf8");
+    if (historicalWorkflowLanguage.test(content))
+      throw new Error(`Prohibited historical workflow language in ${file}`);
+    if (stalePlaceholder.test(content))
+      throw new Error(`Stale unnamespaced placeholder in ${file}`);
+    checkPreviewInstallSequences(content, file);
+    checkRepositorySetup(root, file, content);
+    checkProtoFenceDocumentation(content, file);
+    publicImportCount += checkTypeScriptFences(
+      [...content.matchAll(typeScriptFence)].map((fence) => fence[1]),
+      file,
+      root,
+      index,
+      publicExports,
+    );
+    checkLocalMarkdownLinks(content, file, root);
+  }
+
+  checkPackageDocumentationLinks(root);
+  checkCompleteProtoExample(root);
+
+  const publicTsDoc = resolve(root, "packages/validation/src/validation.ts");
+  const publicTsDocSource = readFileSync(publicTsDoc, "utf8");
+  if (stalePlaceholder.test(publicTsDocSource))
+    throw new Error(`Stale unnamespaced placeholder in ${publicTsDoc}`);
+  publicImportCount += checkTypeScriptFences(
+    tsDocTypeScriptFences(publicTsDocSource),
+    publicTsDoc,
+    root,
+    index,
+    publicExports,
+  );
+  publicImportCount += checkSourceTsDoc(root, index, publicExports);
+
+  for (const proto of [
+    "packages/example/proto/user.proto",
+    "packages/example/proto/product.proto",
+  ]) {
+    if (/\((?:is_required|required_field)\)/.test(readFileSync(resolve(root, proto), "utf8")))
+      throw new Error(`Deprecated active option in ${proto}`);
+  }
+  checkExampleDomainIds(root);
+  if (publicImportCount === 0)
+    throw new Error("Documentation must demonstrate a named public package import");
+  return markdown;
+}
+
+const modulePath = fileURLToPath(import.meta.url);
+if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+  const root = resolve(dirname(modulePath), "..");
+  const markdown = checkDocumentation({ root });
+  console.log(`Checked ${markdown.length} maintained Markdown files and documentation examples.`);
+}

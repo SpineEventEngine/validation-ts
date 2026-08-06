@@ -1,0 +1,71 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Unit tests for `@spine-event-engine/validation` package.
+ *
+ * Tests basic validation functionality and violation formatting.
+ */
+
+import { create } from "@bufbuild/protobuf";
+import { validate, Violations } from "../src/index.js";
+import { ConstraintViolationSchema } from "../src/generated/spine/validate/validation_error_pb.js";
+
+describe("Basic Validation", () => {
+  it("should export `validate` function", () => {
+    expect(typeof validate).toBe("function");
+  });
+
+  it("formats violations through the public Violations owner", () => {
+    expect(typeof Violations.formatAll).toBe("function");
+  });
+});
+
+describe("Format Violations", () => {
+  it('should return "No violations" for empty array', () => {
+    const result = Violations.formatAll([]);
+    expect(result).toBe("No violations");
+  });
+
+  it("formats a field violation and gives useful fallbacks for incomplete diagnostics", () => {
+    const fieldViolation = create(ConstraintViolationSchema, {
+      typeName: "example.User",
+      fieldPath: { fieldName: ["email"] },
+      message: {
+        withPlaceholders: "Invalid ${field.value}",
+        placeholderValue: { "field.value": "not-an-email" },
+      },
+    });
+    const messageViolation = create(ConstraintViolationSchema, { typeName: "example.User" });
+
+    expect(Violations.formatAll([fieldViolation, messageViolation])).toBe(
+      "1. example.User.email: Invalid not-an-email\n2. example.User.unknown: Validation failed",
+    );
+    expect(Violations.failurePath(fieldViolation)).toBe("email");
+    expect(Violations.failurePath(messageViolation)).toBe("unknown");
+    expect(Violations.formatMessage(messageViolation)).toBe("Validation failed");
+  });
+});

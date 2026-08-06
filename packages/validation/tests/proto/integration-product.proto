@@ -1,0 +1,167 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.integration;
+
+// Fixtures for product-management validation across nested catalog data.
+
+import "google/protobuf/timestamp.proto";
+import "spine/options.proto";
+
+// Exercises validation of a catalog product and its dependent display fields.
+message Product {
+    // Requires the prod-number identifier format.
+    string id = 1 [
+        (required) = true,
+        (pattern).regex = "^prod-[0-9]+$",
+        (pattern).error_msg = "Product ID must follow format 'prod-XXX'. Provided: `{value}`."
+    ];
+    // Requires the product's customer-facing name.
+    string name = 2 [
+        (required) = true,
+        (if_missing).error_msg = "Product name is required."
+    ];
+    // Carries optional catalog copy for the product.
+    string description = 3;
+    // Requires a sale price of at least one cent.
+    double price = 4 [
+        (required) = true,
+        (min).value = "0.01",
+        (min).error_msg = "Price must be at least {other}. Provided: {value}."
+    ];
+    // Limits available inventory to the supported stock range.
+    int32 stock = 5 [
+        (min).value = "0",
+        (range).value = "[0..1000000)"
+    ];
+    // Requires the timestamp when the product was created.
+    google.protobuf.Timestamp created_at = 6 [(required) = true];
+    // Requires and validates the assigned category.
+    Category category = 7 [
+        (required) = true,
+        (validate) = true,
+        (if_invalid).error_msg = "Category is invalid."
+    ];
+    // Allows text color only together with a highlight color.
+    Color text_color = 8 [(goes).with = "highlight_color"];
+    // Allows highlight color only together with a text color.
+    Color highlight_color = 9 [(goes).with = "text_color"];
+}
+
+// Holds RGB components for catalog display colors.
+message Color {
+    // Limits red intensity to 0 through 255.
+    int32 red = 1 [(range).value = "[0..255]"];
+    // Limits green intensity to 0 through 255.
+    int32 green = 2 [(range).value = "[0..255]"];
+    // Limits blue intensity to 0 through 255.
+    int32 blue = 3 [(range).value = "[0..255]"];
+}
+
+// Identifies a product category for nested validation.
+message Category {
+    // Requires a positive category identifier.
+    int32 id = 1 [
+        (required) = true,
+        (min).value = "1"
+    ];
+    // Requires the category's display name.
+    string name = 2 [(required) = true];
+}
+
+// Exercises required selection of one checkout payment method.
+message PaymentMethod {
+    // Requires exactly one card or bank-account payment detail.
+    oneof method {
+        option (choice).required = true;
+
+        // Carries nested card details for validation.
+        PaymentCardNumber payment_card = 1 [(validate) = true];
+        // Carries nested bank-account details for validation.
+        BankAccount bank_account = 2 [(validate) = true];
+    }
+}
+
+// Holds card-payment values subject to format and date constraints.
+message PaymentCardNumber {
+    // Requires a card number containing 13 through 19 digits.
+    string number = 1 [
+        (required) = true,
+        (pattern).regex = "^[0-9]{13,19}$",
+        (pattern).error_msg = "Card number must be 13-19 digits."
+    ];
+    // Requires an expiration month from one through twelve.
+    int32 expiry_month = 2 [
+        (required) = true,
+        (range).value = "[1..12]"
+    ];
+    // Requires an expiration year no earlier than 2024.
+    int32 expiry_year = 3 [
+        (required) = true,
+        (min).value = "2024"
+    ];
+}
+
+// Holds bank-routing values subject to required format constraints.
+message BankAccount {
+    // Requires an account number containing 8 through 17 digits.
+    string account_number = 1 [
+        (required) = true,
+        (pattern).regex = "^[0-9]{8,17}$"
+    ];
+    // Requires a nine-digit US routing number.
+    string routing_number = 2 [
+        (required) = true,
+        (pattern).regex = "^[0-9]{9}$"
+    ];
+}
+
+// Requests a bounded page of catalog products.
+message ListProductsRequest {
+    // Requires a one-based page number.
+    int32 page = 1 [
+        (required) = true,
+        (min).value = "1",
+        (if_missing).error_msg = "Page number is required."
+    ];
+    // Requires a page size from one through 100.
+    int32 page_size = 2 [
+        (required) = true,
+        (range).value = "[1..100]",
+        (if_missing).error_msg = "Page size is required."
+    ];
+    // Narrows results using an optional search string.
+    string search_query = 3;
+}
+
+// Returns validated products and the number of matching records.
+message ListProductsResponse {
+    // Carries each returned product through nested validation.
+    repeated Product products = 1 [(validate) = true];
+    // Reports a non-negative total number of matches.
+    int32 total_count = 2 [(min).value = "0"];
+}

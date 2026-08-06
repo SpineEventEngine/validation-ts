@@ -1,0 +1,277 @@
+/*
+ * Copyright 2026, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+syntax = "proto3";
+
+package spine.validation.testing.validate_suite;
+
+import "spine/options.proto";
+import "google/protobuf/any.proto";
+// Fixture `PersonWithAddress` exercises `(required)`, `(validate)`.
+message PersonWithAddress {
+    // Validates `name` with `(required) = true`.
+    string name = 1 [(required) = true];
+    // Validates `address` with `(validate) = true`.
+    Address address = 2 [(validate) = true];
+}
+
+// Fixture `Address` exercises `(required)`, `(pattern)`.
+message Address {
+    // Validates `street` with `(required) = true`.
+    string street = 1 [(required) = true];
+    // Validates `city` with `(required) = true`.
+    string city = 2 [(required) = true];
+    // Validates `zip_code` with `(required) = true`, `(pattern).regex = "^[0-9]{5}$"`.
+    string zip_code = 3 [
+        (required) = true,
+        (pattern).regex = "^[0-9]{5}$"
+    ];
+}
+// Fixture `OrderWithCustomError` exercises `(validate)`.
+message OrderWithCustomError {
+    // Supplies the order identifier outside nested validation.
+    int32 order_id = 1;
+    // Validates `customer` with `(validate) = true`.
+    Customer customer = 2 [
+        (validate) = true,
+        (if_invalid).error_msg = "Customer information is invalid: {value}."
+    ];
+}
+
+// Fixture `Customer` exercises `(required)`, `(pattern)`, `(range)`.
+message Customer {
+    // Validates `email` with `(required) = true`, `(pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"`.
+    string email = 1 [
+        (required) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+    // Validates `age` with `(range).value = "[18..120]"`.
+    int32 age = 2 [(range).value = "[18..120]"];
+}
+// Fixture `TeamWithMembers` exercises `(required)`, `(validate)`.
+message TeamWithMembers {
+    // Validates `team_name` with `(required) = true`.
+    string team_name = 1 [(required) = true];
+    // Validates `members` with `(validate) = true`.
+    repeated Member members = 2 [(validate) = true];
+}
+
+// Fixture `Member` exercises `(required)`, `(pattern)`.
+message Member {
+    // Validates `name` with `(required) = true`.
+    string name = 1 [(required) = true];
+    // Validates `email` with `(required) = true`, `(pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"`.
+    string email = 2 [
+        (required) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+}
+// Fixture `CompanyStructure` exercises `(required)`, `(validate)`.
+message CompanyStructure {
+    // Validates `company_name` with `(required) = true`.
+    string company_name = 1 [(required) = true];
+    // Validates `department` with `(validate) = true`.
+    Department department = 2 [(validate) = true];
+}
+
+// Fixture `Department` exercises `(required)`, `(validate)`.
+message Department {
+    // Validates `dept_name` with `(required) = true`.
+    string dept_name = 1 [(required) = true];
+    // Validates `manager` with `(validate) = true`.
+    Manager manager = 2 [(validate) = true];
+}
+
+// Fixture `Manager` exercises `(required)`, `(pattern)`.
+message Manager {
+    // Validates `name` with `(required) = true`.
+    string name = 1 [(required) = true];
+    // Validates `email` with `(required) = true`, `(pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"`.
+    string email = 2 [
+        (required) = true,
+        (pattern).regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ];
+}
+// Fixture `ProfileWithOptionalData` exercises `(required)`, `(validate)`.
+message ProfileWithOptionalData {
+    // Validates `username` with `(required) = true`.
+    string username = 1 [(required) = true];
+    // Validates `optional_data` with `(validate) = true`.
+    OptionalData optional_data = 2 [(validate) = true];
+}
+
+// Fixture `OptionalData` exercises `(min)`.
+message OptionalData {
+    // Supplies optional biography text beside the bounded follower count.
+    string bio = 1;
+    // Validates `followers` with `(min).value = "0"`.
+    int32 followers = 2 [(min).value = "0"];
+}
+// Fixture `PersonWithoutValidation` exercises `(required)`.
+message PersonWithoutValidation {
+    // Validates `name` with `(required) = true`.
+    string name = 1 [(required) = true];
+    // Supplies an address control that intentionally skips nested validation.
+    Address address = 2;
+}
+// Fixture `ProductOrder` exercises `(min)`, `(validate)`, `(required)`.
+message ProductOrder {
+    // Validates `product_id` with `(min).value = "1"`.
+    int32 product_id = 1 [(min).value = "1"];
+    // Validates `product` with `(validate) = true`.
+    ProductDetails product = 2 [
+        (validate) = true,
+        (if_invalid).error_msg = "Product details are invalid."
+    ];
+    // Validates `reviews` with `(validate) = true`.
+    repeated Review reviews = 3 [(validate) = true];
+    // Validates `shipping` with `(required) = true`, `(validate) = true`.
+    ShippingInfo shipping = 4 [
+        (required) = true,
+        (validate) = true
+    ];
+}
+
+// Fixture `ProductDetails` exercises `(required)`, `(min)`, `(distinct)`.
+message ProductDetails {
+    // Validates `name` with `(required) = true`.
+    string name = 1 [(required) = true];
+    // Validates `price` with `(min).value = "0.01"`.
+    double price = 2 [(min).value = "0.01"];
+    // Validates `tags` with `(distinct) = true`.
+    repeated string tags = 3 [(distinct) = true];
+}
+
+// Fixture `Review` exercises `(range)`.
+message Review {
+    // Validates `rating` with `(range).value = "[1..5]"`.
+    int32 rating = 1 [(range).value = "[1..5]"];
+    // Supplies free-form review text outside the rating constraint.
+    string comment = 2;
+}
+
+// Fixture `ShippingInfo` exercises `(required)`, `(validate)`.
+message ShippingInfo {
+    // Validates `address` with `(required) = true`, `(validate) = true`.
+    Address address = 1 [(required) = true, (validate) = true];
+    // Validates `method` with `(required) = true`.
+    string method = 2 [(required) = true];
+}
+// Fixture `ContainerWithEmptyMessage` exercises `(required)`, `(validate)`.
+message ContainerWithEmptyMessage {
+    // Validates `id` with `(required) = true`.
+    string id = 1 [(required) = true];
+    // Validates `empty` with `(validate) = true`.
+    EmptyValidated empty = 2 [(validate) = true];
+}
+
+// Provides a recursively validated child with no validation options.
+message EmptyValidated {
+    // Supplies unconstrained text in the empty validated child.
+    string note = 1;
+}
+// Fixture `ProjectWithTasks` exercises `(required)`, `(validate)`, `(distinct)`.
+message ProjectWithTasks {
+    // Validates `project_name` with `(required) = true`.
+    string project_name = 1 [(required) = true];
+    // Validates `tasks` with `(validate) = true`.
+    repeated Task tasks = 2 [(validate) = true];
+    // Validates `tags` with `(distinct) = true`.
+    repeated string tags = 3 [(distinct) = true];
+}
+
+// Fixture `Task` exercises `(required)`, `(range)`, `(distinct)`.
+message Task {
+    // Validates `title` with `(required) = true`.
+    string title = 1 [(required) = true];
+    // Validates `priority` with `(range).value = "[1..5]"`.
+    int32 priority = 2 [(range).value = "[1..5]"];
+    // Validates `assignees` with `(distinct) = true`.
+    repeated string assignees = 3 [(distinct) = true];
+}
+// Fixture `Leaf` exercises `(required)`, `(min)`.
+message Leaf {
+    // Validates `value` with `(required) = true`.
+    string value = 1 [(required) = true];
+    // Validates `quantity` with `(min).value = "1"`.
+    int32 quantity = 2 [(min).value = "1"];
+}
+
+// Fixture `NestedValidationContainers` exercises `(validate)`.
+message NestedValidationContainers {
+    // Validates `singular` with `(validate) = true`.
+    Leaf singular = 1 [(validate) = true];
+    // Validates `repeated` with `(validate) = true`.
+    repeated Leaf repeated = 2 [(validate) = true];
+    // Validates `mapped` with `(validate) = true`.
+    map<string, Leaf> mapped = 3 [(validate) = true];
+    // Validates `packed` with `(validate) = true`.
+    google.protobuf.Any packed = 4 [(validate) = true];
+    // Validates `packed_repeated` with `(validate) = true`.
+    repeated google.protobuf.Any packed_repeated = 5 [(validate) = true];
+    // Validates `packed_mapped` with `(validate) = true`.
+    map<string, google.protobuf.Any> packed_mapped = 6 [(validate) = true];
+}
+
+// Fixture `ValidateDisabled` exercises `(validate)`.
+message ValidateDisabled {
+    // Validates `leaf` with `(validate) = false`.
+    Leaf leaf = 1 [(validate) = false];
+}
+
+// Deliberately applies `(validate)` to an unsupported string target.
+message ValidateUnsupportedTarget {
+    // Is the unsupported string target for `(validate)`.
+    string value = 1 [(validate) = true];
+}
+
+// Fixture `RequireLeaf` exercises `(require)`.
+message RequireLeaf {
+    option (require).fields = "value";
+    // Supplies the `(require).fields` operand named `value`.
+    string value = 1;
+    // Supplies a non-required marker control.
+    string marker = 2;
+}
+
+// Fixture `ChoiceLeaf` exercises `(choice)`.
+message ChoiceLeaf {
+    // Selects the `selection` alternative for this fixture.
+    oneof selection {
+        option (choice).required = true;
+        // Supplies the selected oneof value required by `(choice)`.
+        string value = 1;
+    }
+    // Supplies a marker outside the required oneof choice.
+    string marker = 2;
+}
+
+// Fixture `NestedMessageOptionContainers` exercises `(validate)`.
+message NestedMessageOptionContainers {
+    // Validates `require_child` with `(validate) = true`.
+    RequireLeaf require_child = 1 [(validate) = true];
+    // Validates `choice_child` with `(validate) = true`.
+    ChoiceLeaf choice_child = 2 [(validate) = true];
+}

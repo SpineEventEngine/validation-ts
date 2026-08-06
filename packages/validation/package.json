@@ -1,0 +1,61 @@
+{
+  "name": "@spine-event-engine/validation",
+  "version": "2.0.0-snapshot.7",
+  "description": "TypeScript validation library for Protobuf messages with Spine Validation options",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "generate": "buf generate",
+    "generate:tests": "cd tests && buf generate",
+    "build": "pnpm generate && tsc -b",
+    "test": "pnpm generate && vitest run",
+    "test:watch": "pnpm generate && vitest",
+    "test:coverage": "pnpm generate && vitest run --coverage",
+    "proto:lint": "buf lint && cd tests && buf lint",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "protobuf",
+    "validation",
+    "spine",
+    "typescript",
+    "protobuf-es"
+  ],
+  "author": "Spine Event Engine team <developers@spine.io>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SpineEventEngine/validation-ts.git",
+    "directory": "packages/validation"
+  },
+  "peerDependencies": {
+    "@bufbuild/protobuf": "^2.10.2"
+  },
+  "dependencies": {
+    "temporal-polyfill": "1.0.1"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.72.0",
+    "@bufbuild/protobuf": "2.13.0",
+    "@bufbuild/protoc-gen-es": "2.13.0",
+    "@types/node": "24.13.2",
+    "typescript": "6.0.3"
+  },
+  "files": [
+    "dist",
+    "proto",
+    "buf.yaml",
+    "buf.gen.yaml",
+    "README.md",
+    "!tests"
+  ]
+}

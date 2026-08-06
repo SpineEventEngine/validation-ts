@@ -1,23 +1,29 @@
 {
-    "name": "@spine-event-engine/example-smoke",
-    "version": "2.0.0-snapshot.4",
-    "private": true,
-    "description": "Example project demonstrating @spine-event-engine/validation-ts usage",
-    "type": "module",
-    "scripts": {
-        "generate": "buf generate",
-        "build": "npm run generate && tsc",
-        "start": "npm run build && node dist/index.js",
-        "clean": "rm -rf dist src/generated"
-    },
-    "dependencies": {
-        "@bufbuild/protobuf": "^2.10.2",
-        "@spine-event-engine/validation-ts": "*"
-    },
-    "devDependencies": {
-        "@bufbuild/buf": "^1.61.0",
-        "@bufbuild/protoc-gen-es": "^2.10.2",
-        "@types/node": "^25.0.3",
-        "typescript": "^5.9.3"
-    }
+  "name": "@spine-event-engine/example-smoke",
+  "version": "2.0.0-snapshot.7",
+  "private": true,
+  "description": "Example project demonstrating @spine-event-engine/validation usage",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "generate": "buf generate",
+    "build": "pnpm generate && tsc -b",
+    "start": "pnpm --filter @spine-event-engine/validation build && pnpm build && pnpm start:built",
+    "start:built": "node dist/index.js",
+    "test": "pnpm --filter @spine-event-engine/validation build && pnpm generate && vitest run",
+    "clean": "rm -rf dist src/generated",
+    "proto:lint": "buf lint"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "2.13.0",
+    "@spine-event-engine/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.72.0",
+    "@bufbuild/protoc-gen-es": "2.13.0",
+    "@types/node": "24.13.2",
+    "typescript": "6.0.3"
+  }
 }

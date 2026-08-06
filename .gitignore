@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
+packages/validation/docs/api/reference/
+*.tgz
 
 # Generated code (Protobuf)
 src/generated/
@@ -39,6 +41,8 @@ pnpm-debug.log*
 *.tmp
 .cache/
 .temp/
+.superpowers/
+.worktrees/
 
 # Environment and local config
 .env
@@ -46,7 +50,5 @@ pnpm-debug.log*
 .env.*.local
 .claude/settings.local.json
 
-# Package manager lock files (libraries should not commit lock files)
-package-lock.json
+# Lock state is committed at the workspace root for reproducible builds.
 yarn.lock
-pnpm-lock.yaml
