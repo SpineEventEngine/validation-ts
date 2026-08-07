@@ -1,7 +1,5 @@
 # Spine Validation — TypeScript Client Library
 
-Requires Node.js 24 or later; development and CI pin and test Node.js 24.18.0.
-
 A TypeScript validation library for Protobuf messages using [Spine Validation](https://github.com/SpineEventEngine/validation/) options,
 built on [@bufbuild/protobuf](https://github.com/bufbuild/protobuf-es) (Protobuf-ES v2).
 
@@ -106,6 +104,11 @@ contains architecture, exact validation behavior, and local development notes.
 ---
 
 ## 🛠️ Development
+
+### Requirements
+
+- [Node.js 24 or later](https://nodejs.org/en/download).
+- [Corepack](https://github.com/nodejs/corepack).
 
 ### Setup
 
